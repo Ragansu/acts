@@ -20,6 +20,8 @@
 #include <boost/container/flat_set.hpp>
 
 namespace Acts {
+typedef float TrackScore
+std::vector<TrackScore> m_summaryTypeScore;
 
 /// Evicts tracks that seem to be duplicates or fakes. This algorithm takes a
 /// greedy approach in the sense that it will remove the track which looks "most
@@ -34,7 +36,7 @@ namespace Acts {
 ///  3) Else, remove the track with the highest relative shared hits (i.e.
 ///     shared hits / hits).
 ///  4) Back to square 1.
-class GreedyAmbiguityResolution {
+class AthenaAmbiguityResolution {
  public:
   struct Config {
     /// Maximum amount of shared hits per track.
@@ -48,10 +50,12 @@ class GreedyAmbiguityResolution {
 
   struct State {
     std::size_t numberOfTracks{};
-
+    TrackScore score;
     std::vector<int> trackTips;
     std::vector<float> trackChi2;
     std::vector<std::vector<std::size_t>> measurementsPerTrack;
+    std::vector<float> trackDOF;
+    std::vector<int> trackScore;
 
     // TODO consider boost 1.81 unordered_flat_map
     boost::container::flat_map<std::size_t,
@@ -63,9 +67,9 @@ class GreedyAmbiguityResolution {
     boost::container::flat_set<std::size_t> selectedTracks;
   };
 
-  GreedyAmbiguityResolution(const Config& cfg,
+  AthenaAmbiguityResolution(const Config& cfg,
                             std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("GreedyAmbiguityResolution",
+                                getDefaultLogger("AthenaAmbiguityResolution",
                                                  Logging::INFO))
       : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
@@ -89,7 +93,13 @@ class GreedyAmbiguityResolution {
   /// the final state conditions are met.
   ///
   /// @param state A state object that was previously filled by the initialization.
+  void trackScoringTool() const;
+
+  void simpleScore(State& state) const;
+
   void resolve(State& state) const;
+
+  void solveTracks(State& state)const;
 
  private:
   Config m_cfg;
@@ -103,4 +113,4 @@ class GreedyAmbiguityResolution {
 
 }  // namespace Acts
 
-#include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.ipp"
+#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.ipp"

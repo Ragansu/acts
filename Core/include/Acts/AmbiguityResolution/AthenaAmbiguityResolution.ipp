@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.hpp"
+#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
 
 #include <unordered_map>
 
@@ -17,7 +17,7 @@ namespace Acts {
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t, typename source_link_hash_t,
           typename source_link_equality_t>
-void GreedyAmbiguityResolution::computeInitialState(
+void AthenaAmbiguityResolution::computeInitialState(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     State& state, source_link_hash_t&& sourceLinkHash,
     source_link_equality_t&& sourceLinkEquality) const {
@@ -49,6 +49,7 @@ void GreedyAmbiguityResolution::computeInitialState(
     state.trackChi2.push_back(track.chi2() / track.nDoF());
     state.measurementsPerTrack.push_back(std::move(measurements));
     state.selectedTracks.insert(state.numberOfTracks);
+    state.trackDOF.push_back(track.nDoF());
 
     ++state.numberOfTracks;
   }
