@@ -6,146 +6,92 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "ActsExamples/TrackFindingML/AthenaAmbiguityResolution.hpp"
 
-namespace Acts {
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 
-namespace {
+ActsExamples::AthenaAmbiguityResolution::AthenaAmbiguityResolution(
+    std::string name, Acts::Logging::Level lvl)
+    : ActsExamples::IAlgorithm(name, lvl) {}
 
-/// Removes a track from the state which has to be done for multiple properties
-/// because of redundancy.
-static void removeTrack(AthenaAmbiguityResolution::State& state,
-                        std::size_t iTrack) {
-  for (auto iMeasurement : state.measurementsPerTrack[iTrack]) {
-    state.tracksPerMeasurement[iMeasurement].erase(iTrack);
-
-    if (state.tracksPerMeasurement[iMeasurement].size() == 1) {
-      auto jTrack = *state.tracksPerMeasurement[iMeasurement].begin();
-      --state.sharedMeasurementsPerTrack[jTrack];
+std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
+ActsExamples::AthenaAmbiguityResolution::mapTrackHits(
+    const ActsExamples::ConstTrackContainer& tracks,
+    int nMeasurementsMin) const {
+  std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>> trackMap;
+  // Loop over all the trajectories in the events
+  for (const auto& track : tracks) {
+    std::vector<std::size_t> hits;
+    int nbMeasurements = 0;
+    // Store the hits id for the trajectory and compute the number of
+    // measurement
+    tracks.trackStateContainer().visitBackwards(
+        track.tipIndex(), [&](const auto& state) {
+          if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+            std::size_t indexHit =
+                state.getUncalibratedSourceLink()
+                    .template get<ActsExamples::IndexSourceLink>()
+                    .index();
+            hits.emplace_back(indexHit);
+            ++nbMeasurements;
+          }
+        });
+    if (nbMeasurements < nMeasurementsMin) {
+      continue;
     }
+    trackMap.emplace(nbMeasurements, std::make_pair(track.index(), hits));
+  }
+  return trackMap;
+}
+
+ActsExamples::ConstTrackContainer
+ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
+    const ActsExamples::ConstTrackContainer& tracks,
+    std::vector<std::size_t>& goodTracks) const {
+  std::shared_ptr<Acts::ConstVectorMultiTrajectory> trackStateContainer =
+      tracks.trackStateContainerHolder();
+  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+  trackContainer->reserve(goodTracks.size());
+  // Temporary empty track state container: we don't change the original one,
+  // but we need one for filtering
+  auto tempTrackStateContainer =
+      std::make_shared<Acts::VectorMultiTrajectory>();
+
+  TrackContainer solvedTracks{trackContainer, tempTrackStateContainer};
+  solvedTracks.ensureDynamicColumns(tracks);
+
+  for (auto&& iTrack : goodTracks) {
+    auto destProxy = solvedTracks.getTrack(solvedTracks.addTrack());
+    auto srcProxy = tracks.getTrack(iTrack);
+    destProxy.copyFrom(srcProxy, false);
+    destProxy.tipIndex() = srcProxy.tipIndex();
   }
 
-  state.selectedTracks.erase(iTrack);
-}
-
-}  // namespace
-
-void AthenaAmbiguityResolution::resolve(State& state) const {
-  /// Compares two tracks based on the number of shared measurements in order to
-  /// decide if we already met the final state.
-  auto sharedMeasurementsComperator = [&state](std::size_t a, std::size_t b) {
-    return state.sharedMeasurementsPerTrack[a] <
-           state.sharedMeasurementsPerTrack[b];
-  };
-
-  /// Compares two tracks in order to find the one which should be evicted.
-  /// First we compare the relative amount of shared measurements. If that is
-  /// indecisive we use the chi2.
-  auto trackComperator = [&state](std::size_t a, std::size_t b) {
-    /// Helper to calculate the relative amount of shared measurements.
-    auto relativeSharedMeasurements = [&state](std::size_t i) {
-      return 1.0 * state.sharedMeasurementsPerTrack[i] /
-             state.measurementsPerTrack[i].size();
-    };
-
-    if (relativeSharedMeasurements(a) != relativeSharedMeasurements(b)) {
-      return relativeSharedMeasurements(a) < relativeSharedMeasurements(b);
-    }
-    return state.trackChi2[a] < state.trackChi2[b];
-  };
-
-  for (std::size_t i = 0; i < m_cfg.maximumIterations; ++i) {
-    // Lazy out if there is nothing to filter on.
-    if (state.selectedTracks.empty()) {
-      ACTS_VERBOSE("no tracks left - exit loop");
-      break;
-    }
-
-    // Find the maximum amount of shared measurements per track to decide if we
-    // are done or not.
-    auto maximumSharedMeasurements = *std::max_element(
-        state.selectedTracks.begin(), state.selectedTracks.end(),
-        sharedMeasurementsComperator);
-    ACTS_VERBOSE(
-        "maximum shared measurements "
-        << state.sharedMeasurementsPerTrack[maximumSharedMeasurements]);
-    if (state.sharedMeasurementsPerTrack[maximumSharedMeasurements] <
-        m_cfg.maximumSharedHits) {
-      break;
-    }
-
-    // Find the "worst" track by comparing them to each other
-    auto badTrack =
-        *std::max_element(state.selectedTracks.begin(),
-                          state.selectedTracks.end(), trackComperator);
-    ACTS_VERBOSE("remove track "
-                 << badTrack << " nMeas "
-                 << state.measurementsPerTrack[badTrack].size() << " nShared "
-                 << state.sharedMeasurementsPerTrack[badTrack] << " chi2 "
-                 << state.trackChi2[badTrack]);
-    removeTrack(state, badTrack);
-  }
-}
-
-void AthenaAmbiguityResolution::trackScoringTool() const {
-  constexpr int toZero{ 0 };
-  constexpr size_t numberOfInDetCounters{ 14 };
-  constexpr std::array<size_t, numberOfInDetCounters> inDetIndex{
-    numberOfPixelHits,
-    numberOfPixelHoles,
-    numberOfInnermostPixelLayerHits,
-    numberOfGangedPixels,
-    numberOfSCTHits,
-    numberOfSCTHoles,
-    numberOfOutliersOnTrack
-    numberOfMdtHits,          
-    numberOfTgcPhiHits,
-    numberOfTgcEtaHits,       
-    numberOfCscPhiHits,
-    numberOfCscEtaHits,       
-    numberOfRpcPhiHits,       
-    numberOfRpcEtaHits,
-
-  };
-  setTheseElements(inDetIndex, toZero);
-  
-  //set some test values
-	m_summaryTypeScore[numberOfPixelHits]	=  20;
-	m_summaryTypeScore[numberOfPixelHoles] = -10;  // a hole is bad
-	m_summaryTypeScore[numberOfInnermostPixelLayerHits] =  10;  // addition for being b-layer
-	m_summaryTypeScore[numberOfGangedPixels] =  -5;  // decrease for being ganged
-	m_summaryTypeScore[numberOfSCTHits] =  10;  // half of a pixel, since only 1dim
-	m_summaryTypeScore[numberOfSCTHoles] =  -5;  // a hole is bad !
-	m_summaryTypeScore[numberOfOutliersOnTrack] =  -2;  // an outlier might happen
-
-	// scoring for Muons is missing
-	m_summaryTypeScore[numberOfMdtHits]	= 20;
-	m_summaryTypeScore[numberOfTgcPhiHits]	= 20;
-	m_summaryTypeScore[numberOfTgcEtaHits]	= 10;
-	m_summaryTypeScore[numberOfCscPhiHits]	= 20;
-	m_summaryTypeScore[numberOfCscEtaHits]	= 20;
-	m_summaryTypeScore[numberOfRpcPhiHits]	= 20;
-	m_summaryTypeScore[numberOfRpcEtaHits]	= 10;
+  ConstTrackContainer outputTracks{
+      std::make_shared<Acts::ConstVectorTrackContainer>(
+          std::move(*trackContainer)),
+      trackStateContainer};
+  return outputTracks;
 }
 
 
+int ActsExamples::AthenaAmbiguityResolution::simpleScore(
+    const ActsExamples::ConstTrackContainer& tracks) const {
+  // Loop over all the trajectories in the events
+  std::vector<int> trackScore(tracks.size(), 0);
+  for (const auto& track : tracks) {
+    int score = 100;
 
-
-
-void AthenaAmbiguityResolution::simpleScore(State& state) const {
-  TrackScore score = 0;
-  for(j=0;j<state.numberOfTracks;j++) {
-    state.trackScore[j] = 100; // score of 100 per track
-
-    if (track.fitQuality() && state.trackDOF[j] < 0) {
+    if (track.fitQuality() && track.nDoF() < 0) {
       ACTS_VERBOSE("numberDoF < 0, reject it");
-      state.trackScore[j] = 0;
+      score = 0;
       break;
     }
 
     // --- prob(chi2,NDF), protect for chi2<0
-    if (track.fitQuality()!=nullptr && state.trackChi2[j] > 0 && state.trackDOF[j] > 0) {
-      state.trackScore[j]+= std::log10(1.0-Genfun::CumulativeChiSquare(state.trackDOF[j])(state.trackChi2[j]));
+    if (track.fitQuality()!=nullptr && track.chi2() > 0 && track.nDoF() > 0) {
+      score+= std::log10(1.0-Genfun::CumulativeChiSquare(track.nDoF())(track.chi2()));
     }
     int numberOfTrackSummaryTypes = 14;
     // --- summary score analysis
@@ -157,21 +103,27 @@ void AthenaAmbiguityResolution::simpleScore(State& state) const {
         ACTS_VERBOSE("\tType ["<<i<<"], value \t= "<<value<<"], score \t="<<score);
       }
     }
-    score+= state.trackScore[j];
+  trackScore[track.index()] = score;
   } // end of loop over tracks
-  state.score = score;
+  return trackScore;
+
+  }
+
+ActsExamples::ConstTrackContainer
+ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
+    const ActsExamples::ConstTrackContainer& tracks, int trackScore) const {
+  std::vector<std::size_t> goodTracks;
+  // Loop over all the trajectories in the events
+  for (const auto& track : tracks) {
+    if (trackScore[track.index()] > 0) {
+      goodTracks.emplace_back(track.index());
+    }
+  }
+  return prepareOutputTrack(tracks, goodTracks);
 }
 
-void AthenaAmbiguityResolution::solveTracks(State& state) const {
-
-}
-
-
-void AthenaAmbiguityResolution::getCleanedOutTrack(State& state,
-                                                                                    ClusterSplitProbabilityContainer &splitProbContainer,
-                                                                                    int trackId /* = -1*/) const
-{
-  // flag if the track is ok (true) or needs cleaning (false)
+void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
+    const ActsExamples::ConstTrackContainer& tracks) const {
   bool TrkCouldBeAccepted        = true;
 
   // some counters used in the logic
@@ -191,13 +143,14 @@ void AthenaAmbiguityResolution::getCleanedOutTrack(State& state,
 
 
   // get all TSOS the track
-  const Trk::TrackStates* tsos = ptrTrack->trackStateOnSurfaces();
+    ConstTrackContainer tsos = tracks.trackStateContainer();
+
   
-  ACTS_DEBUG ("Study new Track "<< ptrTrack<<"\t , it has "<<tsos->size()<<"\t track states");
+  ACTS_DEBUG ("Study new Track "<< tracks<<"\t , it has "<<tsos->size()<<"\t track states");
   ACTS_DEBUG ("trackId "<< trackId <<", subtrackId "<<subtrackId);
 
   // is this a track from the pattern or a fitted track ?
-  bool ispatterntrack = (ptrTrack->info().trackFitter()==Trk::TrackInfo::Unknown);
+  bool ispatterntrack = (tracks->info().trackFitter()==Trk::TrackInfo::Unknown);
   if (ispatterntrack) {
     ACTS_DEBUG ("==> this is a pattern track, outliers are good hits (reintegration) !");
   } else {
@@ -498,14 +451,6 @@ void AthenaAmbiguityResolution::getCleanedOutTrack(State& state,
       return std::make_tuple(static_cast<Trk::Track *>(nullptr),true); // keep input track;
     }
 
-    // if ( numShared == 0 && TrkCouldBeAccepted ) {
-    // ATH_MSG_DEBUG ("=> Nothing to recover from, drop track !");
-    // return std::make_tuple(static_cast<Trk::Track *>(nullptr),false); // reject input track;
-    // }
-
-    // Track is potentially ok, create a stripped down version from the unused hits and the allowed shared hits
-    // join shared to unused hits, if requirements are met
-
     ACTS_VERBOSE ("Trying to recover track, allow for some shared hits is possible.");
 
     // new TSOS vector
@@ -625,7 +570,3 @@ void AthenaAmbiguityResolution::getCleanedOutTrack(State& state,
   return std::make_tuple(static_cast<Trk::Track *>(nullptr),false); // reject input track;
 
 
-//==========================================================================================
-
-
-// namespace Acts

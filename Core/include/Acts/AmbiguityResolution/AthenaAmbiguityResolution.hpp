@@ -55,7 +55,7 @@ class AthenaAmbiguityResolution {
     std::vector<float> trackChi2;
     std::vector<std::vector<std::size_t>> measurementsPerTrack;
     std::vector<float> trackDOF;
-    std::vector<int> trackScore;
+    std::vector<TrackScore> trackScore;
 
     // TODO consider boost 1.81 unordered_flat_map
     boost::container::flat_map<std::size_t,
@@ -64,6 +64,7 @@ class AthenaAmbiguityResolution {
     std::vector<std::size_t> sharedMeasurementsPerTrack;
 
     // TODO consider boost 1.81 unordered_flat_map
+    boost::container::flat_set<std::size_t> cleanTracks;
     boost::container::flat_set<std::size_t> selectedTracks;
   };
 
@@ -109,6 +110,19 @@ class AthenaAmbiguityResolution {
 
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
+
+  /** some cut values */
+  IntegerProperty m_minHits{this, "minHits", 5};
+  int m_maxShared{0};
+  IntegerProperty m_maxSharedModules{this, "maxShared", 1};
+  IntegerProperty m_maxTracksPerPRD{this, "maxTracksPerSharedPRD", 2};
+  IntegerProperty m_minNotShared{this, "minNotShared", 6};
+  FloatProperty m_minScoreShareTracks{this, "minScoreShareTracks", 0.0};
+  BooleanProperty m_cosmics{this, "Cosmics", false};
+  BooleanProperty m_parameterization{this, "UseParameterization", true}; // Use table of min number DCs
+  BooleanProperty m_doPixelClusterSplitting{this, "doPixelSplitting", false};
+  FloatProperty m_sharedProbCut{this, "sharedProbCut", 0.02};
+  IntegerProperty m_maxSplitSize{this, "MaximalSplitSize", 49, "A.S.: remove that when solved properly by updating the SplitProb info with isExcluded. A.S.: to be removed once EDM is updated"};
 };
 
 }  // namespace Acts
