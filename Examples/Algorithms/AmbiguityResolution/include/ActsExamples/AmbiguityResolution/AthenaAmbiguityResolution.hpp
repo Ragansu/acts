@@ -10,6 +10,7 @@
 
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 
 #include <map>
 #include <string>
@@ -26,64 +27,24 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   /// @param name name of the algorithm
   /// @param lvl is the logging level
   AthenaAmbiguityResolution(std::string name, Acts::Logging::Level lvl);
-  struct TrackSummary {
-    std::vector< uint8_t >         numberOfContribPixelLayers       ;
-    std::vector< uint8_t >         numberOfBLayerHits               ;
-    std::vector< uint8_t >         numberOfBLayerOutliers           ;
-    std::vector< uint8_t >         numberOfBLayerSharedHits         ;
-    std::vector< uint8_t >         numberOfBLayerSplitHits          ;
-    std::vector< uint8_t >         expectBLayerHit                  ; /// @todo FIXME!Should be bool.
-    std::vector< uint8_t >         numberOfInnermostPixelLayerHits               ;
-    std::vector< uint8_t >         numberOfInnermostPixelLayerOutliers           ;
-    std::vector< uint8_t >         numberOfInnermostPixelLayerSharedHits         ;
-    std::vector< uint8_t >         numberOfInnermostPixelLayerSplitHits          ;
-    std::vector< uint8_t >         expectInnermostPixelLayerHit                  ; /// @todo FIXME!Should be bool.
-    std::vector< uint8_t >         numberOfNextToInnermostPixelLayerHits               ;
-    std::vector< uint8_t >         numberOfNextToInnermostPixelLayerOutliers           ;
-    std::vector< uint8_t >         numberOfNextToInnermostPixelLayerSharedHits         ;
-    std::vector< uint8_t >         numberOfNextToInnermostPixelLayerSplitHits          ;
-    std::vector< uint8_t >         expectNextToInnermostPixelLayerHit                  ; /// @todo FIXME!Should be bool.
-    std::vector< uint8_t >         numberOfPixelHits                ;
-    std::vector< uint8_t >         numberOfPixelOutliers            ;
-    std::vector< uint8_t >         numberOfPixelHoles               ;
-    std::vector< uint8_t >         numberOfPixelSharedHits          ;
-    std::vector< uint8_t >         numberOfPixelSplitHits           ;
-    std::vector< uint8_t >         numberOfGangedPixels             ;
-    std::vector< uint8_t >         numberOfGangedFlaggedFakes       ;
-    std::vector< uint8_t >         numberOfPixelDeadSensors         ;
-    std::vector< uint8_t >         numberOfPixelSpoiltHits          ;
-    std::vector< uint8_t >         numberOfSCTHits                  ;
-    std::vector< uint8_t >         numberOfSCTOutliers              ;
-    std::vector< uint8_t >         numberOfSCTHoles                 ;
-    std::vector< uint8_t >         numberOfSCTDoubleHoles           ;
-    std::vector< uint8_t >         numberOfSCTSharedHits            ;
-    std::vector< uint8_t >         numberOfSCTDeadSensors           ;
-    std::vector< uint8_t >         numberOfSCTSpoiltHits            ;
-    std::vector< uint8_t >         numberOfTRTHits                  ;
-    std::vector< uint8_t >         numberOfTRTOutliers              ;
-    std::vector< uint8_t >         numberOfTRTHoles                 ;
-    std::vector< uint8_t >         numberOfTRTHighThresholdHits     ;
-    std::vector< uint8_t >         numberOfTRTHighThresholdOutliers ;
-    std::vector< uint8_t >         numberOfTRTDeadStraws            ;
-    std::vector< uint8_t >         numberOfTRTTubeHits              ;
-    std::vector< uint8_t >         numberOfTRTXenonHits             ;
-    
-    std::vector< uint8_t >         numberOfPrecisionLayers;
-    std::vector< uint8_t >         numberOfPrecisionHoleLayers;
-    std::vector< uint8_t >         numberOfPhiLayers;
-    std::vector< uint8_t >         numberOfPhiHoleLayers;
-    std::vector< uint8_t >         numberOfTriggerEtaLayers;
-    std::vector< uint8_t >         numberOfTriggerEtaHoleLayers;
-    
-    std::vector< uint8_t >         numberOfOutliersOnTrack          ;
-    std::vector< uint8_t >         standardDeviationOfChi2OS        ;
-    std::vector< float >           eProbabilityComb;
-    std::vector< float >           eProbabilityHT;
-    std::vector< float >           eProbabilityToT;
-    std::vector< float >           eProbabilityBrem;
-
+  ///
+  struct TrajectoryState {
+    std::size_t nStates = 0;
+    std::size_t nMeasurements = 0;
+    std::size_t nOutliers = 0;
+    std::size_t nHoles = 0;
+    double chi2Sum = 0;
+    std::vector<double> measurementChi2 = {};
+    std::vector<double> outlierChi2 = {};
+    std::size_t NDF = 0;
+    std::vector<unsigned int> measurementVolume = {};
+    std::vector<unsigned int> measurementLayer = {};
+    std::vector<unsigned int> outlierVolume = {};
+    std::vector<unsigned int> outlierLayer = {};
+    std::size_t nSharedHits = 0;
   };
   
+  TrajectoryState trajectoryState;
   struct TypeScore {
     int value;
     std::string name;
@@ -127,6 +88,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
       const ConstTrackContainer& tracks,
       std::vector<std::size_t>& goodTracks) const;
 
+  void fillTrajectoryState(const ConstTrackContainer& tracks, std::size_t trackID) const;
   int simpleScore(const ConstTrackContainer& tracks) const;
   void getCleanedOutTracks(const ConstTrackContainer& tracks) const;
   std::vector<std::size_t> solveAmbiguity(const ConstTrackContainer& tracks, int trackScore) const;

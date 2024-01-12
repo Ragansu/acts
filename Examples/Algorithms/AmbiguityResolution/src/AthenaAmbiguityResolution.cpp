@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFindingML/AthenaAmbiguityResolution.hpp"
-
+#include "ActsExamples/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
@@ -15,6 +15,28 @@ ActsExamples::AthenaAmbiguityResolution::AthenaAmbiguityResolution(
     std::string name, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm(name, lvl) {}
 
+void ActsExamples::AthenaAmbiguityResolution::fillTrajectoryState( ConstTrackContainer& tracks, std::size_t trackID) const {
+  // get the track
+  auto track = tracks.getTrack(trackID);
+  // get the trajectory state
+  auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
+      tracks.trackStateContainer(), track.tipIndex());
+  // fill the trajectory state
+  trajectoryState.nStates = trajState.nStates;
+  trajectoryState.nMeasurements = trajState.nMeasurements;
+  trajectoryState.nOutliers = trajState.nOutliers;
+  trajectoryState.nHoles = trajState.nHoles;
+  trajectoryState.chi2Sum = trajState.chi2Sum;
+  trajectoryState.measurementChi2 = trajState.measurementChi2;
+  trajectoryState.outlierChi2 = trajState.outlierChi2;
+  trajectoryState.NDF = trajState.NDF;
+  trajectoryState.measurementVolume = trajState.measurementVolume;
+  trajectoryState.measurementLayer = trajState.measurementLayer;
+  trajectoryState.outlierVolume = trajState.outlierVolume;
+  trajectoryState.outlierLayer = trajState.outlierLayer;
+  trajectoryState.nSharedHits = trajState.nSharedHits;
+  
+}
 ActsExamples::ConstTrackContainer
 ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
     const ActsExamples::ConstTrackContainer& tracks,
@@ -45,6 +67,7 @@ ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
   return outputTracks;
 }
 
+void 
 
 int ActsExamples::AthenaAmbiguityResolution::simpleScore(
     const ActsExamples::ConstTrackContainer& tracks) const {
@@ -53,14 +76,14 @@ int ActsExamples::AthenaAmbiguityResolution::simpleScore(
   for (const auto& track : tracks) {
     int score = 100;
 
-    if (track.fitQuality() && track.nDoF() < 0) {
+    if (track.nDoF() < 0) {
       ACTS_VERBOSE("numberDoF < 0, reject it");
       score = 0;
       break;
     }
 
     // --- prob(chi2,NDF), protect for chi2<0
-    if (track.fitQuality()!=nullptr && track.chi2() > 0 && track.nDoF() > 0) {
+    if (track.chi2() > 0 && track.nDoF() > 0) {
       score+= std::log10(1.0-Genfun::CumulativeChiSquare(track.nDoF())(track.chi2()));
     }
     int numberOfTrackSummaryTypes = m_typeScores.size();
@@ -299,17 +322,6 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
       TrkCouldBeAccepted = false;
       continue;
     }
-
-
-    /* consider hit to be a shared one, if
-       - not too many tracks share this hit already
-       - the score of the track is high enough to allow for shared hits
-    */
-
-
-    // Trk::PRDtoTrackMap::ConstPrepRawDataTrackMapRange range = prd_to_track_map.onTracks(*(rot->prepRawData()));
-    // int                             numberOfTracksWithThisPrd = std::distance(range.first,range.second);
-    // ACTS_VERBOSE ("---> number of tracks with this share Prd: " << numberOfTracksWithThisPrd << " maxtracks: " << m_maxTracksPerPRD);
 
     int numberOfTracksWithThisPrd = sharedMeasurementsPerTrack[index]
 
