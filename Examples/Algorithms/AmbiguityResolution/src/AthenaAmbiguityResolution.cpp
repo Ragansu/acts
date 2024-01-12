@@ -15,36 +15,6 @@ ActsExamples::AthenaAmbiguityResolution::AthenaAmbiguityResolution(
     std::string name, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm(name, lvl) {}
 
-std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
-ActsExamples::AthenaAmbiguityResolution::mapTrackHits(
-    const ActsExamples::ConstTrackContainer& tracks,
-    int nMeasurementsMin) const {
-  std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>> trackMap;
-  // Loop over all the trajectories in the events
-  for (const auto& track : tracks) {
-    std::vector<std::size_t> hits;
-    int nbMeasurements = 0;
-    // Store the hits id for the trajectory and compute the number of
-    // measurement
-    tracks.trackStateContainer().visitBackwards(
-        track.tipIndex(), [&](const auto& state) {
-          if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-            std::size_t indexHit =
-                state.getUncalibratedSourceLink()
-                    .template get<ActsExamples::IndexSourceLink>()
-                    .index();
-            hits.emplace_back(indexHit);
-            ++nbMeasurements;
-          }
-        });
-    if (nbMeasurements < nMeasurementsMin) {
-      continue;
-    }
-    trackMap.emplace(nbMeasurements, std::make_pair(track.index(), hits));
-  }
-  return trackMap;
-}
-
 ActsExamples::ConstTrackContainer
 ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
     const ActsExamples::ConstTrackContainer& tracks,
@@ -93,13 +63,13 @@ int ActsExamples::AthenaAmbiguityResolution::simpleScore(
     if (track.fitQuality()!=nullptr && track.chi2() > 0 && track.nDoF() > 0) {
       score+= std::log10(1.0-Genfun::CumulativeChiSquare(track.nDoF())(track.chi2()));
     }
-    int numberOfTrackSummaryTypes = 14;
+    int numberOfTrackSummaryTypes = m_typeScores.size();
     // --- summary score analysis
     for (int i=0; i<numberOfTrackSummaryTypes; ++i) {
       int value = trackSummary.get(static_cast<Trk::SummaryType>(i));
       //value is -1 if undefined.
       if (value>0) {
-        state.trackScore[j]+=m_summaryTypeScore[i]*value;
+        score+=m_typeScores[i].value * value;
         ACTS_VERBOSE("\tType ["<<i<<"], value \t= "<<value<<"], score \t="<<score);
       }
     }
@@ -107,9 +77,8 @@ int ActsExamples::AthenaAmbiguityResolution::simpleScore(
   } // end of loop over tracks
   return trackScore;
 
-  }
-
-ActsExamples::ConstTrackContainer
+}
+std::vector<std::size_t> 
 ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
     const ActsExamples::ConstTrackContainer& tracks, int trackScore) const {
   std::vector<std::size_t> goodTracks;
@@ -124,8 +93,8 @@ ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
 
 void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
     const ActsExamples::ConstTrackContainer& tracks) const {
-  bool TrkCouldBeAccepted        = true;
 
+  bool TrkCouldBeAccepted        = true;
   // some counters used in the logic
   int  numUnused         = 0;
   int  numTRT_Unused     = 0;
@@ -163,14 +132,14 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
   int npixel    = 0;
   int npixholes = 0;
   int nsctholes = 0;
-  const Trk::TrackSummary* trkSummary=ptrTrack->trackSummary();
+  const TrackSummary* trkSummary=ptrTrack->trackSummary();
   if (trkSummary) {
     ACTS_VERBOSE ("---> Found summary information");
-    nPixelDeadSensor = trkSummary->get(Trk::numberOfPixelDeadSensors);
-    nSCTDeadSensor   = trkSummary->get(Trk::numberOfSCTDeadSensors);
-    npixel           = trkSummary->get(Trk::numberOfPixelHits);
-    npixholes        = trkSummary->get(Trk::numberOfPixelHoles);
-    nsctholes        = trkSummary->get(Trk::numberOfSCTHoles);
+    nPixelDeadSensor = trkSummary->get(numberOfPixelDeadSensors);
+    nSCTDeadSensor   = trkSummary->get(numberOfSCTDeadSensors);
+    npixel           = trkSummary->get(numberOfPixelHits);
+    npixholes        = trkSummary->get(numberOfPixelHoles);
+    nsctholes        = trkSummary->get(numberOfSCTHoles);
   }
   // set nDeadSensors to 0 in case trkSummary wasn't called with HoleSearch
   // (i.e. number of deadSensors not available)
@@ -195,15 +164,53 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
   std::vector<int> tsosType;
   tsosType.resize(tsos->size());
 
+  std::vector<std::vector<std::size_t>> measurementsPerTrack;
+  boost::container::flat_map<std::size_t,boost::container::flat_set<std::size_t>> tracksPerMeasurement;
+  std::vector<std::size_t> sharedMeasurementsPerTrack;
+
+  std::size_t numberOfTracks = tracks->size();
+  for (const auto& track : tracks) {
+
+    if (track.nMeasurements() < m_cfg.nMeasurementsMin) {
+      continue;
+    }
+    std::vector<std::size_t> measurements;
+    for (auto ts : track.trackStatesReversed()) {
+      if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        SourceLink sourceLink = ts.getUncalibratedSourceLink();
+        // assign a new measurement index if the source link was not seen yet
+        auto emplace = measurementIndexMap.try_emplace(
+            sourceLink, measurementIndexMap.size());
+        measurements.push_back(emplace.first->second);
+      }
+    }
+    measurementsPerTrack.push_back(std::move(measurements));
+  }
+
+  for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
+    for (auto iMeasurement : measurementsPerTrack[iTrack]) {
+      tracksPerMeasurement[iMeasurement].insert(iTrack);
+    }
+  }
+
+  std::vector<std::size_t> sharedMeasurementsPerTrack = std::vector<std::size_t>(tracks.size(), 0);
+  for (std::size_t iTrack = 0; iTrack < state.numberOfTracks; ++iTrack) {
+    for (auto iMeasurement : measurementsPerTrack[iTrack]) {
+      if (tracksPerMeasurement[iMeasurement].size() > 1) {
+        ++sharedMeasurementsPerTrack[iTrack];
+      }
+    }
+  }
   // loop over all TSOS and classify them
 
-  for (int index = 0 ;index<numberOfTracks; ++index) {
+  int index = 0;
+  for (const auto& track : tracks) {
 
     // init array
     tsosType[index] = OtherTsos;
 
     // get measurment from TSOS
-    auto meas = sate.measurementOnTrack[index];
+    auto meas = measurementOnTrack[index];
 
     // if we do not have a measurement, we should just mark it
     if (!meas) {
@@ -298,16 +305,13 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
        - not too many tracks share this hit already
        - the score of the track is high enough to allow for shared hits
     */
-    int count_tracks = 0;
-    for (auto iMeasurement : state.measurementsPerTrack[index]){
-      count_tracks++;
-    }
+
 
     // Trk::PRDtoTrackMap::ConstPrepRawDataTrackMapRange range = prd_to_track_map.onTracks(*(rot->prepRawData()));
     // int                             numberOfTracksWithThisPrd = std::distance(range.first,range.second);
     // ACTS_VERBOSE ("---> number of tracks with this share Prd: " << numberOfTracksWithThisPrd << " maxtracks: " << m_maxTracksPerPRD);
 
-    int numberOfTracksWithThisPrd = count_tracks;
+    int numberOfTracksWithThisPrd = sharedMeasurementsPerTrack[index]
 
     // see if we try keeping it as a shared hit ?
     if ( numberOfTracksWithThisPrd < m_maxTracksPerPRD  && // we do not allow to share with to many tracks
@@ -374,6 +378,7 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
     tsosType[index]    = RejectedHit;
     // mark track as bad !
     TrkCouldBeAccepted = false; // we have to remove at least one PRD
+    index++;
   }
 
   // total number of hits with dead modules
@@ -460,8 +465,8 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
     int cntIns = 0;
 
     // loop over all TSOS (and types) and copy the good ones overiTsos
-    Trk::TrackStates::const_iterator iTsos    = tsos->begin();
-    Trk::TrackStates::const_iterator iTsosEnd = tsos->end();
+    auto iTsos    = tsos->begin();
+    auto iTsosEnd = tsos->end();
 
     for (int index = 0 ; iTsos != iTsosEnd ; ++iTsos,++index ) {
 
@@ -569,4 +574,4 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
 
   return std::make_tuple(static_cast<Trk::Track *>(nullptr),false); // reject input track;
 
-
+}

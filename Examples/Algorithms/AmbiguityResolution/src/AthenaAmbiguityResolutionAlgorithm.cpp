@@ -33,12 +33,9 @@ ActsExamples::ProcessCode ActsExamples::AthenaAmbiguityResolutionAlgorithm::exec
   // Read input data
   const auto& tracks = m_inputTracks(ctx);
   // Associate measurement to their respective tracks
-  std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
-      trackMap = mapTrackHits(tracks, m_cfg.nMeasurementsMin);
-  auto cluster = Acts::detail::clusterDuplicateTracks(trackMap);
+  int score = simpleScore(tracks);
   // Select the ID of the track we want to keep
-  std::vector<std::size_t> goodTracks =
-      m_duplicateClassifier.solveAmbiguity(cluster, tracks);
+  std::vector<std::size_t> goodTracks = solveAmbiguity(tracks,score);
   // Prepare the output track collection from the IDs
   auto outputTracks = prepareOutputTrack(tracks, goodTracks);
   m_outputTracks(ctx, std::move(outputTracks));
