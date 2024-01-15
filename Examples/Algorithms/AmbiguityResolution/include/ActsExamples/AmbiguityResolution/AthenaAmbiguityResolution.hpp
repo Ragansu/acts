@@ -45,6 +45,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   };
   
   TrajectoryState trajectoryState;
+  
   struct TypeScore {
     int value;
     std::string name;
