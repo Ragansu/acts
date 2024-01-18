@@ -16,7 +16,9 @@
 ActsExamples::AthenaAmbiguityResolutionAlgorithm::AthenaAmbiguityResolutionAlgorithm(
     ActsExamples::AthenaAmbiguityResolutionAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
-    : m_cfg(std::move(cfg)){
+    : ActsExamples::AthenaAmbiguityResolution("AthenaAmbiguityResolutionAlgorithm",
+                                           lvl),
+      m_cfg(std::move(cfg)){
   
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");

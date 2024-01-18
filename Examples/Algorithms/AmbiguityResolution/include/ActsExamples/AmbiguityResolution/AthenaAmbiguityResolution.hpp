@@ -10,7 +10,6 @@
 
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 
 #include <map>
 #include <string>

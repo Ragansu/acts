@@ -1,6 +1,8 @@
 add_library(
   ActsExamplesAmbiguityResolution SHARED
   src/GreedyAmbiguityResolutionAlgorithm.cpp
+  src/AthenaAmbiguityResolutionAlgorithm.cpp
+  src/AthenaAmbiguityResolution.cpp
 )
 
 target_include_directories(

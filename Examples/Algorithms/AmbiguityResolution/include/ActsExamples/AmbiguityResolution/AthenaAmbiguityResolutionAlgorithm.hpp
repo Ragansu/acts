@@ -44,7 +44,7 @@ class AthenaAmbiguityResolutionAlgorithm final : public AthenaAmbiguityResolutio
     /// Input track collection.
     std::string inputTracks;
     /// Path to the ONNX model for the duplicate neural network
-    BigConfig cuts
+    BigConfig cuts;
     /// Output track collection.
     std::string outputTracks;
     /// Minimum number of measurement to form a track.
