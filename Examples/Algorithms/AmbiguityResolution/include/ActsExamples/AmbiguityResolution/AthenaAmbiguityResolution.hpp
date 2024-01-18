@@ -27,23 +27,28 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   /// @param lvl is the logging level
   AthenaAmbiguityResolution(std::string name, Acts::Logging::Level lvl);
   ///
-  struct TrajectoryState {
-    std::size_t nStates = 0;
+  struct Detector {
+    std::string name;
     std::size_t nMeasurements = 0;
     std::size_t nOutliers = 0;
     std::size_t nHoles = 0;
-    double chi2Sum = 0;
-    std::vector<double> measurementChi2 = {};
-    std::vector<double> outlierChi2 = {};
-    std::size_t NDF = 0;
+
     std::vector<unsigned int> measurementVolume = {};
     std::vector<unsigned int> measurementLayer = {};
     std::vector<unsigned int> outlierVolume = {};
     std::vector<unsigned int> outlierLayer = {};
-    std::size_t nSharedHits = 0;
+    std::vector<unsigned int> holeVolume = {};
+    std::vector<unsigned int> holeLayer = {};
+
+    void findnHoles(const ConstTrackContainer& tracks, std::size_t trackID) const;
+    void findnOutliers(const ConstTrackContainer& tracks, std::size_t trackID) const;
+    void findnMeasurements(const ConstTrackContainer& tracks, std::size_t trackID) const;
   };
   
-  TrajectoryState trajectoryState;
+  std::vector<Detector> m_detectors = {
+    {"Pixel",0,0,0,{},{}},
+    {"SCT",0,0,0,{},{}},
+  };
   
   struct TypeScore {
     int value;

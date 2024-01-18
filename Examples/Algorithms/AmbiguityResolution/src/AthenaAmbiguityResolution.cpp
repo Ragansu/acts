@@ -16,6 +16,58 @@ ActsExamples::AthenaAmbiguityResolution::AthenaAmbiguityResolution(
     : ActsExamples::IAlgorithm(name, lvl) {}
 
 
+
+
+void ActsExamples::AthenaAmbiguityResolution::Detector::findnHoles(
+    const ActsExamples::ConstTrackContainer& tracks,
+    std::size_t trackID) const {
+  for (const auto& track : tracks) {
+    for (auto ts : track.trackStatesReversed()) {
+      if (ts.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
+        SourceLink sourceLink = ts.getUncalibratedSourceLink();
+        // assign a new measurement index if the source link was not seen yet
+        auto emplace = measurementIndexMap.try_emplace(
+            sourceLink, measurementIndexMap.size());
+        measurements.push_back(emplace.first->second);
+      }
+    }
+  }
+}
+
+void ActsExamples::AthenaAmbiguityResolution::Detector::findnOutliers(
+    const ActsExamples::ConstTrackContainer& tracks,
+    std::size_t trackID) const {
+  for (const auto& track : tracks) {
+    for (auto ts : track.trackStatesReversed()) {
+      if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+        SourceLink sourceLink = ts.getUncalibratedSourceLink();
+        // assign a new measurement index if the source link was not seen yet
+        auto emplace = measurementIndexMap.try_emplace(
+            sourceLink, measurementIndexMap.size());
+        measurements.push_back(emplace.first->second);
+      }
+    }
+  }
+}
+
+void ActsExamples::AthenaAmbiguityResolution::Detector::findnMeasurements(
+    const ActsExamples::ConstTrackContainer& tracks,
+    std::size_t trackID) const {
+  for (const auto& track : tracks) {
+    for (auto ts : track.trackStatesReversed()) {
+      if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        SourceLink sourceLink = ts.getUncalibratedSourceLink();
+        // assign a new measurement index if the source link was not seen yet
+        auto emplace = measurementIndexMap.try_emplace(
+            sourceLink, measurementIndexMap.size());
+        measurements.push_back(emplace.first->second);
+      }
+    }
+  }
+}
+
+
+
 ActsExamples::ConstTrackContainer
 ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
     const ActsExamples::ConstTrackContainer& tracks,
@@ -45,8 +97,7 @@ ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
       trackStateContainer};
   return outputTracks;
 }
-
-void 
+ 
 
 int ActsExamples::AthenaAmbiguityResolution::simpleScore(
     const ActsExamples::ConstTrackContainer& tracks) const {
@@ -134,14 +185,17 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
   int npixel    = 0;
   int npixholes = 0;
   int nsctholes = 0;
-  const TrackSummary* trkSummary=ptrTrack->trackSummary();
-  if (trkSummary) {
+  bool isTRT    = false;
+  auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
+      tracks.trackStateContainer(), track.tipIndex());
+  
+  if (trajState.nStates > 0) {
     ACTS_VERBOSE ("---> Found summary information");
-    nPixelDeadSensor = trkSummary->get(numberOfPixelDeadSensors);
-    nSCTDeadSensor   = trkSummary->get(numberOfSCTDeadSensors);
-    npixel           = trkSummary->get(numberOfPixelHits);
-    npixholes        = trkSummary->get(numberOfPixelHoles);
-    nsctholes        = trkSummary->get(numberOfSCTHoles);
+    nPixelDeadSensor = 0 //temporarily disabled 
+    nSCTDeadSensor   = 0 //temporarily disabled
+    npixel           = trajState.nMeasurements
+    npixholes        = trajState.nHoles //temporarily assigned to nHoles
+    nsctholes        = trajState.nHoles // temporarily assigned to nHoles
   }
   // set nDeadSensors to 0 in case trkSummary wasn't called with HoleSearch
   // (i.e. number of deadSensors not available)

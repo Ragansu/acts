@@ -36,6 +36,8 @@ struct TrajectoryState {
   std::vector<unsigned int> measurementLayer = {};
   std::vector<unsigned int> outlierVolume = {};
   std::vector<unsigned int> outlierLayer = {};
+  std::vector<unsigned int> holeVolume = {};
+  std::vector<unsigned int> holeLayer = {};
   std::size_t nSharedHits = 0;
 };
 
@@ -77,6 +79,9 @@ TrajectoryState trajectoryState(const traj_t& multiTraj,
       trajState.outlierLayer.push_back(layer);
     } else if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
       trajState.nHoles++;
+      trajState.holeVolume.push_back(volume);
+      trajState.holeLayer.push_back(layer);
+
     }
   });
   return trajState;
