@@ -48,6 +48,11 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   std::vector<Detector> m_detectors = {
     {"Pixel",0,0,0,{},{}},
     {"SCT",0,0,0,{},{}},
+    {"MDT",0,0,0,{},{}},
+    {"TGC",0,0,0,{},{}},
+    {"CSC",0,0,0,{},{}},
+    {"RPC",0,0,0,{},{}}
+
   };
   
   struct TypeScore {

@@ -457,8 +457,8 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
   // get chi2/NDF, if track is fitted
   if ( !ispatterntrack ) {
     double trackchi2 = 0.;
-    if  (ptrTrack->fitQuality() && ptrTrack->fitQuality()->numberDoF()>0 )
-      trackchi2 = ptrTrack->fitQuality()->chiSquared()/ptrTrack->fitQuality()->numberDoF();
+    if  (track.nDoF()>0 )
+      trackchi2 = track.chi2 / track.nDoF();
 
     // if we have share hits and this is a bad track, we reject it
     if ( numShared > 0 && !ispatterntrack && trackchi2 > 3 ) {
@@ -469,12 +469,6 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
   }
 
 
-  // numTRT cut, special for back tracking
-  if ( numTRT_Unused < nCutTRT) {
-    ACTS_DEBUG ("Track fails TRT hit cut, mark it as bad !");
-    // mark track as bad !
-    TrkCouldBeAccepted = false;
-  }
 
   //
   // now see what to do with the track
@@ -504,7 +498,7 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
     ACTS_VERBOSE ("Trying to recover track, allow for some shared hits is possible.");
 
     // new TSOS vector
-    std::vector<const Trk::TrackStateOnSurface*> newTSOS;
+    std::vector<ConstTrackContainer> newTSOS;
 
     // counter for the weighted number of added shared hits
     int cntIns = 0;
@@ -597,11 +591,11 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
       return std::make_tuple(static_cast<Trk::Track *>(nullptr),true); // keep input track;
     } else {
       // ok, done, create subtrack
-      Trk::Track* newTrack = createSubTrack(newTSOS,ptrTrack);
-      if (!newTrack) {
-        ACTS_DEBUG ("=> Failed to create subtrack");
-        return std::make_tuple(static_cast<Trk::Track *>(nullptr),false); // reject input track;
-      }
+      // Trk::Track* newTrack = createSubTrack(newTSOS,track.nDoF);
+      // if (!newTrack) {
+      //   ACTS_DEBUG ("=> Failed to create subtrack");
+      //   return std::make_tuple(static_cast<Trk::Track *>(nullptr),false); // reject input track;
+      // }
 
       Trk::TrackInfo info;
       info.addPatternRecoAndProperties(ptrTrack->info());
