@@ -32,6 +32,9 @@ class AthenaAmbiguityResolution : public IAlgorithm {
     std::size_t nMeasurements = 0;
     std::size_t nOutliers = 0;
     std::size_t nHoles = 0;
+    std::size_t nhits_score = 0;
+    std::size_t nholes_score = 0;
+
 
     std::vector<unsigned int> measurementVolume = {};
     std::vector<unsigned int> measurementLayer = {};
@@ -47,30 +50,29 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   
   std::vector<Detector> m_detectors = {
     {"Pixel",0,0,0,{},{}},
-    {"SCT",0,0,0,{},{}},
-  };
+ ;
   
-  struct TypeScore {
-    int value;
-    std::string name;
-  };
+  // struct TypeScore {
+  //   int value;
+  //   std::string name;
+  // };
 
-  std::vector<TypeScore> m_typeScores = {
-    {20,"numberOfPixelHits"},
-    {-10,"numberOfPixelHoles"},
-    {10,"numberOfInnermostPixelLayerHits"},
-    {-5,"numberOfGangedPixels"},
-    {10,"numberOfSCTHits"},
-    {-5,"numberOfSCTHoles"},
-    {-2,"numberOfOutliersOnTrack"},
-    {20,"numberOfMdtHits"},
-    {20,"numberOfTgcPhiHits"},
-    {10,"numberOfTgcEtaHits"},
-    {20,"numberOfCscPhiHits"},
-    {20,"numberOfCscEtaHits"},
-    {20,"numberOfRpcPhiHits"},
-    {10,"numberOfRpcEtaHits"}
-  };
+  // std::vector<TypeScore> m_typeScores = {
+  //   {20,"numberOfPixelHits"},
+  //   {-10,"numberOfPixelHoles"},
+  //   {10,"numberOfInnermostPixelLayerHits"},
+  //   {-5,"numberOfGangedPixels"},
+  //   {10,"numberOfSCTHits"},
+  //   {-5,"numberOfSCTHoles"},
+  //   {-2,"numberOfOutliersOnTrack"},
+  //   {20,"numberOfMdtHits"},
+  //   {20,"numberOfTgcPhiHits"},
+  //   {10,"numberOfTgcEtaHits"},
+  //   {20,"numberOfCscPhiHits"},
+  //   {20,"numberOfCscEtaHits"},
+  //   {20,"numberOfRpcPhiHits"},
+  //   {10,"numberOfRpcEtaHits"}
+  // };
 
   
 
