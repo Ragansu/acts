@@ -34,6 +34,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
     std::size_t nHoles = 0;
     std::size_t nhits_score = 0;
     std::size_t nholes_score = 0;
+    std::size_t noutliers_score = 0;
 
 
     std::vector<unsigned int> measurementVolume = {};
@@ -49,8 +50,13 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   };
   
   std::vector<Detector> m_detectors = {
-    {"Pixel",0,0,0,{},{}},
- ;
+    {"Pixel",0,0,0,20,-10,-2,{},{},{},{},{}},
+    {"SCT",0,0,0,10,-5,-2,{},{},{},{},{}},
+    {"MDT",0,0,0,20,0,0,{},{},{},{},{}},
+    {"TGC",0,0,0,20,0,0,{},{},{},{},{}},
+    {"CSC",0,0,0,20,0,0,{},{},{},{},{}},
+    {"RPC",0,0,0,20,0,0,{},{},{},{},{}}
+    };
   
   // struct TypeScore {
   //   int value;
