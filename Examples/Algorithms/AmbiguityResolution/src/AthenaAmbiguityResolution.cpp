@@ -18,56 +18,35 @@ ActsExamples::AthenaAmbiguityResolution::AthenaAmbiguityResolution(
 
 
 
-void ActsExamples::AthenaAmbiguityResolution::Detector::findnHoles(
-    const ActsExamples::ConstTrackContainer& tracks,
-    std::size_t trackID) const {
-  for (const auto& track : tracks) {
-    for (auto ts : track.trackStatesReversed()) {
-      if (ts.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
-        SourceLink sourceLink = ts.getUncalibratedSourceLink();
-        // assign a new measurement index if the source link was not seen yet
-        auto emplace = measurementIndexMap.try_emplace(
-            sourceLink, measurementIndexMap.size());
-        measurements.push_back(emplace.first->second);
+std::vector<Detector> ActsExamples::AthenaAmbiguityResolution::constructDetector(ConstTrackContainer& tracks) {
+  
+  for(auto& track : tracks){
+    std:: vector<Detector> detectors
+    auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
+      tracks.trackStateContainer(), track.tipIndex());
+    if (trajState.nStates > 0) {
+      nmeasurementLayer = trajState.measurementLayer.size();
+      for (int j; j < m_nDetectors; ++j){
+
+        for(int i= m_detectors[j].layerMin; i < m_detectors[j].layerMax ; ++i){
+          detectors[j].nMeasurements++;
+          detectors[j].measurementVolume.push_back(trajState.measurementVolume[i]);
+          detectors[j].measurementLayer.push_back(trajState.measurementLayer[i]);
+
+          detectors[j].nOutliers++;
+          detectors[j].outlierVolume.push_back(trajState.outlierVolume[i]);
+          detectors[j].outlierLayer.push_back(trajState.outlierLayer[i]);
+
+          detectors[j].nHoles++;
+          detectors[j].holeVolume.push_back(trajState.holeVolume[i]);
+          detectors[j].holeLayer.push_back(trajState.holeLayer[i]);
+          detectors[j].AllTracks.push_back(track.tipIndex());
+        }
       }
     }
   }
+  return detectors;
 }
-
-void ActsExamples::AthenaAmbiguityResolution::Detector::findnOutliers(
-    const ActsExamples::ConstTrackContainer& tracks,
-    std::size_t trackID) const {
-  for (const auto& track : tracks) {
-    for (auto ts : track.trackStatesReversed()) {
-      if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
-        SourceLink sourceLink = ts.getUncalibratedSourceLink();
-        // assign a new measurement index if the source link was not seen yet
-        auto emplace = measurementIndexMap.try_emplace(
-            sourceLink, measurementIndexMap.size());
-        measurements.push_back(emplace.first->second);
-      }
-    }
-  }
-}
-
-void ActsExamples::AthenaAmbiguityResolution::Detector::findnMeasurements(
-    const ActsExamples::ConstTrackContainer& tracks,
-    std::size_t trackID) const {
-  for (const auto& track : tracks) {
-    for (auto ts : track.trackStatesReversed()) {
-      if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-        SourceLink sourceLink = ts.getUncalibratedSourceLink();
-        // assign a new measurement index if the source link was not seen yet
-        auto emplace = measurementIndexMap.try_emplace(
-            sourceLink, measurementIndexMap.size());
-        measurements.push_back(emplace.first->second);
-      }
-    }
-  }
-}
-
-
-
 ActsExamples::ConstTrackContainer
 ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
     const ActsExamples::ConstTrackContainer& tracks,
@@ -116,17 +95,19 @@ int ActsExamples::AthenaAmbiguityResolution::simpleScore(
     if (track.chi2() > 0 && track.nDoF() > 0) {
       score+= std::log10(1.0-Genfun::CumulativeChiSquare(track.nDoF())(track.chi2()));
     }
-    int numberOfTrackSummaryTypes = m_typeScores.size();
-    // --- summary score analysis
-    for (int i=0; i<numberOfTrackSummaryTypes; ++i) {
-      int value = trackSummary.get(static_cast<Trk::SummaryType>(i));
-      //value is -1 if undefined.
-      if (value>0) {
-        score+=m_typeScores[i].value * value;
-        ACTS_VERBOSE("\tType ["<<i<<"], value \t= "<<value<<"], score \t="<<score);
+    // --- detector score analysis
+    for (int i=0; i<m_nDetectors; ++i) {
+      detector = m_detectors[i];
+
+      score+= detector.nHoles * detector.holeScore;
+      score+= detector.nOutliers * detector.outlierScore;
+      score+= detector.nMeasurements * detector.measurementScore;
+      score+= detector.otherScore;
+
+      ACTS_VERBOSE("Detector " << detector.name << " score: " << score);
       }
     }
-  trackScore[track.index()] = score;
+  trackScore[track.tipIndex()] = score;
   } // end of loop over tracks
   return trackScore;
 
@@ -137,71 +118,88 @@ ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
   std::vector<std::size_t> goodTracks;
   // Loop over all the trajectories in the events
   for (const auto& track : tracks) {
-    if (trackScore[track.index()] > 0) {
-      goodTracks.emplace_back(track.index());
+    if (trackScore[track.tipIndex()] > 0) {
+      goodTracks.emplace_back(track.tipIndex());
     }
   }
   return prepareOutputTrack(tracks, goodTracks);
 }
 
+
 void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
     const ActsExamples::ConstTrackContainer& tracks) const {
 
-  bool TrkCouldBeAccepted        = true;
-  // some counters used in the logic
-  int  numUnused         = 0;
-  int  numTRT_Unused     = 0;
-  int  numShared         = 0;
-  int  numWeightedShared = 0;
-  bool thishasblayer     = false;
-  bool hassharedblayer   = false;
-  bool hassharedpixel    = false;
-  bool firstisshared     = true; // logic is that it is set to false if we find a first hit unshared
+  // Loop over all detectors
+  for(int i; i < m_nDetectors; ++i){
+    detector = m_detectors[i];
 
-  // let's remember the last 2 ROTs on the track
-  const Trk::RIO_OnTrack* lastrot       = nullptr;
-  const Trk::RIO_OnTrack* lastbutonerot = nullptr;
-  int                     lastrotindex  = 0;
+    for(int j; j < detector.AllTracks.size(); ++j){
+      if (detector.AllTracks[j] != goodTracks[j]){
+        detector.goodTracks.push_back(detector.AllTracks[j]);
+      }
+    }
+    // Loop over all tracks
+   
+    
 
 
-  // get all TSOS the track
-    ConstTrackContainer tsos = tracks.trackStateContainer();
+
+  }
+  // bool TrkCouldBeAccepted        = true;
+  // // some counters used in the logic
+  // int  numUnused         = 0;
+  // int  numTRT_Unused     = 0;
+  // int  numShared         = 0;
+  // int  numWeightedShared = 0;
+  // bool thishasblayer     = false;
+  // bool hassharedblayer   = false;
+  // bool hassharedpixel    = false;
+  // bool firstisshared     = true; // logic is that it is set to false if we find a first hit unshared
+
+  // // let's remember the last 2 ROTs on the track
+  // const Trk::RIO_OnTrack* lastrot       = nullptr;
+  // const Trk::RIO_OnTrack* lastbutonerot = nullptr;
+  // int                     lastrotindex  = 0;
+
+
+  // // get all TSOS the track
+  // ConstTrackContainer tsos = track.trackStateContainer();
 
   
-  ACTS_DEBUG ("Study new Track "<< tracks<<"\t , it has "<<tsos->size()<<"\t track states");
-  ACTS_DEBUG ("trackId "<< trackId <<", subtrackId "<<subtrackId);
+  // ACTS_DEBUG ("Study new Track "<< tracks<<"\t , it has "<<tsos->size()<<"\t track states");
+  // ACTS_DEBUG ("trackId "<< trackId <<", subtrackId "<<subtrackId);
 
-  // is this a track from the pattern or a fitted track ?
-  bool ispatterntrack = (tracks->info().trackFitter()==Trk::TrackInfo::Unknown);
-  if (ispatterntrack) {
-    ACTS_DEBUG ("==> this is a pattern track, outliers are good hits (reintegration) !");
-  } else {
-    ACTS_DEBUG ("==> this is a refitted track, so we can use the chi2 ! ");
-  }
+  // // is this a track from the pattern or a fitted track ?
+  // bool ispatterntrack = (tracks->info().trackFitter()==Trk::TrackInfo::Unknown);
+  // if (ispatterntrack) {
+  //   ACTS_DEBUG ("==> this is a pattern track, outliers are good hits (reintegration) !");
+  // } else {
+  //   ACTS_DEBUG ("==> this is a refitted track, so we can use the chi2 ! ");
+  // }
 
-  // some pre-processing of the summary information, if available, needed for special cuts
-  int nPixelDeadSensor = -1;
-  int nSCTDeadSensor   = -1;
-  int npixel    = 0;
-  int npixholes = 0;
-  int nsctholes = 0;
-  bool isTRT    = false;
-  auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
-      tracks.trackStateContainer(), track.tipIndex());
+  // // some pre-processing of the summary information, if available, needed for special cuts
+  // int nPixelDeadSensor = -1;
+  // int nSCTDeadSensor   = -1;
+  // int npixel    = 0;
+  // int npixholes = 0;
+  // int nsctholes = 0;
+  // bool isTRT    = false;
+  // auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
+  //     tracks.trackStateContainer(), track.tipIndex());
   
-  if (trajState.nStates > 0) {
-    ACTS_VERBOSE ("---> Found summary information");
-    nPixelDeadSensor = 0 //temporarily disabled 
-    nSCTDeadSensor   = 0 //temporarily disabled
-    npixel           = trajState.nMeasurements
-    npixholes        = trajState.nHoles //temporarily assigned to nHoles
-    nsctholes        = trajState.nHoles // temporarily assigned to nHoles
-  }
-  // set nDeadSensors to 0 in case trkSummary wasn't called with HoleSearch
-  // (i.e. number of deadSensors not available)
-  if (nPixelDeadSensor == -1) nPixelDeadSensor = 0;
-  if (nSCTDeadSensor   == -1) nSCTDeadSensor   = 0;
-  ACTS_VERBOSE ("---> Number of dead si sensors: " << nPixelDeadSensor + nSCTDeadSensor);
+  // if (trajState.nStates > 0) {
+  //   ACTS_VERBOSE ("---> Found summary information");
+  //   nPixelDeadSensor = 0 //temporarily disabled 
+  //   nSCTDeadSensor   = 0 //temporarily disabled
+  //   npixel           = trajState.nMeasurements
+  //   npixholes        = trajState.nHoles //temporarily assigned to nHoles
+  //   nsctholes        = trajState.nHoles // temporarily assigned to nHoles
+  // }
+  // // set nDeadSensors to 0 in case trkSummary wasn't called with HoleSearch
+  // // (i.e. number of deadSensors not available)
+  // if (nPixelDeadSensor == -1) nPixelDeadSensor = 0;
+  // if (nSCTDeadSensor   == -1) nSCTDeadSensor   = 0;
+  // ACTS_VERBOSE ("---> Number of dead si sensors: " << nPixelDeadSensor + nSCTDeadSensor);
 
   // possible classification of TSOS
   enum TsosTypes {

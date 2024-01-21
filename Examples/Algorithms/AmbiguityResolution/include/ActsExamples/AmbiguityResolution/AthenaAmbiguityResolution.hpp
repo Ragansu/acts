@@ -27,15 +27,64 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   /// @param lvl is the logging level
   AthenaAmbiguityResolution(std::string name, Acts::Logging::Level lvl);
   ///
-  struct Detector {
-    std::string name;
+
+  /// Framework execute method of the algorithm
+
+  class DectectorConfig {
+    public:
+      std::string name;
+      std::size_t hits_score = 0;
+      std::size_t holes_score = 0;
+      std::size_t outliers_score = 0;
+      std::size_t other_score = 0;
+      std::size_t score = 0;
+      unsigned int layerMin = 0;
+      unsigned int layerMax = 0;
+
+      DectectorConfig(std::string name, std::size_t hits_score, std::size_t holes_score, std::size_t outliers_score, std::size_t other_score, unsigned int layerMin, unsigned int layerMax) {
+        this->name = name;
+        this->hits_score = hits_score;
+        this->holes_score = holes_score;
+        this->outliers_score = outliers_score;
+        this->other_score = other_score;
+        this->layerMin = layerMin;
+        this->layerMax = layerMax;
+        this->score = 0;
+      }
+
+      void setVolumeIds(std::vector<unsigned int> volumeIds) {
+        m_volumeIds = volumeIds;
+      }
+      void setLayerIds(std::vector<unsigned int> layerIds) {
+        m_layerIds = layerIds;
+      }
+    protected:
+      std::vector<unsigned int> getVolumeIds() {
+        return m_volumeIds;
+      std::vector<unsigned int> getLayerIds() {
+        return m_layerIds;
+      }
+      
+    private:
+      std::vector<unsigned int> m_volumeIds = {};
+      std::vector<unsigned int> m_layerIds = {};
+
+  };
+
+  std::vector<DectectorConfig> m_detectorConfigs = {
+    DectectorConfig("Pixel", 20, -10, -5, 0, 0, 2),
+    DectectorConfig("SCT", 10, -5, -2, 0, 0, 2),
+    DectectorConfig("TRT", 0, 0, 0, 0, 0, 2),
+    DectectorConfig("MDT", 20, 0, 0, 0, 0, 2),
+    DectectorConfig("TGC", 20, 0, 0, 0, 0, 2),
+    DectectorConfig("CSC", 20, 0, 0, 0, 0, 2),
+    DectectorConfig("RPC", 20, 0, 0, 0, 0, 2)
+  };
+
+  class Detector : public DectectorConfig {
     std::size_t nMeasurements = 0;
     std::size_t nOutliers = 0;
     std::size_t nHoles = 0;
-    std::size_t nhits_score = 0;
-    std::size_t nholes_score = 0;
-    std::size_t noutliers_score = 0;
-
 
     std::vector<unsigned int> measurementVolume = {};
     std::vector<unsigned int> measurementLayer = {};
@@ -44,19 +93,14 @@ class AthenaAmbiguityResolution : public IAlgorithm {
     std::vector<unsigned int> holeVolume = {};
     std::vector<unsigned int> holeLayer = {};
 
-    void findnHoles(const ConstTrackContainer& tracks, std::size_t trackID) const;
-    void findnOutliers(const ConstTrackContainer& tracks, std::size_t trackID) const;
-    void findnMeasurements(const ConstTrackContainer& tracks, std::size_t trackID) const;
   };
   
-  std::vector<Detector> m_detectors = {
-    {"Pixel",0,0,0,20,-10,-2,{},{},{},{},{}},
-    {"SCT",0,0,0,10,-5,-2,{},{},{},{},{}},
-    {"MDT",0,0,0,20,0,0,{},{},{},{},{}},
-    {"TGC",0,0,0,20,0,0,{},{},{},{},{}},
-    {"CSC",0,0,0,20,0,0,{},{},{},{},{}},
-    {"RPC",0,0,0,20,0,0,{},{},{},{},{}}
-    };
+  std::vector<Detector> m_detectors;
+  };
+  std::vector<Detector> constructDetectors(const ConstTrackContainer& tracks) const;
+
+  int m_nDetectors = m_detectors.size();
+
   
   // struct TypeScore {
   //   int value;
