@@ -32,29 +32,34 @@ class AthenaAmbiguityResolution : public IAlgorithm {
 
   class DectectorConfig {
     public:
-      std::size_t hits_score = 0; // score for hits
-      std::size_t holes_score = 0; // score for holes
-      std::size_t outliers_score = 0; // score for outliers
-      std::size_t eta_score = 0; // score based on eta
-      std::size_t phi_score = 0; // score based on phi
-      std::size_t other_score = 0; // score for other measurements
+      DectectorConfig( std::size_t hits_score, std::size_t holes_score, std::size_t outliers_score, std::size_t other_score) {
+        this->hits_score = hits_score;
+        this->holes_score = holes_score;
+        this->outliers_score = outliers_score;
+        this->other_score = other_score;
+      }
+      
+      std::size_t getHitsScore() const { return hits_score; }
+      std::size_t getHolesScore() const { return holes_score; }
+      std::size_t getOutliersScore() const { return outliers_score; }
+      std::size_t getOtherScore() const { return other_score; }
 
-      DectectorConfig( std::size_t hits_score, std::size_t holes_score, std::size_t outliers_score, std::size_t eta_score, std::size_t phi_score, std::size_t other_score) 
-      : hits_score(hits_score), holes_score(holes_score), outliers_score(outliers_score), eta_score(eta_score), phi_score(phi_score), other_score(other_score) { }
+    private:
+      std::size_t hits_score;
+      std::size_t holes_score;
+      std::size_t outliers_score;
+      std::size_t other_score;
+  };
+
+  std::map<unsigned int,DectectorConfig> Volumemap {
+    {0,DectectorConfig( 20, -10, -2, 0)}, //pixel
+    {1,DectectorConfig( 10, -5, -2, 0)},  //sct
 
   };
 
-  std::map<size_t,DectectorConfig> Volumemap {
-    {0,DectectorConfig( 20, -10, -2, 0, 0, 0)}, //pixel
-    {1,DectectorConfig( 10, -5, -2, 0, 0, 0)},  //sct
-    {2,DectectorConfig( 20,0,0,0,0,0)},         //mdt
-    {3,DectectorConfig( 0,0,0,20,10,0)},        //tgc
-    {4,DectectorConfig( 0,0,0,20,10,0)},        //csc
-    {5,DectectorConfig( 0,0,0,20,10,0)}         //rpc
-  };
+// muons TODO etahits and phihits
 
-
-
+  std::size_t m_minScore = 0;
   
   // struct TypeScore {
   //   int value;
@@ -78,10 +83,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   //   {10,"numberOfRpcEtaHits"}
   // };
 
-  
 
-
-  TypeScore m_typeScore;
  protected:
   /// Associated measurements ID to Tracks ID
   ///

@@ -9,6 +9,7 @@
 #include "ActsExamples/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
 ActsExamples::AthenaAmbiguityResolution::AthenaAmbiguityResolution(
@@ -48,43 +49,51 @@ ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
  
 
 std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
-  ActsExamples::ConstTrackContainer& tracks ) const {
+ const ActsExamples::ConstTrackContainer& tracks ) const {
 
   std::vector<int> trackScore;
+  int iTrack = 0;
   // Loop over all the trajectories in the events
   for (auto track : tracks){
     auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
       tracks.trackStateContainer(), track.tipIndex());
     int score = 100;
-
     if (track.nDoF() < 0) {
       ACTS_VERBOSE("numberDoF < 0, reject it");
       score = 0;
       break;
     }
-
     // --- prob(chi2,NDF), protect for chi2<0
     if (track.chi2() > 0 && track.nDoF() > 0) {
-      score+= std::log10(1.0-Genfun::CumulativeChiSquare(track.nDoF())(track.chi2()));
+      score+= std::log10(1.0-(track.chi2()/track.nDoF()));
     }
-    // --- detector score analysis
+    // --- detector score =  per volume
+    // add score based on number of hits
 
-    for (int i = 0; 1 < trajState.measurementVolume.size(); ++i){
-      auto detector = Volumemap[trajState.measurementVolume[i]];
-      score+= trajState[i].nMeasurements * detector.measurementScore;
+    for (long unsigned int i = 0; i < trajState.measurementVolume.size(); ++i){
+      
+      auto detector_it = Volumemap.find(trajState.measurementVolume[i]);
+      auto detector = detector_it->second;
+      score+=detector.getHitsScore(); 
     }
 
-    for (int i = 0; 1 < trajState.holeVolume.size(); ++i){
-      auto detector = Volumemap[trajState.holeVolume[i]];
-      score+= trajState[i].nHoles * detector.holeScore;
+    for (long unsigned int i = 0; i < trajState.holeVolume.size(); ++i){
+      auto detector_it = Volumemap.find(trajState.holeVolume[i]);
+      auto detector = detector_it->second;
+      score+=detector.getHolesScore();
     }
-    for (int i = 0; 1 < trajState.outlierVolume.size(); ++i){
-      score+= trajState.nOutliers * detectors.outlierScore;
+    for (long unsigned int i = 0; i < trajState.outlierVolume.size(); ++i){
+      auto detector_it = Volumemap.find(trajState.outlierVolume[i]);
+      auto detector = detector_it->second;
+      score+=detector.getOutliersScore();
     }
       // TODO: add scored based on eta and phi
 
     trackScore.push_back(score);
     ACTS_DEBUG("Detector " << track.tipIndex()<< " score: " << score);
+    
+    iTrack++;
+
 
   } // end of loop over tracks
     
@@ -95,18 +104,17 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
 std::vector<std::size_t> 
 ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
     const ActsExamples::ConstTrackContainer& tracks ,std::vector<int> Score) const {
-    std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks);
+  
+  std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks);
+
 
   std::vector<std::size_t> goodTracks;
 
-  for(auto track : tracks){
-
-
-    if(detectors_configs[i].GoodTracks.size() == 1){
-      goodTracks.push_back(detectors_configs[i].GoodTracks[0]);
-      continue;
+  for(long unsigned int i=0; i<cleanTracks.size(); ++i){
+    if (Score[cleanTracks[i]] > m_minScore){
+      goodTracks.push_back(cleanTracks[i]);
     }
-    goodTracks.push_back(detectors[i][maxScoreIndex].tipIndex); 
+
   }
   return goodTracks;
 }
@@ -134,26 +142,9 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
 
   std::vector<std::vector<std::size_t>> measurementsPerTrack;
   boost::container::flat_map<std::size_t,boost::container::flat_set<std::size_t>> tracksPerMeasurement;
-  std::vector<std::size_t> sharedMeasurementsPerTrack;
-  std::size_t numberOfTracks = tracks->size();
+  std::size_t numberOfTracks = tracks.size();
 
-  for (const auto& track : tracks) {
 
-    if (track.nMeasurements() < m_cfg.nMeasurementsMin) {
-      continue;
-    }
-    std::vector<std::size_t> measurements;
-    for (auto ts : track.trackStatesReversed()) {
-      if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-        SourceLink sourceLink = ts.getUncalibratedSourceLink();
-        // assign a new measurement index if the source link was not seen yet
-        auto emplace = measurementIndexMap.try_emplace(
-            sourceLink, measurementIndexMap.size());
-        measurements.push_back(emplace.first->second);
-      }
-    }
-    measurementsPerTrack.push_back(std::move(measurements));
-  }
 
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
     for (auto iMeasurement : measurementsPerTrack[iTrack]) {
@@ -162,7 +153,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
   }
 
   std::vector<std::size_t> sharedMeasurementsPerTrack = std::vector<std::size_t>(tracks.size(), 0);
-  for (std::size_t iTrack = 0; iTrack < state.numberOfTracks; ++iTrack) {
+  for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
     for (auto iMeasurement : measurementsPerTrack[iTrack]) {
       if (tracksPerMeasurement[iMeasurement].size() > 1) {
         ++sharedMeasurementsPerTrack[iTrack];
@@ -171,45 +162,40 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
   }
 
 
-  int index = 0;
+  int iTrack = 0;
   for (const auto& track : tracks) {
 
     // init array
-    tsosType[index] = OtherTsos;
+    tsosType[iTrack] = OtherTsos;
 
-    // get measurment from TSOS
-    auto meas = measurementOnTrack[index];
 
     // if we do not have a measurement, we should just mark it
-    if (!meas) {
-      ACTS_VERBOSE ("-> No measurement on TSOS, it is another type, to be copied over");
-      tsosType[index] = OtherTsos;
-      continue;
-    }
-    
-    trajState = Acts::MultiTrajectoryHelpers::trajectoryState(tracks, track.tipIndex());
-     
-    for(int i = 0; i< trajState.measurementVolume.size(); ++i){
-      auto detector = Volumemap[trajState.measurementVolume[i]];
+
+    auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(tracks.trackStateContainer(), track.tipIndex());
+    bool TrkCouldBeAccepted = true;
+ 
+    for(long unsigned int i = 0; i< trajState.measurementVolume.size(); ++i){
+      auto detector_it = Volumemap.find(trajState.measurementVolume[i]);
+      auto detector = detector_it->second;
 
 
-      if (track.something > detector.something){               // place holder for goodTracks algorithm
-        TrkCouldBeAccepted = false;
-      }
-      else if (track.somethingelse1 < detector.somethingelse1){          // place holder for goodTracks algorithm
-        TrkCouldBeAccepted = true;
-      }
-      else {continue;}
+      // if (track.something > detector.something){               // place holder for goodTracks algorithm
+      //   TrkCouldBeAccepted = false;
+      // }
+      // else if (track.somethingelse1 < detector.somethingelse1){          // place holder for goodTracks algorithm
+      //   TrkCouldBeAccepted = true;
+      // }
+      // else {continue;}
 
-      if (track.somethingelse2 == detector.somethingelse2){         // place holder for goodTracks algorithm
-        TrkCouldBeAccepted = true;
-      }
-      else{
-        TrkCouldBeAccepted = false;        
-      }
+      // if (track.somethingelse2 == detector.somethingelse2){         // place holder for goodTracks algorithm
+      //   TrkCouldBeAccepted = true;
+      // }
+      // else{
+      //   TrkCouldBeAccepted = false;        
+      // }
     }
     if (TrkCouldBeAccepted){
-      cleanTracks.push_back(track.tipIndex());
+      cleanTracks.push_back(iTrack);
     }
   }
   return cleanTracks;
@@ -226,7 +212,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
 
 
     // Loop over all tracks
-  }
+  
   // bool TrkCouldBeAccepted        = true;
   // // some counters used in the logic
   // int  numUnused         = 0;
