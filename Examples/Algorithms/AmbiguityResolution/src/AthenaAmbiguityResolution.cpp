@@ -18,15 +18,16 @@ ActsExamples::AthenaAmbiguityResolution::AthenaAmbiguityResolution(
 
 
 
-std::vector<Detector> ActsExamples::AthenaAmbiguityResolution::constructDetector(ConstTrackContainer& tracks) {
+std::vector<Detector> ActsExamples::AthenaAmbiguityResolution::constructDetector(ConstTrackContainer& tracks , std::size_t tipIndex) {
   
   for(auto& track : tracks){
     std:: vector<Detector> detectors
     auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
-      tracks.trackStateContainer(), track.tipIndex());
+      tracks.trackStateContainer(), tipIndex);
     if (trajState.nStates > 0) {
       nmeasurementLayer = trajState.measurementLayer.size();
       for (int j; j < m_nDetectors; ++j){
+
 
         for(int i= m_detectors[j].layerMin; i < m_detectors[j].layerMax ; ++i){
           detectors[j].nMeasurements++;
@@ -47,6 +48,7 @@ std::vector<Detector> ActsExamples::AthenaAmbiguityResolution::constructDetector
   }
   return detectors;
 }
+
 ActsExamples::ConstTrackContainer
 ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
     const ActsExamples::ConstTrackContainer& tracks,
@@ -78,7 +80,7 @@ ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
 }
  
 
-int ActsExamples::AthenaAmbiguityResolution::simpleScore(
+std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     const ActsExamples::ConstTrackContainer& tracks) const {
   // Loop over all the trajectories in the events
   std::vector<int> trackScore(tracks.size(), 0);
@@ -95,19 +97,21 @@ int ActsExamples::AthenaAmbiguityResolution::simpleScore(
     if (track.chi2() > 0 && track.nDoF() > 0) {
       score+= std::log10(1.0-Genfun::CumulativeChiSquare(track.nDoF())(track.chi2()));
     }
+    detectors = constructDetector(tracks, track.tipIndex());
     // --- detector score analysis
     for (int i=0; i<m_nDetectors; ++i) {
-      detector = m_detectors[i];
 
-      score+= detector.nHoles * detector.holeScore;
-      score+= detector.nOutliers * detector.outlierScore;
-      score+= detector.nMeasurements * detector.measurementScore;
-      score+= detector.otherScore;
+      score+= detectors[i].nHoles * detectors[i].holeScore;
+      score+= detectors[i].nOutliers * detectors[i].outlierScore;
+      score+= detectors[i].nMeasurements * detectors[i].measurementScore;
+      // TODO: add scored based on eta and phi
+      score+= detectors[i].otherScore;
 
-      ACTS_VERBOSE("Detector " << detector.name << " score: " << score);
+      ACTS_DEBUG("Detector " << detector[i].name << " score: " << score);
       }
     }
-  trackScore[track.tipIndex()] = score;
+    ACTS_VERBOSE("Track score: " << score << " for track " << track.tipIndex());
+    trackScore[track.tipIndex()] = score;
   } // end of loop over tracks
   return trackScore;
 
@@ -131,11 +135,27 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
 
   // Loop over all detectors
   for(int i; i < m_nDetectors; ++i){
-    detector = m_detectors[i];
+    detector_config = m_detectors[i];
 
-    for(int j; j < detector.AllTracks.size(); ++j){
-      if (detector.AllTracks[j] != goodTracks[j]){
-        detector.goodTracks.push_back(detector.AllTracks[j]);
+    for(int j; j < detector_config.AllTracks.size(); ++j){
+        bool TrkCouldBeAccepted        = true;
+      auto track = tracks.getTrack(detector.AllTracks[j]);
+      if (track.something > detector.something){               // place holder for goodTracks algorithm
+        TrkCouldBeAccepted = false;
+      else if (track.somethingelse1 < detector.somethingelse1){          // place holder for goodTracks algorithm
+        TrkCouldBeAccepted = true;
+      }
+      else {continue;}
+
+      if (track.somethingelse2 == detector.somethingelse2){         // place holder for goodTracks algorithm
+        TrkCouldBeAccepted = true;
+      }
+      else{
+        TrkCouldBeAccepted = false;        
+      }
+      
+      if (TrkCouldBeAccepted){
+        detector.GoodTracks.push_back(detector.AllTracks[j]);
       }
     }
     // Loop over all tracks
