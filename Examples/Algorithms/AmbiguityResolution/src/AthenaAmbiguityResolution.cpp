@@ -16,39 +16,6 @@ ActsExamples::AthenaAmbiguityResolution::AthenaAmbiguityResolution(
     : ActsExamples::IAlgorithm(name, lvl) {}
 
 
-
-
-std::vector<Detector> ActsExamples::AthenaAmbiguityResolution::constructDetector(ConstTrackContainer& tracks , std::size_t tipIndex) {
-  
-  for(auto& track : tracks){
-    std:: vector<Detector> detectors
-    auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
-      tracks.trackStateContainer(), tipIndex);
-    if (trajState.nStates > 0) {
-      nmeasurementLayer = trajState.measurementLayer.size();
-      for (int j; j < m_nDetectors; ++j){
-
-
-        for(int i= m_detectors[j].layerMin; i < m_detectors[j].layerMax ; ++i){
-          detectors[j].nMeasurements++;
-          detectors[j].measurementVolume.push_back(trajState.measurementVolume[i]);
-          detectors[j].measurementLayer.push_back(trajState.measurementLayer[i]);
-
-          detectors[j].nOutliers++;
-          detectors[j].outlierVolume.push_back(trajState.outlierVolume[i]);
-          detectors[j].outlierLayer.push_back(trajState.outlierLayer[i]);
-
-          detectors[j].nHoles++;
-          detectors[j].holeVolume.push_back(trajState.holeVolume[i]);
-          detectors[j].holeLayer.push_back(trajState.holeLayer[i]);
-          detectors[j].AllTracks.push_back(track.tipIndex());
-        }
-      }
-    }
-  }
-  return detectors;
-}
-
 ActsExamples::ConstTrackContainer
 ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
     const ActsExamples::ConstTrackContainer& tracks,
@@ -81,10 +48,13 @@ ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
  
 
 std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
-    const ActsExamples::ConstTrackContainer& tracks) const {
+  ActsExamples::ConstTrackContainer& tracks ) const {
+
+  std::vector<int> trackScore;
   // Loop over all the trajectories in the events
-  std::vector<int> trackScore(tracks.size(), 0);
-  for (const auto& track : tracks) {
+  for (auto track : tracks){
+    auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
+      tracks.trackStateContainer(), track.tipIndex());
     int score = 100;
 
     if (track.nDoF() < 0) {
@@ -97,51 +67,135 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     if (track.chi2() > 0 && track.nDoF() > 0) {
       score+= std::log10(1.0-Genfun::CumulativeChiSquare(track.nDoF())(track.chi2()));
     }
-    detectors = constructDetector(tracks, track.tipIndex());
     // --- detector score analysis
-    for (int i=0; i<m_nDetectors; ++i) {
 
-      score+= detectors[i].nHoles * detectors[i].holeScore;
-      score+= detectors[i].nOutliers * detectors[i].outlierScore;
-      score+= detectors[i].nMeasurements * detectors[i].measurementScore;
-      // TODO: add scored based on eta and phi
-      score+= detectors[i].otherScore;
-
-      ACTS_DEBUG("Detector " << detector[i].name << " score: " << score);
-      }
+    for (int i = 0; 1 < trajState.measurementVolume.size(); ++i){
+      auto detector = Volumemap[trajState.measurementVolume[i]];
+      score+= trajState[i].nMeasurements * detector.measurementScore;
     }
-    ACTS_VERBOSE("Track score: " << score << " for track " << track.tipIndex());
-    trackScore[track.tipIndex()] = score;
-  } // end of loop over tracks
-  return trackScore;
 
+    for (int i = 0; 1 < trajState.holeVolume.size(); ++i){
+      auto detector = Volumemap[trajState.holeVolume[i]];
+      score+= trajState[i].nHoles * detector.holeScore;
+    }
+    for (int i = 0; 1 < trajState.outlierVolume.size(); ++i){
+      score+= trajState.nOutliers * detectors.outlierScore;
+    }
+      // TODO: add scored based on eta and phi
+
+    trackScore.push_back(score);
+    ACTS_DEBUG("Detector " << track.tipIndex()<< " score: " << score);
+
+  } // end of loop over tracks
+    
+  return trackScore;
 }
+
+// place holder for goodTracks algorithm
 std::vector<std::size_t> 
 ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
-    const ActsExamples::ConstTrackContainer& tracks, int trackScore) const {
+    const ActsExamples::ConstTrackContainer& tracks ,std::vector<int> Score) const {
+    std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks);
+
   std::vector<std::size_t> goodTracks;
-  // Loop over all the trajectories in the events
-  for (const auto& track : tracks) {
-    if (trackScore[track.tipIndex()] > 0) {
-      goodTracks.emplace_back(track.tipIndex());
+
+  for(auto track : tracks){
+
+
+    if(detectors_configs[i].GoodTracks.size() == 1){
+      goodTracks.push_back(detectors_configs[i].GoodTracks[0]);
+      continue;
     }
+    goodTracks.push_back(detectors[i][maxScoreIndex].tipIndex); 
   }
-  return prepareOutputTrack(tracks, goodTracks);
+  return goodTracks;
 }
 
 
-void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
+std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
     const ActsExamples::ConstTrackContainer& tracks) const {
-
+  std::vector<std::size_t> cleanTracks;
+    enum TsosTypes {
+    // A measurement not yet used in any other track
+    UnusedHit   = 1,
+    // A measurement shared with another track
+    SharedHit   = 2,
+    // A hit that needs to be removed from the track
+    RejectedHit = 3,
+    // an outlier, to be copied in case
+    Outlier     = 4,
+    // other TSOS types to be copied in case
+    OtherTsos   = 5
+  };
   // Loop over all detectors
-  for(int i; i < m_nDetectors; ++i){
-    detector_config = m_detectors[i];
 
-    for(int j; j < detector_config.AllTracks.size(); ++j){
-        bool TrkCouldBeAccepted        = true;
-      auto track = tracks.getTrack(detector.AllTracks[j]);
+
+  std::vector<int> tsosType;
+
+  std::vector<std::vector<std::size_t>> measurementsPerTrack;
+  boost::container::flat_map<std::size_t,boost::container::flat_set<std::size_t>> tracksPerMeasurement;
+  std::vector<std::size_t> sharedMeasurementsPerTrack;
+  std::size_t numberOfTracks = tracks->size();
+
+  for (const auto& track : tracks) {
+
+    if (track.nMeasurements() < m_cfg.nMeasurementsMin) {
+      continue;
+    }
+    std::vector<std::size_t> measurements;
+    for (auto ts : track.trackStatesReversed()) {
+      if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        SourceLink sourceLink = ts.getUncalibratedSourceLink();
+        // assign a new measurement index if the source link was not seen yet
+        auto emplace = measurementIndexMap.try_emplace(
+            sourceLink, measurementIndexMap.size());
+        measurements.push_back(emplace.first->second);
+      }
+    }
+    measurementsPerTrack.push_back(std::move(measurements));
+  }
+
+  for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
+    for (auto iMeasurement : measurementsPerTrack[iTrack]) {
+      tracksPerMeasurement[iMeasurement].insert(iTrack);
+    }
+  }
+
+  std::vector<std::size_t> sharedMeasurementsPerTrack = std::vector<std::size_t>(tracks.size(), 0);
+  for (std::size_t iTrack = 0; iTrack < state.numberOfTracks; ++iTrack) {
+    for (auto iMeasurement : measurementsPerTrack[iTrack]) {
+      if (tracksPerMeasurement[iMeasurement].size() > 1) {
+        ++sharedMeasurementsPerTrack[iTrack];
+      }
+    }
+  }
+
+
+  int index = 0;
+  for (const auto& track : tracks) {
+
+    // init array
+    tsosType[index] = OtherTsos;
+
+    // get measurment from TSOS
+    auto meas = measurementOnTrack[index];
+
+    // if we do not have a measurement, we should just mark it
+    if (!meas) {
+      ACTS_VERBOSE ("-> No measurement on TSOS, it is another type, to be copied over");
+      tsosType[index] = OtherTsos;
+      continue;
+    }
+    
+    trajState = Acts::MultiTrajectoryHelpers::trajectoryState(tracks, track.tipIndex());
+     
+    for(int i = 0; i< trajState.measurementVolume.size(); ++i){
+      auto detector = Volumemap[trajState.measurementVolume[i]];
+
+
       if (track.something > detector.something){               // place holder for goodTracks algorithm
         TrkCouldBeAccepted = false;
+      }
       else if (track.somethingelse1 < detector.somethingelse1){          // place holder for goodTracks algorithm
         TrkCouldBeAccepted = true;
       }
@@ -153,17 +207,25 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
       else{
         TrkCouldBeAccepted = false;        
       }
-      
-      if (TrkCouldBeAccepted){
-        detector.GoodTracks.push_back(detector.AllTracks[j]);
-      }
     }
+    if (TrkCouldBeAccepted){
+      cleanTracks.push_back(track.tipIndex());
+    }
+  }
+  return cleanTracks;
+}
+
+
+
+
+// OLD CODE IGNORE
+
+
+
+
+
+
     // Loop over all tracks
-   
-    
-
-
-
   }
   // bool TrkCouldBeAccepted        = true;
   // // some counters used in the logic
@@ -222,76 +284,13 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
   // ACTS_VERBOSE ("---> Number of dead si sensors: " << nPixelDeadSensor + nSCTDeadSensor);
 
   // possible classification of TSOS
-  enum TsosTypes {
-    // A measurement not yet used in any other track
-    UnusedHit   = 1,
-    // A measurement shared with another track
-    SharedHit   = 2,
-    // A hit that needs to be removed from the track
-    RejectedHit = 3,
-    // an outlier, to be copied in case
-    Outlier     = 4,
-    // other TSOS types to be copied in case
-    OtherTsos   = 5
-  };
+
   // create an array of types for each TSOS
-  std::vector<int> tsosType;
-  tsosType.resize(tsos->size());
+  
 
-  std::vector<std::vector<std::size_t>> measurementsPerTrack;
-  boost::container::flat_map<std::size_t,boost::container::flat_set<std::size_t>> tracksPerMeasurement;
-  std::vector<std::size_t> sharedMeasurementsPerTrack;
-
-  std::size_t numberOfTracks = tracks->size();
-  for (const auto& track : tracks) {
-
-    if (track.nMeasurements() < m_cfg.nMeasurementsMin) {
-      continue;
-    }
-    std::vector<std::size_t> measurements;
-    for (auto ts : track.trackStatesReversed()) {
-      if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-        SourceLink sourceLink = ts.getUncalibratedSourceLink();
-        // assign a new measurement index if the source link was not seen yet
-        auto emplace = measurementIndexMap.try_emplace(
-            sourceLink, measurementIndexMap.size());
-        measurements.push_back(emplace.first->second);
-      }
-    }
-    measurementsPerTrack.push_back(std::move(measurements));
-  }
-
-  for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
-    for (auto iMeasurement : measurementsPerTrack[iTrack]) {
-      tracksPerMeasurement[iMeasurement].insert(iTrack);
-    }
-  }
-
-  std::vector<std::size_t> sharedMeasurementsPerTrack = std::vector<std::size_t>(tracks.size(), 0);
-  for (std::size_t iTrack = 0; iTrack < state.numberOfTracks; ++iTrack) {
-    for (auto iMeasurement : measurementsPerTrack[iTrack]) {
-      if (tracksPerMeasurement[iMeasurement].size() > 1) {
-        ++sharedMeasurementsPerTrack[iTrack];
-      }
-    }
-  }
   // loop over all TSOS and classify them
 
-  int index = 0;
-  for (const auto& track : tracks) {
 
-    // init array
-    tsosType[index] = OtherTsos;
-
-    // get measurment from TSOS
-    auto meas = measurementOnTrack[index];
-
-    // if we do not have a measurement, we should just mark it
-    if (!meas) {
-      ACTS_VERBOSE ("-> No measurement on TSOS, it is another type, to be copied over");
-      tsosType[index] = OtherTsos;
-      continue;
-    }
 
     // ok, let try to get the ROT then
     // const Trk::RIO_OnTrack* rot = dynamic_cast <const Trk::RIO_OnTrack*> (meas);
@@ -313,178 +312,178 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
 
     // let's get some information about the measurement
     // const Identifier& id = rot->identify();
-    bool isPixel         = m_detID->is_pixel(id);
-    bool isBlayer        = isPixel ? m_detID->is_blayer(id) : false;
-    // bool isoutlier       = (*iTsos)->type(Trk::TrackStateOnSurface::Outlier);
+  //   bool isPixel         = m_detID->is_pixel(id);
+  //   bool isBlayer        = isPixel ? m_detID->is_blayer(id) : false;
+  //   // bool isoutlier       = (*iTsos)->type(Trk::TrackStateOnSurface::Outlier);
 
-    // do we have some b-layer hit here (sorting of TSOS is inside out)
-    if (isBlayer && (!isoutlier || ispatterntrack)) thishasblayer = true;  // we may reintegrate outliers from pattern
+  //   // do we have some b-layer hit here (sorting of TSOS is inside out)
+  //   if (isBlayer && (!isoutlier || ispatterntrack)) thishasblayer = true;  // we may reintegrate outliers from pattern
 
-    // special cut to remove problematic combinations in the pixels
-    if ( isPixel && !thishasblayer && npixholes>0           &&  // a pixel hit, no b-layer, we do have pixel holes
-         ( ( npixel==1 && !isoutlier ) ||                       // one pixel on track, it is not an additional outlier
-           ( ispatterntrack && npixel==0 && isoutlier) )   ) {  // pattern track, no pixels, but an outlier (we may reintegrate it)
-      ACTS_VERBOSE ("-> Special case, problematic single pixel hit on track, reject it !");
-      tsosType[index]    = RejectedHit;
-      // mark track as bad !
-      TrkCouldBeAccepted = false;
-      continue;
-    }
+  //   // special cut to remove problematic combinations in the pixels
+  //   if ( isPixel && !thishasblayer && npixholes>0           &&  // a pixel hit, no b-layer, we do have pixel holes
+  //        ( ( npixel==1 && !isoutlier ) ||                       // one pixel on track, it is not an additional outlier
+  //          ( ispatterntrack && npixel==0 && isoutlier) )   ) {  // pattern track, no pixels, but an outlier (we may reintegrate it)
+  //     ACTS_VERBOSE ("-> Special case, problematic single pixel hit on track, reject it !");
+  //     tsosType[index]    = RejectedHit;
+  //     // mark track as bad !
+  //     TrkCouldBeAccepted = false;
+  //     continue;
+  //   }
 
-    // do we have an outlier (an not a pattern track) ?
-    // if ( (isoutlier && !ispatterntrack) || !(m_detID->is_indet(id)) ) {
-    if ( (isoutlier && !ispatterntrack) || !(m_detID->is_indet(id)) ) {
-      ACTS_VERBOSE ("-> Prd is outlier on a fitter track (or not InDet), copy it over");
-      tsosType[index] = Outlier;
-      continue;
-    }
+  //   // do we have an outlier (an not a pattern track) ?
+  //   // if ( (isoutlier && !ispatterntrack) || !(m_detID->is_indet(id)) ) {
+  //   if ( (isoutlier && !ispatterntrack) || !(m_detID->is_indet(id)) ) {
+  //     ACTS_VERBOSE ("-> Prd is outlier on a fitter track (or not InDet), copy it over");
+  //     tsosType[index] = Outlier;
+  //     continue;
+  //   }
 
-    // let's check if this is a shared hit (even if it is an outlier on a pattern track) ?
-    if (!prd_to_track_map.isUsed(*(rot->prepRawData()))) {
-      if ( !isoutlier ) {
-        ACTS_VERBOSE ("-> Prd is unused, copy it over");
-      } else {
-        ACTS_VERBOSE ("-> Prd is outlier on a pattern track and is unused, copy it over");
-      }
+  //   // let's check if this is a shared hit (even if it is an outlier on a pattern track) ?
+  //   if (!prd_to_track_map.isUsed(*(rot->prepRawData()))) {
+  //     if ( !isoutlier ) {
+  //       ACTS_VERBOSE ("-> Prd is unused, copy it over");
+  //     } else {
+  //       ACTS_VERBOSE ("-> Prd is outlier on a pattern track and is unused, copy it over");
+  //     }
 
-      tsosType[index] = UnusedHit;
-      // increase some counters
-      if (isTRT) numTRT_Unused++;
-      else numUnused++;
-      // remember if first hit is shared, we need that later
-      if (numShared == 0) firstisshared = false;
-      // remember the last 2 ROTs
-      lastbutonerot = lastrot;
-      lastrot       = rot;
-      lastrotindex  = index;
+  //     tsosType[index] = UnusedHit;
+  //     // increase some counters
+  //     if (isTRT) numTRT_Unused++;
+  //     else numUnused++;
+  //     // remember if first hit is shared, we need that later
+  //     if (numShared == 0) firstisshared = false;
+  //     // remember the last 2 ROTs
+  //     lastbutonerot = lastrot;
+  //     lastrot       = rot;
+  //     lastrotindex  = index;
 
-      continue;
-    }
+  //     continue;
+  //   }
 
-    //
-    // ok, we have a shared hit
-    //
+  //   //
+  //   // ok, we have a shared hit
+  //   //
 
-    // do we have an outlier and a pattern track, but the hit is shared, so reject it (we reintegrate it otherwise)
-    if ( isoutlier && ispatterntrack ) {
-      ACTS_VERBOSE ("-> Shared Prd is outlier on a pattern track, we do not want to reintegrate it, so reject it ");
-      tsosType[index]    = RejectedHit;
-      // mark track as bad !
-      TrkCouldBeAccepted = false;
-      continue;
-    }
+  //   // do we have an outlier and a pattern track, but the hit is shared, so reject it (we reintegrate it otherwise)
+  //   if ( isoutlier && ispatterntrack ) {
+  //     ACTS_VERBOSE ("-> Shared Prd is outlier on a pattern track, we do not want to reintegrate it, so reject it ");
+  //     tsosType[index]    = RejectedHit;
+  //     // mark track as bad !
+  //     TrkCouldBeAccepted = false;
+  //     continue;
+  //   }
 
-    int numberOfTracksWithThisPrd = sharedMeasurementsPerTrack[index]
+  //   int numberOfTracksWithThisPrd = sharedMeasurementsPerTrack[index]
 
-    // see if we try keeping it as a shared hit ?
-    if ( numberOfTracksWithThisPrd < m_maxTracksPerPRD  && // we do not allow to share with to many tracks
-         score > m_minScoreShareTracks                  && // score needs to be good
-         (!isPixel || npixholes<=0)                    ) { // we do not share pixels if there are holes in pixels
+  //   // see if we try keeping it as a shared hit ?
+  //   if ( numberOfTracksWithThisPrd < m_maxTracksPerPRD  && // we do not allow to share with to many tracks
+  //        score > m_minScoreShareTracks                  && // score needs to be good
+  //        (!isPixel || npixholes<=0)                    ) { // we do not share pixels if there are holes in pixels
 
-      // special treatment of share split pixel clusters...
-      if (m_doPixelClusterSplitting && isPixel) {
-        // get pixel cluster
-        const InDet::PixelCluster* clus = dynamic_cast <const InDet::PixelCluster*> (rot->prepRawData());
+  //     // special treatment of share split pixel clusters...
+  //     if (m_doPixelClusterSplitting && isPixel) {
+  //       // get pixel cluster
+  //       const InDet::PixelCluster* clus = dynamic_cast <const InDet::PixelCluster*> (rot->prepRawData());
 
-        if ( !clus ) {
-          ACTS_WARNING ("-----> cast to Pixel cluster failed, should not happen !");
-          // mark track as bad !
-          TrkCouldBeAccepted = false; // we have to remove at least one PRD
-          continue;
-        } else {
+  //       if ( !clus ) {
+  //         ACTS_WARNING ("-----> cast to Pixel cluster failed, should not happen !");
+  //         // mark track as bad !
+  //         TrkCouldBeAccepted = false; // we have to remove at least one PRD
+  //         continue;
+  //       } else {
 
-          // split clusters are not allowed to be shared at all, unless
-          const Trk::ClusterSplitProbabilityContainer::ProbabilityInfo &splitProb = splitProbContainer.splitProbability(clus);
-          if ( splitProb.isSplit() )  {
-            ACTS_VERBOSE ("-----> Pixel cluster is split, reject shared hit !!!");
-            tsosType[index]    = RejectedHit;
-            // mark track as bad !
-            TrkCouldBeAccepted = false; // we have to remove at least one PRD
-            continue;
-          }
+  //         // split clusters are not allowed to be shared at all, unless
+  //         const Trk::ClusterSplitProbabilityContainer::ProbabilityInfo &splitProb = splitProbContainer.splitProbability(clus);
+  //         if ( splitProb.isSplit() )  {
+  //           ACTS_VERBOSE ("-----> Pixel cluster is split, reject shared hit !!!");
+  //           tsosType[index]    = RejectedHit;
+  //           // mark track as bad !
+  //           TrkCouldBeAccepted = false; // we have to remove at least one PRD
+  //           continue;
+  //         }
 
-          // is cluster compatible with being a shared cluster ?
-          // A.S.: also a hack for the max size: allows large clusters that are exluded from the splitter to be shared
-          //       needs isExcluded() flag in the future
-          if (splitProb.splitProbability1() < m_sharedProbCut && clus->rdoList().size() <= size_t(m_maxSplitSize) ) {
-            ACTS_VERBOSE ("-----> Pixel cluster is not compatible with being shared (splitProb = "
-                             << splitProb.splitProbability1() << ") , reject shared hit !!!");
-            tsosType[index]    = RejectedHit;
-            // mark track as bad !
-            TrkCouldBeAccepted = false; // we have to remove at least one PRD
-            continue;
-          }
-        }
-      }
+  //         // is cluster compatible with being a shared cluster ?
+  //         // A.S.: also a hack for the max size: allows large clusters that are exluded from the splitter to be shared
+  //         //       needs isExcluded() flag in the future
+  //         if (splitProb.splitProbability1() < m_sharedProbCut && clus->rdoList().size() <= size_t(m_maxSplitSize) ) {
+  //           ACTS_VERBOSE ("-----> Pixel cluster is not compatible with being shared (splitProb = "
+  //                            << splitProb.splitProbability1() << ") , reject shared hit !!!");
+  //           tsosType[index]    = RejectedHit;
+  //           // mark track as bad !
+  //           TrkCouldBeAccepted = false; // we have to remove at least one PRD
+  //           continue;
+  //         }
+  //       }
+  //     }
 
-      ACTS_VERBOSE ("---> Shared hit, but good track, let's enter hit in the list and try to keep it !");
-      tsosType[index]   = SharedHit;
-      numShared++;                             // increase counter
-      numWeightedShared += (isPixel ? 2 : 1);  // increase counter
+  //     ACTS_VERBOSE ("---> Shared hit, but good track, let's enter hit in the list and try to keep it !");
+  //     tsosType[index]   = SharedHit;
+  //     numShared++;                             // increase counter
+  //     numWeightedShared += (isPixel ? 2 : 1);  // increase counter
 
-      // some additional bookkeeping, we need this later
-      if (isPixel) {
-        // ME: bugfix, either shared blayer or shared pixel
-        if (isBlayer) hassharedblayer = true;
-        else  hassharedpixel = true;
-      }
-      // remember the last 2 ROTs
-      lastbutonerot = lastrot;
-      lastrot       = rot;
-      lastrotindex  = index;
+  //     // some additional bookkeeping, we need this later
+  //     if (isPixel) {
+  //       // ME: bugfix, either shared blayer or shared pixel
+  //       if (isBlayer) hassharedblayer = true;
+  //       else  hassharedpixel = true;
+  //     }
+  //     // remember the last 2 ROTs
+  //     lastbutonerot = lastrot;
+  //     lastrot       = rot;
+  //     lastrotindex  = index;
 
-      continue;
-    }
+  //     continue;
+  //   }
 
-    // ok, we failed to keep the share hit, let's reject it.
-    ACTS_VERBOSE ("---> Share hit and bad track, reject it !");
-    tsosType[index]    = RejectedHit;
-    // mark track as bad !
-    TrkCouldBeAccepted = false; // we have to remove at least one PRD
-    index++;
-  }
+  //   // ok, we failed to keep the share hit, let's reject it.
+  //   ACTS_VERBOSE ("---> Share hit and bad track, reject it !");
+  //   tsosType[index]    = RejectedHit;
+  //   // mark track as bad !
+  //   TrkCouldBeAccepted = false; // we have to remove at least one PRD
+  //   index++;
+  // }
 
-  // total number of hits with dead modules
-  int totalSiHits = numUnused + nPixelDeadSensor + nSCTDeadSensor;
+  // // total number of hits with dead modules
+  // int totalSiHits = numUnused + nPixelDeadSensor + nSCTDeadSensor;
 
-  // special cut, do not allow the last hit to be to far away or after to many holes
-  if (ispatterntrack                                                                              && // pattern track and
-      totalSiHits > m_minHits                                                                     && // we have enough hits on the track
-      (lastrot && lastbutonerot)                                                                  && // has enough ROTs
-      (lastrot->globalPosition()-lastbutonerot->globalPosition()).mag()>1000*CLHEP::mm) { // distance cut
-    ACTS_DEBUG ("Special cut on distance, reject last hit on track !");
-    tsosType[lastrotindex] = RejectedHit;
-    numUnused--; // update counter
-    // mark track as bad !
-    TrkCouldBeAccepted     = false;
-  }
+  // // special cut, do not allow the last hit to be to far away or after to many holes
+  // if (ispatterntrack                                                                              && // pattern track and
+  //     totalSiHits > m_minHits                                                                     && // we have enough hits on the track
+  //     (lastrot && lastbutonerot)                                                                  && // has enough ROTs
+  //     (lastrot->globalPosition()-lastbutonerot->globalPosition()).mag()>1000*CLHEP::mm) { // distance cut
+  //   ACTS_DEBUG ("Special cut on distance, reject last hit on track !");
+  //   tsosType[lastrotindex] = RejectedHit;
+  //   numUnused--; // update counter
+  //   // mark track as bad !
+  //   TrkCouldBeAccepted     = false;
+  // }
 
-  // special cut, do not allow the last hit to be after to many holes
-  if (ispatterntrack                                                                              && // pattern track and
-      totalSiHits > m_minHits                                                                     && // we have enough hits on the track
-      nsctholes>3 ) { // too many holes cut
-    ACTS_DEBUG ("Special cut on too many holes, reject last hit on track !");
-    tsosType[lastrotindex] = RejectedHit;
-    numUnused--; // update counter
-    // mark track as bad !
-    TrkCouldBeAccepted     = false;
-  }
+  // // special cut, do not allow the last hit to be after to many holes
+  // if (ispatterntrack                                                                              && // pattern track and
+  //     totalSiHits > m_minHits                                                                     && // we have enough hits on the track
+  //     nsctholes>3 ) { // too many holes cut
+  //   ACTS_DEBUG ("Special cut on too many holes, reject last hit on track !");
+  //   tsosType[lastrotindex] = RejectedHit;
+  //   numUnused--; // update counter
+  //   // mark track as bad !
+  //   TrkCouldBeAccepted     = false;
+  // }
 
 
 
-  // get chi2/NDF, if track is fitted
-  if ( !ispatterntrack ) {
-    double trackchi2 = 0.;
-    if  (track.nDoF()>0 )
-      trackchi2 = track.chi2 / track.nDoF();
+  // // get chi2/NDF, if track is fitted
+  // if ( !ispatterntrack ) {
+  //   double trackchi2 = 0.;
+  //   if  (track.nDoF()>0 )
+  //     trackchi2 = track.chi2 / track.nDoF();
 
-    // if we have share hits and this is a bad track, we reject it
-    if ( numShared > 0 && !ispatterntrack && trackchi2 > 3 ) {
-      ACTS_DEBUG ("Shared hits, we have a bad chi2 track, mark it as bad !");
-      // mark track as bad !
-      TrkCouldBeAccepted = false;
-    }
-  }
+  //   // if we have share hits and this is a bad track, we reject it
+  //   if ( numShared > 0 && !ispatterntrack && trackchi2 > 3 ) {
+  //     ACTS_DEBUG ("Shared hits, we have a bad chi2 track, mark it as bad !");
+  //     // mark track as bad !
+  //     TrkCouldBeAccepted = false;
+  //   }
+  // }
 
 
 
@@ -493,142 +492,143 @@ void ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
   //
 
   // best case, we like this track and it passes this complex if statement
-  if ( TrkCouldBeAccepted                                                    && // we did not mark the track as bad before
-       ( !hassharedblayer || npixholes<=1 )                                  && // if blayer, at most 1 pixel hole
-       !hassharedpixel                                                       && // no shared pixel hits
-       ( ( totalSiHits >= m_minHits      && numShared == 0 )                 || // no shared and enough hits OR
-         ( totalSiHits >= m_minNotShared && numWeightedShared <= m_maxShared && // shared hits and enough unique hits and shared hits with good quality
-           ( totalSiHits + std::min(numShared,m_maxShared) ) >= m_minHits && score > m_minScoreShareTracks ) ) ) {
-    ACTS_DEBUG ("=> Suggest to keep track with "<<numShared<<" shared hits !");
-    return std::make_tuple(static_cast<Trk::Track *>(nullptr),true); // keep input track
 
-    // ok, failed that one, can we recover the track ?
-  } else if ( numTRT_Unused >= nCutTRT           && // TRT track or no TRT at all (back tracking)
-              ( totalSiHits >= m_minHits         || // we have enough hits OR
-                ( totalSiHits >= m_minNotShared  && // shared hits and enough unique hits and shared hits with good quality
-                  totalSiHits+std::min(numShared,m_maxShared) >= m_minHits && score > m_minScoreShareTracks ) ) ) {
-    // catch, if this is cosmics, accept the incoming track
-    if (m_cosmics) {
-      ACTS_DEBUG ("=> Cosmics, accept input track even with shared hits");
-      return std::make_tuple(static_cast<Trk::Track *>(nullptr),true); // keep input track;
-    }
+//   if ( TrkCouldBeAccepted                                                    && // we did not mark the track as bad before
+//        ( !hassharedblayer || npixholes<=1 )                                  && // if blayer, at most 1 pixel hole
+//        !hassharedpixel                                                       && // no shared pixel hits
+//        ( ( totalSiHits >= m_minHits      && numShared == 0 )                 || // no shared and enough hits OR
+//          ( totalSiHits >= m_minNotShared && numWeightedShared <= m_maxShared && // shared hits and enough unique hits and shared hits with good quality
+//            ( totalSiHits + std::min(numShared,m_maxShared) ) >= m_minHits && score > m_minScoreShareTracks ) ) ) {
+//     ACTS_DEBUG ("=> Suggest to keep track with "<<numShared<<" shared hits !");
+//     return std::make_tuple(static_cast<Trk::Track *>(nullptr),true); // keep input track
 
-    ACTS_VERBOSE ("Trying to recover track, allow for some shared hits is possible.");
+//     // ok, failed that one, can we recover the track ?
+//   } else if ( numTRT_Unused >= nCutTRT           && // TRT track or no TRT at all (back tracking)
+//               ( totalSiHits >= m_minHits         || // we have enough hits OR
+//                 ( totalSiHits >= m_minNotShared  && // shared hits and enough unique hits and shared hits with good quality
+//                   totalSiHits+std::min(numShared,m_maxShared) >= m_minHits && score > m_minScoreShareTracks ) ) ) {
+//     // catch, if this is cosmics, accept the incoming track
+//     if (m_cosmics) {
+//       ACTS_DEBUG ("=> Cosmics, accept input track even with shared hits");
+//       return std::make_tuple(static_cast<Trk::Track *>(nullptr),true); // keep input track;
+//     }
 
-    // new TSOS vector
-    std::vector<ConstTrackContainer> newTSOS;
+//     ACTS_VERBOSE ("Trying to recover track, allow for some shared hits is possible.");
 
-    // counter for the weighted number of added shared hits
-    int cntIns = 0;
+//     // new TSOS vector
+//     std::vector<ConstTrackContainer> newTSOS;
 
-    // loop over all TSOS (and types) and copy the good ones overiTsos
-    auto iTsos    = tsos->begin();
-    auto iTsosEnd = tsos->end();
+//     // counter for the weighted number of added shared hits
+//     int cntIns = 0;
 
-    for (int index = 0 ; iTsos != iTsosEnd ; ++iTsos,++index ) {
+//     // loop over all TSOS (and types) and copy the good ones overiTsos
+//     auto iTsos    = tsos->begin();
+//     auto iTsosEnd = tsos->end();
 
-      // remove rejected hits
-      if (tsosType[index] == RejectedHit) {
-        ACTS_VERBOSE ("-> Dropping rejected hit");
+//     for (int index = 0 ; iTsos != iTsosEnd ; ++iTsos,++index ) {
 
-      } else if (tsosType[index] != SharedHit ) {
-        ACTS_VERBOSE ("-> Copy good TSOS");
-        newTSOS.push_back(*iTsos);
+//       // remove rejected hits
+//       if (tsosType[index] == RejectedHit) {
+//         ACTS_VERBOSE ("-> Dropping rejected hit");
 
-      } else if (cntIns >= m_maxShared) {
-        ACTS_VERBOSE ("-> Too many share hits, dropping outer hit(s)");
+//       } else if (tsosType[index] != SharedHit ) {
+//         ACTS_VERBOSE ("-> Copy good TSOS");
+//         newTSOS.push_back(*iTsos);
 
-      } else {
-        ACTS_VERBOSE ("-> Try to recover a shared hit");
+//       } else if (cntIns >= m_maxShared) {
+//         ACTS_VERBOSE ("-> Too many share hits, dropping outer hit(s)");
 
-        // get measurment from TSOS
-        const Trk::MeasurementBase* meas = (*iTsos)->measurementOnTrack();
-        // get ROT from this TSOS
-        const Trk::RIO_OnTrack*      rot = dynamic_cast <const Trk::RIO_OnTrack*> (meas);
+//       } else {
+//         ACTS_VERBOSE ("-> Try to recover a shared hit");
 
-        if (!rot) {
-          ACTS_VERBOSE ("Cast to RIO_OnTrack failed, should never happen !");
-          continue;
-        }
+//         // get measurment from TSOS
+//         const Trk::MeasurementBase* meas = (*iTsos)->measurementOnTrack();
+//         // get ROT from this TSOS
+//         const Trk::RIO_OnTrack*      rot = dynamic_cast <const Trk::RIO_OnTrack*> (meas);
 
-        // is it a pixel cluster ?
-        bool isPixel = m_detID->is_pixel(rot->identify());
+//         if (!rot) {
+//           ACTS_VERBOSE ("Cast to RIO_OnTrack failed, should never happen !");
+//           continue;
+//         }
 
-        // find out how many tracks use this hit already
-        Trk::PRDtoTrackMap::ConstPrepRawDataTrackMapRange range = prd_to_track_map.onTracks(*(rot->prepRawData()));
-        int                           numberOfTracksWithThisPrd = std::distance(range.first,range.second);
-        ACTS_VERBOSE ("---> number of tracks with this shared Prd: " << numberOfTracksWithThisPrd << " maxtracks: " << m_maxTracksPerPRD);
+//         // is it a pixel cluster ?
+//         bool isPixel = m_detID->is_pixel(rot->identify());
 
-        // check if this newly shared hit would exceed the shared hits limit of the already accepted track (**)
-        int  iShared        = 0;
-        int  othernpixel    = 0;
-        bool otherhasblayer = false;
-        if ( numberOfTracksWithThisPrd == 1 ) {
-          // @TODO is it ensured that the prds of all tracks have been registered already ?
-          std::vector< const Trk::PrepRawData* > prdsToCheck = m_assoTool->getPrdsOnTrack(prd_to_track_map,*(range.first->second));
-          for (const Trk::PrepRawData* prd : prdsToCheck) {
-            if (prd_to_track_map.isShared(*prd))
-              ++iShared;
-            if (m_detID->is_pixel(prd->identify())) {
-              othernpixel++;
-              if (m_detID->is_blayer(prd->identify())) otherhasblayer=true;
-            }
-          }
-        }
+//         // find out how many tracks use this hit already
+//         Trk::PRDtoTrackMap::ConstPrepRawDataTrackMapRange range = prd_to_track_map.onTracks(*(rot->prepRawData()));
+//         int                           numberOfTracksWithThisPrd = std::distance(range.first,range.second);
+//         ACTS_VERBOSE ("---> number of tracks with this shared Prd: " << numberOfTracksWithThisPrd << " maxtracks: " << m_maxTracksPerPRD);
 
-        // now decide what to do, can we keep the shared hit
-        if ( numberOfTracksWithThisPrd < m_maxTracksPerPRD            && // number of tracks sharing hit
-             score > m_minScoreShareTracks                            && // score cut
-             (!isPixel || !hassharedblayer || npixholes <= 0)         && // shared b-layer only if no pixel holes
-             ( iShared < m_maxShared || (isPixel && !firstisshared) ) && // do not allow other accepted track to exceed the shared limit, if first pixel hit is shared
-             (!isPixel || thishasblayer == otherhasblayer )           && // only allow shared pixel if both have blayer or both not
-             (!isPixel || npixel >= othernpixel )                    ) { // only allow shared pixel if new track as at least as many pixel hits
+//         // check if this newly shared hit would exceed the shared hits limit of the already accepted track (**)
+//         int  iShared        = 0;
+//         int  othernpixel    = 0;
+//         bool otherhasblayer = false;
+//         if ( numberOfTracksWithThisPrd == 1 ) {
+//           // @TODO is it ensured that the prds of all tracks have been registered already ?
+//           std::vector< const Trk::PrepRawData* > prdsToCheck = m_assoTool->getPrdsOnTrack(prd_to_track_map,*(range.first->second));
+//           for (const Trk::PrepRawData* prd : prdsToCheck) {
+//             if (prd_to_track_map.isShared(*prd))
+//               ++iShared;
+//             if (m_detID->is_pixel(prd->identify())) {
+//               othernpixel++;
+//               if (m_detID->is_blayer(prd->identify())) otherhasblayer=true;
+//             }
+//           }
+//         }
 
-          ACTS_VERBOSE ("---> Accepted hit shared with " << numberOfTracksWithThisPrd << " tracks !");
-          newTSOS.push_back(*iTsos);
-          numUnused++; // update counter
+//         // now decide what to do, can we keep the shared hit
+//         if ( numberOfTracksWithThisPrd < m_maxTracksPerPRD            && // number of tracks sharing hit
+//              score > m_minScoreShareTracks                            && // score cut
+//              (!isPixel || !hassharedblayer || npixholes <= 0)         && // shared b-layer only if no pixel holes
+//              ( iShared < m_maxShared || (isPixel && !firstisshared) ) && // do not allow other accepted track to exceed the shared limit, if first pixel hit is shared
+//              (!isPixel || thishasblayer == otherhasblayer )           && // only allow shared pixel if both have blayer or both not
+//              (!isPixel || npixel >= othernpixel )                    ) { // only allow shared pixel if new track as at least as many pixel hits
 
-          // update shared hit counter
-          cntIns += (isPixel ? 2 : 1);
+//           ACTS_VERBOSE ("---> Accepted hit shared with " << numberOfTracksWithThisPrd << " tracks !");
+//           newTSOS.push_back(*iTsos);
+//           numUnused++; // update counter
 
-        } else {
-          ACTS_VERBOSE ("---> Reject hit shared with " << numberOfTracksWithThisPrd << " tracks !");
-        }
-      }
-    }
+//           // update shared hit counter
+//           cntIns += (isPixel ? 2 : 1);
 
-    // this still may happen per (**) see above.
-    if ( numUnused+nPixelDeadSensor+nSCTDeadSensor < m_minHits || newTSOS.size() <= 3 ) {
-      ACTS_DEBUG ("=> Too few hits, reject track with shared hits");
-      return std::make_tuple(static_cast<Trk::Track *>(nullptr),false); // reject input track;
-    }
+//         } else {
+//           ACTS_VERBOSE ("---> Reject hit shared with " << numberOfTracksWithThisPrd << " tracks !");
+//         }
+//       }
+//     }
 
-    // check that this is not the input track
-    if ( newTSOS.size() == tsos->size() ) {
-      ACTS_DEBUG ("=> Recovered input track, accept it !");
-      return std::make_tuple(static_cast<Trk::Track *>(nullptr),true); // keep input track;
-    } else {
-      // ok, done, create subtrack
-      // Trk::Track* newTrack = createSubTrack(newTSOS,track.nDoF);
-      // if (!newTrack) {
-      //   ACTS_DEBUG ("=> Failed to create subtrack");
-      //   return std::make_tuple(static_cast<Trk::Track *>(nullptr),false); // reject input track;
-      // }
+//     // this still may happen per (**) see above.
+//     if ( numUnused+nPixelDeadSensor+nSCTDeadSensor < m_minHits || newTSOS.size() <= 3 ) {
+//       ACTS_DEBUG ("=> Too few hits, reject track with shared hits");
+//       return std::make_tuple(static_cast<Trk::Track *>(nullptr),false); // reject input track;
+//     }
 
-      Trk::TrackInfo info;
-      info.addPatternRecoAndProperties(ptrTrack->info());
-      Trk::TrackInfo newInfo;
-      newInfo.setPatternRecognitionInfo(Trk::TrackInfo::InDetAmbiTrackSelectionTool);
-      info.addPatternReco(newInfo);
-      newTrack->info().addPatternReco(ptrTrack->info());
+//     // check that this is not the input track
+//     if ( newTSOS.size() == tsos->size() ) {
+//       ACTS_DEBUG ("=> Recovered input track, accept it !");
+//       return std::make_tuple(static_cast<Trk::Track *>(nullptr),true); // keep input track;
+//     } else {
+//       // ok, done, create subtrack
+//       // Trk::Track* newTrack = createSubTrack(newTSOS,track.nDoF);
+//       // if (!newTrack) {
+//       //   ACTS_DEBUG ("=> Failed to create subtrack");
+//       //   return std::make_tuple(static_cast<Trk::Track *>(nullptr),false); // reject input track;
+//       // }
 
-      ACTS_DEBUG ("=> Successfully created subtrack with shared hits recovered !");
-      return std::make_tuple(newTrack,false); // new cleaned track, reject input track ;
-    }
-  } else {
-    ACTS_DEBUG ("=> Track is recommended to be dropped");
-  }
+//       Trk::TrackInfo info;
+//       info.addPatternRecoAndProperties(ptrTrack->info());
+//       Trk::TrackInfo newInfo;
+//       newInfo.setPatternRecognitionInfo(Trk::TrackInfo::InDetAmbiTrackSelectionTool);
+//       info.addPatternReco(newInfo);
+//       newTrack->info().addPatternReco(ptrTrack->info());
 
-  return std::make_tuple(static_cast<Trk::Track *>(nullptr),false); // reject input track;
+//       ACTS_DEBUG ("=> Successfully created subtrack with shared hits recovered !");
+//       return std::make_tuple(newTrack,false); // new cleaned track, reject input track ;
+//     }
+//   } else {
+//     ACTS_DEBUG ("=> Track is recommended to be dropped");
+//   }
 
-}
+//   return std::make_tuple(static_cast<Trk::Track *>(nullptr),false); // reject input track;
+
+// }

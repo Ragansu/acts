@@ -32,7 +32,6 @@ class AthenaAmbiguityResolution : public IAlgorithm {
 
   class DectectorConfig {
     public:
-      std::string name; // name of the detector
       std::size_t hits_score = 0; // score for hits
       std::size_t holes_score = 0; // score for holes
       std::size_t outliers_score = 0; // score for outliers
@@ -40,74 +39,21 @@ class AthenaAmbiguityResolution : public IAlgorithm {
       std::size_t phi_score = 0; // score based on phi
       std::size_t other_score = 0; // score for other measurements
 
-      unsigned int layerMin = 0;
-      unsigned int layerMax = 0;
-
-      DectectorConfig(std::string name, std::size_t hits_score, std::size_t holes_score, std::size_t outliers_score, std::size_t eta_score, std::size_t phi_score, std::size_t other_score) 
-      : name(name), hits_score(hits_score), holes_score(holes_score), outliers_score(outliers_score), eta_score(eta_score), phi_score(phi_score), other_score(other_score) { }
-      void addAllTracks(std::size_t trackID) {
-        AllTracks.push_back(trackID);
-      }
-
-      void addGoodTracks(std::size_t trackID) {
-        GoodTracks.push_back(trackID);
-      }
-
-      // void setVolumeIds(std::vector<unsigned int> volumeIds) {
-      //   m_volumeIds = volumeIds;
-      // }
-      // void setLayerIds(std::vector<unsigned int> layerIds) {
-      //   m_layerIds = layerIds;
-      }
-    protected:
-      // std::vector<unsigned int> getVolumeIds() {
-      //   return m_volumeIds;
-      // std::vector<unsigned int> getLayerIds() {
-      //   return m_layerIds;
-      // }
-      
-    private:
-      // std::vector<unsigned int> m_volumeIds = {};
-      // std::vector<unsigned int> m_layerIds = {};
-
-      std::vector<std::size_t> AllTracks = {};
-      std::vector<std::size_t> GoodTracks = {};
+      DectectorConfig( std::size_t hits_score, std::size_t holes_score, std::size_t outliers_score, std::size_t eta_score, std::size_t phi_score, std::size_t other_score) 
+      : hits_score(hits_score), holes_score(holes_score), outliers_score(outliers_score), eta_score(eta_score), phi_score(phi_score), other_score(other_score) { }
 
   };
 
-  std::vector<DectectorConfig> m_detectorConfigs = {
-    {"Pixel", 20, -10, -2, 0, 0, 0},
-    {"SCT", 10, -5, -2, 0, 0, 0},
-    {"MDT", 20,0,0,0,0,0},
-    {"TGC", 0,0,0,20,10,0},
-    {"CSC", 0,0,0,20,10,0},
-    {"RPC", 0,0,0,20,10,0}
+  std::map<size_t,DectectorConfig> Volumemap {
+    {0,DectectorConfig( 20, -10, -2, 0, 0, 0)}, //pixel
+    {1,DectectorConfig( 10, -5, -2, 0, 0, 0)},  //sct
+    {2,DectectorConfig( 20,0,0,0,0,0)},         //mdt
+    {3,DectectorConfig( 0,0,0,20,10,0)},        //tgc
+    {4,DectectorConfig( 0,0,0,20,10,0)},        //csc
+    {5,DectectorConfig( 0,0,0,20,10,0)}         //rpc
   };
 
-  class Detector : public DectectorConfig {
-  public:
-    std::size_t tipIndex = 0;
-    std::size_t nMeasurements = 0;
-    std::size_t nOutliers = 0;
-    std::size_t nHoles = 0;
-    std::size_t score = 0;
 
-    std::vector<unsigned int> measurementVolume = {};
-    std::vector<unsigned int> measurementLayer = {};
-    std::vector<unsigned int> outlierVolume = {};
-    std::vector<unsigned int> outlierLayer = {};
-    std::vector<unsigned int> holeVolume = {};
-    std::vector<unsigned int> holeLayer = {};
-
-    Detector(const DectectorConfig other) : DectectorConfig(other) { }
-
-  };
-  
-  std::vector<Detector> m_detectors;
-  };
-  std::vector<Detector> constructDetectors(const ConstTrackContainer& tracks) const;
-
-  int m_nDetectors = m_detectors.size();
 
   
   // struct TypeScore {
@@ -154,8 +100,8 @@ class AthenaAmbiguityResolution : public IAlgorithm {
       std::vector<std::size_t>& goodTracks) const;
 
   std::vector<int> simpleScore(const ConstTrackContainer& tracks) const;
-  void getCleanedOutTracks(const ConstTrackContainer& tracks) const;
-  std::vector<std::size_t> solveAmbiguity(const ConstTrackContainer& tracks, int trackScore) const;
+  std::vector<std::size_t> getCleanedOutTracks(const ConstTrackContainer& tracks) const;
+  std::vector<std::size_t> solveAmbiguity(const ConstTrackContainer& tracks, std::vector<int> trackScore) const;
 };
 
 }  // namespace ActsExamples

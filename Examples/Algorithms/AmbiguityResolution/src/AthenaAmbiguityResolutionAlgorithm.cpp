@@ -35,7 +35,7 @@ ActsExamples::ProcessCode ActsExamples::AthenaAmbiguityResolutionAlgorithm::exec
   // Read input data
   const auto& tracks = m_inputTracks(ctx);
   // Associate measurement to their respective tracks
-  int score = simpleScore(tracks);
+  <std::vector<int> score = simpleScore(tracks);
   // Select the ID of the track we want to keep
   std::vector<std::size_t> goodTracks = solveAmbiguity(tracks,score);
   // Prepare the output track collection from the IDs
