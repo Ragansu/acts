@@ -63,8 +63,9 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     if (track.chi2() > 0 && track.nDoF() > 0) {
       score+= std::log10(1.0-(track.chi2()/track.nDoF()));
     }
-    // --- detector score =  per volume
-    // add score based on number of hits
+    // detector score is determined by the number of hits/hole/outliers * hit/hole/outlier score
+    // here so instead of calculating nhits/nholes/noutliers per volume, 
+    // we just loop over all volumes and add the score.
 
     for (long unsigned int i = 0; i < trajState.measurementVolume.size(); ++i){
       auto detector_it = Volumemap.find(trajState.measurementVolume[i]);
