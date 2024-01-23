@@ -33,22 +33,22 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   struct DectectorConfig {
     public:
       DectectorConfig( std::size_t hits_score, std::size_t holes_score, std::size_t outliers_score, std::size_t other_score) {
-        this->hits_score = hits_score;
-        this->holes_score = holes_score;
-        this->outliers_score = outliers_score;
-        this->other_score = other_score;
+        hitsScore = hits_score;
+        holesScore = holes_score;
+        outliersScore = outliers_score;
+        otherScore = other_score;
       }
       
-      std::size_t getHitsScore() const { return hits_score; }
-      std::size_t getHolesScore() const { return holes_score; }
-      std::size_t getOutliersScore() const { return outliers_score; }
-      std::size_t getOtherScore() const { return other_score; }
+      std::size_t getHitsScore() const { return hitsScore; }
+      std::size_t getHolesScore() const { return holesScore; }
+      std::size_t getOutliersScore() const { return outliersScore; }
+      std::size_t getOtherScore() const { return otherScore; }
 
     private:
-      std::size_t hits_score;
-      std::size_t holes_score;
-      std::size_t outliers_score;
-      std::size_t other_score;
+      std::size_t hitsScore;
+      std::size_t holesScore;
+      std::size_t outliersScore;
+      std::size_t otherScore;
   };
 
   std::map<unsigned int,DectectorConfig> Volumemap {
@@ -59,7 +59,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
 
 // muons TODO etahits and phihits
 
-  std::size_t m_minScore = 0;
+  int m_minScore = 0;
   
   // struct TypeScore {
   //   int value;

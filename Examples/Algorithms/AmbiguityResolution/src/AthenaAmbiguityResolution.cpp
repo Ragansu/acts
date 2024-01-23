@@ -58,11 +58,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
       tracks.trackStateContainer(), track.tipIndex());
     int score = 100;
-    if (track.nDoF() < 0) {
-      ACTS_VERBOSE("numberDoF < 0, reject it");
-      score = 0;
-      break;
-    }
+    
     // --- prob(chi2,NDF), protect for chi2<0
     if (track.chi2() > 0 && track.nDoF() > 0) {
       score+= std::log10(1.0-(track.chi2()/track.nDoF()));
@@ -72,7 +68,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
 
     for (long unsigned int i = 0; i < trajState.measurementVolume.size(); ++i){
       auto detector_it = Volumemap.find(trajState.measurementVolume[i]);
-      if(detector_it){
+      if(detector_it != Volumemap.end()){
         auto detector = detector_it->second;
         score+=detector.getHitsScore();
       }
@@ -80,14 +76,14 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
 
     for (long unsigned int i = 0; i < trajState.holeVolume.size(); ++i){
       auto detector_it = Volumemap.find(trajState.holeVolume[i]);
-      if(detector_it){
+      if(detector_it != Volumemap.end()){
         auto detector = detector_it->second;
         score+=detector.getHolesScore();
       } 
     }
     for (long unsigned int i = 0; i < trajState.outlierVolume.size(); ++i){
       auto detector_it = Volumemap.find(trajState.outlierVolume[i]);
-      if(detector_it){
+      if(detector_it != Volumemap.end()){
         auto detector = detector_it->second;
         score+=detector.getOutliersScore();
       }
@@ -181,6 +177,10 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
  
     for(long unsigned int i = 0; i< trajState.measurementVolume.size(); ++i){
       auto detector_it = Volumemap.find(trajState.measurementVolume[i]);
+      if(detector_it == Volumemap.end()){
+        continue;
+      }
+
       auto detector = detector_it->second;
 
 
