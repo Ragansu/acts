@@ -37,6 +37,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
       int outliersScore;
       int otherScore;
       
+      std::size_t detectorId;
   };
 
 // muons TODO etahits and phihits
@@ -76,8 +77,10 @@ class AthenaAmbiguityResolution : public IAlgorithm {
 
 private:
   std::map<unsigned int,DectectorConfig> m_volumeMap {
-    {0,{20, -10, -2, 0}}, //pixel
-    {1,{10, -5, -2, 0}}  //sct
+    {0,{20, -10, -2, 0, 1}}, //pixel 1
+    {1,{20, -10, -2, 0, 1}}, //pixel 2
+    {2,{10, -5, -2, 0, 2}},  //sct 1
+    {3,{10, -5, -2, 0, 2}}
   };
 };
 

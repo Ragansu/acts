@@ -53,6 +53,13 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
 
   std::vector<int> trackScore;
   int iTrack = 0;
+  struct counter {
+    int nhits;
+    int nholes;
+    int noutliers;
+  };
+  
+  std::map<std::size_t, counter> counterMap;
   // Loop over all the trajectories in the events
   for (auto track : tracks){
     auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
@@ -72,6 +79,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
       if(detector_it != m_volumeMap.end()){
         auto detector = detector_it->second;
         score+=detector.hitsScore;
+        counterMap[detector.detectorId].nhits++;
       }
     }
 
@@ -80,6 +88,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
       if(detector_it != m_volumeMap.end()){
         auto detector = detector_it->second;
         score+=detector.holesScore;
+        counterMap[detector.detectorId].nholes++;
       } 
     }
     for (long unsigned int i = 0; i < trajState.outlierVolume.size(); ++i){
@@ -87,6 +96,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
       if(detector_it != m_volumeMap.end()){
         auto detector = detector_it->second;
         score+=detector.outliersScore;
+        counterMap[detector.detectorId].noutliers++;
       }
     }
       // TODO: add scored based on eta and phi
