@@ -31,67 +31,21 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   /// Framework execute method of the algorithm
 
   struct DectectorConfig {
-    public:
-      DectectorConfig( std::size_t hits_score, std::size_t holes_score, std::size_t outliers_score, std::size_t other_score) {
-        hitsScore = hits_score;
-        holesScore = holes_score;
-        outliersScore = outliers_score;
-        otherScore = other_score;
-      }
+
+      int hitsScore;
+      int holesScore;
+      int outliersScore;
+      int otherScore;
       
-      std::size_t getHitsScore() const { return hitsScore; }
-      std::size_t getHolesScore() const { return holesScore; }
-      std::size_t getOutliersScore() const { return outliersScore; }
-      std::size_t getOtherScore() const { return otherScore; }
-
-    private:
-      std::size_t hitsScore;
-      std::size_t holesScore;
-      std::size_t outliersScore;
-      std::size_t otherScore;
-  };
-
-  std::map<unsigned int,DectectorConfig> Volumemap {
-    {0,DectectorConfig( 20, -10, -2, 0)}, //pixel
-    {1,DectectorConfig( 10, -5, -2, 0)},  //sct
-
   };
 
 // muons TODO etahits and phihits
 
   int m_minScore = 0;
   
-  // struct TypeScore {
-  //   int value;
-  //   std::string name;
-  // };
-
-  // std::vector<TypeScore> m_typeScores = {
-  //   {20,"numberOfPixelHits"},
-  //   {-10,"numberOfPixelHoles"},
-  //   {10,"numberOfInnermostPixelLayerHits"},
-  //   {-5,"numberOfGangedPixels"},
-  //   {10,"numberOfSCTHits"},
-  //   {-5,"numberOfSCTHoles"},
-  //   {-2,"numberOfOutliersOnTrack"},
-  //   {20,"numberOfMdtHits"},
-  //   {20,"numberOfTgcPhiHits"},
-  //   {10,"numberOfTgcEtaHits"},
-  //   {20,"numberOfCscPhiHits"},
-  //   {20,"numberOfCscEtaHits"},
-  //   {20,"numberOfRpcPhiHits"},
-  //   {10,"numberOfRpcEtaHits"}
-  // };
-
 
  protected:
-  /// Associated measurements ID to Tracks ID
-  ///
-  /// @param tracks is the input track container
-  /// @param nMeasurementsMin minimum number of measurement per track
-  /// @return an ordered list containing pairs of track ID and associated measurement ID
-  // std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
-  // mapTrackHits(const ConstTrackContainer& tracks, int nMeasurementsMin) const;
+
 
   /// Prepare the output track container to be written
   ///
@@ -101,9 +55,30 @@ class AthenaAmbiguityResolution : public IAlgorithm {
       const ConstTrackContainer& tracks,
       std::vector<std::size_t>& goodTracks) const;
 
+  /// Compute the score of each track
+  ///
+  /// @param tracks is the input track container
+  /// @return a vector of scores for each track
   std::vector<int> simpleScore(const ConstTrackContainer& tracks) const;
+
+  /// Remove tracks that are not good enough based on cuts
+  ///
+  /// @param tracks is the input track container
+  /// @return a vector of IDs of the tracks we want to keep
   std::vector<std::size_t> getCleanedOutTracks(const ConstTrackContainer& tracks) const;
+
+  /// Remove tracks that are not good enough
+  ///
+  /// @param tracks is the input track container
+  /// @param trackScore is the score of each track
+  /// @return a vector of IDs of the tracks we want to keep
   std::vector<std::size_t> solveAmbiguity(const ConstTrackContainer& tracks, std::vector<int> trackScore) const;
+
+private:
+  std::map<unsigned int,DectectorConfig> m_volumeMap {
+    {0,{20, -10, -2, 0}}, //pixel
+    {1,{10, -5, -2, 0}}  //sct
+  };
 };
 
 }  // namespace ActsExamples

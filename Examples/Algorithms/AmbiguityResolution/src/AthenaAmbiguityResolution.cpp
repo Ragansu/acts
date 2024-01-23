@@ -68,25 +68,25 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     // we just loop over all volumes and add the score.
 
     for (long unsigned int i = 0; i < trajState.measurementVolume.size(); ++i){
-      auto detector_it = Volumemap.find(trajState.measurementVolume[i]);
-      if(detector_it != Volumemap.end()){
+      auto detector_it = m_volumeMap.find(trajState.measurementVolume[i]);
+      if(detector_it != m_volumeMap.end()){
         auto detector = detector_it->second;
-        score+=detector.getHitsScore();
+        score+=detector.hitsScore;
       }
     }
 
     for (long unsigned int i = 0; i < trajState.holeVolume.size(); ++i){
-      auto detector_it = Volumemap.find(trajState.holeVolume[i]);
-      if(detector_it != Volumemap.end()){
+      auto detector_it = m_volumeMap.find(trajState.holeVolume[i]);
+      if(detector_it != m_volumeMap.end()){
         auto detector = detector_it->second;
-        score+=detector.getHolesScore();
+        score+=detector.holesScore;
       } 
     }
     for (long unsigned int i = 0; i < trajState.outlierVolume.size(); ++i){
-      auto detector_it = Volumemap.find(trajState.outlierVolume[i]);
-      if(detector_it != Volumemap.end()){
+      auto detector_it = m_volumeMap.find(trajState.outlierVolume[i]);
+      if(detector_it != m_volumeMap.end()){
         auto detector = detector_it->second;
-        score+=detector.getOutliersScore();
+        score+=detector.outliersScore;
       }
     }
       // TODO: add scored based on eta and phi
@@ -108,15 +108,12 @@ ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
     const ActsExamples::ConstTrackContainer& tracks ,std::vector<int> Score) const {
   
   std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks);
-
-
   std::vector<std::size_t> goodTracks;
 
   for(long unsigned int i=0; i<cleanTracks.size(); ++i){
     if (Score[cleanTracks[i]] > m_minScore){
       goodTracks.push_back(cleanTracks[i]);
     }
-
   }
   return goodTracks;
 }
@@ -177,12 +174,12 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
     bool TrkCouldBeAccepted = true;
  
     for(long unsigned int i = 0; i< trajState.measurementVolume.size(); ++i){
-      auto detector_it = Volumemap.find(trajState.measurementVolume[i]);
-      if(detector_it == Volumemap.end()){
+      auto detector_it = m_volumeMap.find(trajState.measurementVolume[i]);
+      if(detector_it == m_volumeMap.end()){
         continue;
       }
 
-      auto detector = detector_it->second;
+      // auto detector = detector_it->second;
 
 
       // if (track.something > detector.something){               // place holder for goodTracks algorithm
@@ -207,9 +204,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
   return cleanTracks;
 }
 
-
-
-
+// place holder for goodTracks algorithm
 // OLD CODE IGNORE
 
 
