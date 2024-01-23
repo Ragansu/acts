@@ -30,7 +30,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
 
   /// Framework execute method of the algorithm
 
-  class DectectorConfig {
+  struct DectectorConfig {
     public:
       DectectorConfig( std::size_t hits_score, std::size_t holes_score, std::size_t outliers_score, std::size_t other_score) {
         this->hits_score = hits_score;

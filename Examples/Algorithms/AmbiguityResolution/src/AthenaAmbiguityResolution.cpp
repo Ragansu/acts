@@ -71,21 +71,26 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     // add score based on number of hits
 
     for (long unsigned int i = 0; i < trajState.measurementVolume.size(); ++i){
-      
       auto detector_it = Volumemap.find(trajState.measurementVolume[i]);
-      auto detector = detector_it->second;
-      score+=detector.getHitsScore(); 
+      if(detector_it){
+        auto detector = detector_it->second;
+        score+=detector.getHitsScore();
+      }
     }
 
     for (long unsigned int i = 0; i < trajState.holeVolume.size(); ++i){
       auto detector_it = Volumemap.find(trajState.holeVolume[i]);
-      auto detector = detector_it->second;
-      score+=detector.getHolesScore();
+      if(detector_it){
+        auto detector = detector_it->second;
+        score+=detector.getHolesScore();
+      } 
     }
     for (long unsigned int i = 0; i < trajState.outlierVolume.size(); ++i){
       auto detector_it = Volumemap.find(trajState.outlierVolume[i]);
-      auto detector = detector_it->second;
-      score+=detector.getOutliersScore();
+      if(detector_it){
+        auto detector = detector_it->second;
+        score+=detector.getOutliersScore();
+      }
     }
       // TODO: add scored based on eta and phi
 
