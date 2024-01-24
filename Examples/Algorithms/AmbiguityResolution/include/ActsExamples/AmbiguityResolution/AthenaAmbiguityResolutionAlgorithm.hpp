@@ -33,6 +33,8 @@ class AthenaAmbiguityResolutionAlgorithm final : public AthenaAmbiguityResolutio
     std::string outputTracks;
     /// Minimum number of measurement to form a track.
     int nMeasurementsMin = 7;
+    /// Maximum number of shared hits.
+    int maximumSharedHits = 3;
   };
 
   /// Construct the ambiguity resolution algorithm.

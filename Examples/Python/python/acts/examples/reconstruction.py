@@ -131,6 +131,12 @@ AmbiguityResolutionConfig = namedtuple(
     defaults=[None] * 3,
 )
 
+AthenaAmbiguityResolutionConfig = namedtuple(
+    "AthenaAmbiguityResolutionConfig",
+    ["maximumSharedHits", "nMeasurementsMin"],
+    defaults=[None] * 2,
+)
+
 AmbiguityResolutionMLConfig = namedtuple(
     "AmbiguityResolutionMLConfig",
     ["maximumSharedHits", "nMeasurementsMin", "maximumIterations"],
@@ -1553,6 +1559,53 @@ def addAmbiguityResolution(
             maximumSharedHits=config.maximumSharedHits,
             nMeasurementsMin=config.nMeasurementsMin,
             maximumIterations=config.maximumIterations,
+        ),
+    )
+    s.addAlgorithm(alg)
+    s.addWhiteboardAlias("tracks", alg.config.outputTracks)
+
+    addTrackWriters(
+        s,
+        name="ambi",
+        tracks=alg.config.outputTracks,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        writeStates=writeTrajectories,
+        writeSummary=writeTrajectories,
+        writeCKFperformance=True,
+        writeFinderPerformance=False,
+        writeFitterPerformance=False,
+        logLevel=logLevel,
+        writeCovMat=writeCovMat,
+    )
+
+    return s
+
+
+@acts.examples.NamedTypeArgs(
+    config=AthenaAmbiguityResolutionConfig,
+)
+def addAthenaAmbiguityResolution(
+    s,
+    config: AthenaAmbiguityResolutionConfig = AthenaAmbiguityResolutionConfig(),
+    tracks: str = "tracks",
+    outputDirCsv: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    writeTrajectories: bool = True,
+    logLevel: Optional[acts.logging.Level] = None,
+    writeCovMat=False,
+) -> None:
+    from acts.examples import AthenaAmbiguityResolutionAlgorithm
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    alg = AthenaAmbiguityResolutionAlgorithm(
+        level=customLogLevel(),
+        inputTracks=tracks,
+        outputTracks="ambiTracks",
+        **acts.examples.defaultKWArgs(
+            maximumSharedHits=config.maximumSharedHits,
+            nMeasurementsMin=config.nMeasurementsMin,
         ),
     )
     s.addAlgorithm(alg)
