@@ -183,23 +183,22 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
         continue;
       }
 
-      // auto detector = detector_it->second;
+      auto detector = detector_it->second;
+      ACTS_VERBOSE ("---> Found summary information");
+      ACTS_VERBOSE ("---> Number of hits: " << counterMap[detector.detectorId].nhits);
 
-
-      // if (track.something > detector.something){               // place holder for goodTracks algorithm
-      //   TrkCouldBeAccepted = false;
-      // }
-      // else if (track.somethingelse1 < detector.somethingelse1){          // place holder for goodTracks algorithm
-      //   TrkCouldBeAccepted = true;
-      // }
-      // else {continue;}
-
-      // if (track.somethingelse2 == detector.somethingelse2){         // place holder for goodTracks algorithm
-      //   TrkCouldBeAccepted = true;
-      // }
-      // else{
-      //   TrkCouldBeAccepted = false;        
-      // }
+      if (counterMap[detector.detectorId].nhits < 1){
+        TrkCouldBeAccepted = false;
+      }
+      else if (counterMap[detector.detectorId].nholes > 2){
+        TrkCouldBeAccepted = false;
+      }
+      else if (counterMap[detector.detectorId].noutliers > 2){
+        TrkCouldBeAccepted = false;
+      }
+      else{
+        TrkCouldBeAccepted = true;
+      }
     }
     if (TrkCouldBeAccepted){
       cleanTracks.push_back(iTrack);
