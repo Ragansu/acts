@@ -187,13 +187,13 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       ACTS_VERBOSE ("---> Found summary information");
       ACTS_VERBOSE ("---> Number of hits: " << counterMap[detector.detectorId].nhits);
 
-      if (counterMap[detector.detectorId].nhits < 1){
+      if (counterMap[detector.detectorId].nhits < detector.minHits){
         TrkCouldBeAccepted = false;
       }
-      else if (counterMap[detector.detectorId].nholes > 2){
+      else if (counterMap[detector.detectorId].nholes > detector.maxHoles){
         TrkCouldBeAccepted = false;
       }
-      else if (counterMap[detector.detectorId].noutliers > 2){
+      else if (counterMap[detector.detectorId].noutliers > detector.maxOutliers){
         TrkCouldBeAccepted = false;
       }
       else{
