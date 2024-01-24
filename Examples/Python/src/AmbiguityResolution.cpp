@@ -8,6 +8,8 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/AmbiguityResolution/GreedyAmbiguityResolutionAlgorithm.hpp"
+#include "ActsExamples/AmbiguityResolution/AthenaAmbiguityResolutionAlgorithm.hpp"
+
 
 #include <memory>
 
@@ -28,6 +30,13 @@ void addAmbiguityResolution(Context& ctx) {
       ActsExamples::GreedyAmbiguityResolutionAlgorithm, mex,
       "GreedyAmbiguityResolutionAlgorithm", inputTracks, outputTracks,
       maximumSharedHits, maximumIterations, nMeasurementsMin);
+}
+
+  auto [m, mex] = ctx.get("main", "examples");
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::AthenaAmbiguityResolutionAlgorithm, mex,
+      "AthenaAmbiguityResolutionAlgorithm", inputTracks, outputTracks,nMeasurementsMin);
 }
 
 }  // namespace Acts::Python
