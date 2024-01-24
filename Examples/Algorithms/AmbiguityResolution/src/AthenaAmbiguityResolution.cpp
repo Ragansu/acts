@@ -49,7 +49,7 @@ ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
  
 
 std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
- const ActsExamples::ConstTrackContainer& tracks ) const {
+ const ActsExamples::ConstTrackContainer& tracks, std::map<std::size_t, counter>& counterMap) const {
 
   std::vector<int> trackScore;
   int iTrack = 0;
@@ -59,7 +59,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     int noutliers;
   };
   
-  std::map<std::size_t, counter> counterMap;
+
   // Loop over all the trajectories in the events
   for (auto track : tracks){
     auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
@@ -115,9 +115,9 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
 // place holder for goodTracks algorithm
 std::vector<std::size_t> 
 ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
-    const ActsExamples::ConstTrackContainer& tracks ,std::vector<int> Score) const {
+    const ActsExamples::ConstTrackContainer& tracks ,std::vector<int> Score, std::map<std::size_t, counter>& counterMap) const {
   
-  std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks);
+  std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks, counterMap);
   std::vector<std::size_t> goodTracks;
 
   for(long unsigned int i=0; i<cleanTracks.size(); ++i){
@@ -130,7 +130,7 @@ ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
 
 
 std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
-    const ActsExamples::ConstTrackContainer& tracks) const {
+    const ActsExamples::ConstTrackContainer& tracks,   std::map<std::size_t, counter>& counterMap) const {
   std::vector<std::size_t> cleanTracks;
     enum TsosTypes {
     // A measurement not yet used in any other track

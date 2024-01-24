@@ -60,27 +60,27 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   ///
   /// @param tracks is the input track container
   /// @return a vector of scores for each track
-  std::vector<int> simpleScore(const ConstTrackContainer& tracks) const;
+  std::vector<int> simpleScore(const ConstTrackContainer& tracks,   std::map<std::size_t, counter>& counterMap) const;
 
   /// Remove tracks that are not good enough based on cuts
   ///
   /// @param tracks is the input track container
   /// @return a vector of IDs of the tracks we want to keep
-  std::vector<std::size_t> getCleanedOutTracks(const ConstTrackContainer& tracks) const;
+  std::vector<std::size_t> getCleanedOutTracks(const ConstTrackContainer& tracks,   std::map<std::size_t, counter>& counterMap) const;
 
   /// Remove tracks that are not good enough
   ///
   /// @param tracks is the input track container
   /// @param trackScore is the score of each track
   /// @return a vector of IDs of the tracks we want to keep
-  std::vector<std::size_t> solveAmbiguity(const ConstTrackContainer& tracks, std::vector<int> trackScore) const;
+  std::vector<std::size_t> solveAmbiguity(const ConstTrackContainer& tracks, std::vector<int> trackScore, std::map<std::size_t, counter>& counterMap) const;
 
 private:
   std::map<unsigned int,DectectorConfig> m_volumeMap {
     {0,{20, -10, -2, 0, 1}}, //pixel 1
     {1,{20, -10, -2, 0, 1}}, //pixel 2
     {2,{10, -5, -2, 0, 2}},  //sct 1
-    {3,{10, -5, -2, 0, 2}}
+    {3,{10, -5, -2, 0, 2}} //sct 2
   };
 };
 
