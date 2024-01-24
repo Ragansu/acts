@@ -48,6 +48,12 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument(
+    "--AthenaSolver",
+    help="Use the Athena Ambiguity Solver instead of the classical one",
+    action="store_true",
+)
+
+parser.add_argument(
     "--MLSeedFilter",
     help="Use the Ml seed filter to select seed after the seeding step",
     action="store_true",
