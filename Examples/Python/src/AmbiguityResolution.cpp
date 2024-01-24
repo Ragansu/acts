@@ -31,8 +31,6 @@ void addAmbiguityResolution(Context& ctx) {
       "GreedyAmbiguityResolutionAlgorithm", inputTracks, outputTracks,
       maximumSharedHits, maximumIterations, nMeasurementsMin);
 
-  auto [m, mex] = ctx.get("main", "examples");
-
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AthenaAmbiguityResolutionAlgorithm, mex,
       "AthenaAmbiguityResolutionAlgorithm", inputTracks, outputTracks,nMeasurementsMin);
