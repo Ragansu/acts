@@ -30,7 +30,6 @@ void addAmbiguityResolution(Context& ctx) {
       ActsExamples::GreedyAmbiguityResolutionAlgorithm, mex,
       "GreedyAmbiguityResolutionAlgorithm", inputTracks, outputTracks,
       maximumSharedHits, maximumIterations, nMeasurementsMin);
-}
 
   auto [m, mex] = ctx.get("main", "examples");
 
