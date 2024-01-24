@@ -33,7 +33,7 @@ void addAmbiguityResolution(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AthenaAmbiguityResolutionAlgorithm, mex,
-      "AthenaAmbiguityResolutionAlgorithm", inputTracks, outputTracks,nMeasurementsMin);
+      "AthenaAmbiguityResolutionAlgorithm", inputTracks, outputTracks);
 }
 
 }  // namespace Acts::Python
