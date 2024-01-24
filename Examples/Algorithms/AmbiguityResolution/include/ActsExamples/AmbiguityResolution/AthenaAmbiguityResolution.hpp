@@ -40,6 +40,12 @@ class AthenaAmbiguityResolution : public IAlgorithm {
       std::size_t detectorId;
   };
 
+  struct counter {
+    int nhits;
+    int nholes;
+    int noutliers;
+  };
+
 // muons TODO etahits and phihits
 
   int m_minScore = 0;

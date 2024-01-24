@@ -52,13 +52,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
  const ActsExamples::ConstTrackContainer& tracks, std::map<std::size_t, counter>& counterMap) const {
 
   std::vector<int> trackScore;
-  int iTrack = 0;
-  struct counter {
-    int nhits;
-    int nholes;
-    int noutliers;
-  };
-  
+  int iTrack = 0;  
 
   // Loop over all the trajectories in the events
   for (auto track : tracks){
