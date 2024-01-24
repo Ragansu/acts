@@ -222,10 +222,7 @@ if ambiguity_MLSolver:
 elif athena_ambiguity_resolution:
     addAthenaAmbiguityResolution(
         s,
-        AthenaAmbiguityResolutionConfig(
-            maximumSharedHits=3,
-            nMeasurementsMin=7,
-        ),
+        AthenaAmbiguityResolutionConfig(),
         outputDirRoot=outputDir,
         writeCovMat=True,
         # outputDirCsv=outputDir,
