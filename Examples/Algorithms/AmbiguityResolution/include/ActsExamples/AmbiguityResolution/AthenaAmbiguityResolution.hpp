@@ -40,7 +40,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
       std::size_t detectorId;
   };
 
-  struct counter {
+  struct Counter {
     int nhits;
     int nholes;
     int noutliers;
@@ -66,20 +66,20 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   ///
   /// @param tracks is the input track container
   /// @return a vector of scores for each track
-  std::vector<int> simpleScore(const ConstTrackContainer& tracks,   std::map<std::size_t, counter>& counterMap) const;
+  std::vector<int> simpleScore(const ConstTrackContainer& tracks,   std::map<std::size_t, Counter>& counterMap) const;
 
   /// Remove tracks that are not good enough based on cuts
   ///
   /// @param tracks is the input track container
   /// @return a vector of IDs of the tracks we want to keep
-  std::vector<std::size_t> getCleanedOutTracks(const ConstTrackContainer& tracks,   std::map<std::size_t, counter>& counterMap) const;
+  std::vector<std::size_t> getCleanedOutTracks(const ConstTrackContainer& tracks,   std::map<std::size_t, Counter>& counterMap) const;
 
   /// Remove tracks that are not good enough
   ///
   /// @param tracks is the input track container
   /// @param trackScore is the score of each track
   /// @return a vector of IDs of the tracks we want to keep
-  std::vector<std::size_t> solveAmbiguity(const ConstTrackContainer& tracks, std::vector<int> trackScore, std::map<std::size_t, counter>& counterMap) const;
+  std::vector<std::size_t> solveAmbiguity(const ConstTrackContainer& tracks, std::vector<int> trackScore, std::map<std::size_t, Counter>& counterMap) const;
 
 private:
   std::map<unsigned int,DectectorConfig> m_volumeMap {
