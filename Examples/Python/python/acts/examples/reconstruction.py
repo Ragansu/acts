@@ -1603,10 +1603,10 @@ def addAthenaAmbiguityResolution(
         level=customLogLevel(),
         inputTracks=tracks,
         outputTracks="ambiTracks",
-        **acts.examples.defaultKWArgs(
-            maximumSharedHits=config.maximumSharedHits,
-            nMeasurementsMin=config.nMeasurementsMin,
-        ),
+        # **acts.examples.defaultKWArgs(
+        #     maximumSharedHits=config.maximumSharedHits,
+        #     nMeasurementsMin=config.nMeasurementsMin,
+        # ),
     )
     s.addAlgorithm(alg)
     s.addWhiteboardAlias("tracks", alg.config.outputTracks)
