@@ -87,10 +87,10 @@ class AthenaAmbiguityResolution : public IAlgorithm {
 
 private:
   std::map<unsigned int,DectectorConfig> m_volumeMap {
-    {0,{20, -10, -2, 0, 0, 10, 10, 1}}, //pixel 1
-    {1,{20, -10, -2, 0, 0, 10, 10, 1}}, //pixel 2
-    {2,{10, -5, -2, 0, 0, 10, 10, 2}},  //sct 1
-    {3,{10, -5, -2, 0, 0, 10, 10, 2}} //sct 2
+    {0,{20, -10, -2, 0, 1000, 2, 10, 1}}, //pixel 1
+    {1,{20, -10, -2, 0, 1000, 2, 10, 1}}, //pixel 2
+    {2,{10, -5, -2, 0, 1000, 2, 10, 2}},  //sct 1
+    {3,{10, -5, -2, 0, 1000, 2, 10, 2}} //sct 2
   };
 };
 
