@@ -22,7 +22,7 @@ using namespace ActsExamples;
 
 namespace Acts::Python {
 
-void addAmbiguityResolution(Context& ctx) {
+void addAthenaAmbiguityResolution(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
