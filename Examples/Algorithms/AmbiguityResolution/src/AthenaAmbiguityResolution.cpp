@@ -141,28 +141,28 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
   // Loop over all detectors
 
 
-  std::vector<int> tsosType;
+  std::vector<int> tsosType = std::vector<int>(tracks.size(), OtherTsos);
 
-  std::vector<std::vector<std::size_t>> measurementsPerTrack;
-  boost::container::flat_map<std::size_t,boost::container::flat_set<std::size_t>> tracksPerMeasurement;
-  std::size_t numberOfTracks = tracks.size();
+  // std::vector<std::vector<std::size_t>> measurementsPerTrack;
+  // boost::container::flat_map<std::size_t,boost::container::flat_set<std::size_t>> tracksPerMeasurement;
+  // std::size_t numberOfTracks = tracks.size();
 
 
 
-  for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
-    for (auto iMeasurement : measurementsPerTrack[iTrack]) {
-      tracksPerMeasurement[iMeasurement].insert(iTrack);
-    }
-  }
+  // for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
+  //   for (auto iMeasurement : measurementsPerTrack[iTrack]) {
+  //     tracksPerMeasurement[iMeasurement].insert(iTrack);
+  //   }
+  // }
 
-  std::vector<std::size_t> sharedMeasurementsPerTrack = std::vector<std::size_t>(tracks.size(), 0);
-  for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
-    for (auto iMeasurement : measurementsPerTrack[iTrack]) {
-      if (tracksPerMeasurement[iMeasurement].size() > 1) {
-        ++sharedMeasurementsPerTrack[iTrack];
-      }
-    }
-  }
+  // std::vector<std::size_t> sharedMeasurementsPerTrack = std::vector<std::size_t>(tracks.size(), 0);
+  // for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
+  //   for (auto iMeasurement : measurementsPerTrack[iTrack]) {
+  //     if (tracksPerMeasurement[iMeasurement].size() > 1) {
+  //       ++sharedMeasurementsPerTrack[iTrack];
+  //     }
+  //   }
+  // }
 
 
   int iTrack = 0;
