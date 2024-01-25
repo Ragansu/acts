@@ -113,10 +113,21 @@ TruthEstimatedSeedingAlgorithmConfigArg = namedtuple(
     defaults=[(None, None)],
 )
 
+
 TrackSelectorConfig = namedtuple(
     "TrackSelectorConfig",
-    ["loc0", "loc1", "time", "eta", "absEta", "pt", "phi", "nMeasurementsMin"],
-    defaults=[(None, None)] * 7 + [None],
+    [
+        "loc0",
+        "loc1",
+        "time",
+        "eta",
+        "absEta",
+        "pt",
+        "phi",
+        "nMeasurementsMin",
+        "nMeasurementsGroupMin",
+    ],
+    defaults=[(None, None)] * 7 + [None] * 2,
 )
 
 CkfConfig = namedtuple(
@@ -1183,6 +1194,7 @@ def addCKFTracks(
                 ptMin=trackSelectorConfig.pt[0],
                 ptMax=trackSelectorConfig.pt[1],
                 minMeasurements=trackSelectorConfig.nMeasurementsMin,
+                measurementCounter=trackSelectorConfig.nMeasurementsGroupMin,
             )
         )
         if trackSelectorConfig is not None
