@@ -100,7 +100,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
       // TODO: add scored based on eta and phi
 
     trackScore.push_back(score);
-    ACTS_INFO("Track " << iTrack << " score: " << trackScore[iTrack]);
+    // ACTS_INFO("Track " << iTrack << " score: " << trackScore[iTrack]);
 
 
     counterMaps.push_back(counterMap);
@@ -117,7 +117,9 @@ std::vector<std::size_t>
 ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
     const ActsExamples::ConstTrackContainer& tracks ,std::vector<int> trackScore, std::vector<std::map<std::size_t, Counter>>& counterMaps) const {
   
-
+  for(long unsigned int i=0; i<5; ++i){
+    ACTS_INFO("Track " << i << " score: " << trackScore[i]);
+  }
   std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks, counterMaps);
 
   ACTS_INFO("Number of tracks: " << tracks.size());
