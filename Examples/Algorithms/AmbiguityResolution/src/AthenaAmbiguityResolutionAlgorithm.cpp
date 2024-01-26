@@ -36,8 +36,9 @@ ActsExamples::ProcessCode ActsExamples::AthenaAmbiguityResolutionAlgorithm::exec
   const auto& tracks = m_inputTracks(ctx);
   // Associate measurement to their respective tracks
   std::map<std::size_t, Counter> counterMap = {
+    {0,{0,0,0}},
     {1,{0,0,0}},
-    {1,{0,0,0}}
+    {2,{0,0,0}}
   };
   std::vector<int> score = simpleScore(tracks, counterMap);
   // Select the ID of the track we want to keep
