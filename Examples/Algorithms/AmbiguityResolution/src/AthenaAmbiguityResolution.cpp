@@ -114,12 +114,13 @@ ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
 
   std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks, counterMap);
 
+  ACTS_INFO("Number of tracks: " << tracks.size());
+
   ACTS_INFO("Number of clean tracks: " << cleanTracks.size());
 
 
   std::vector<std::size_t> goodTracks;
 
-  ACTS_INFO("Number of tracks: " << tracks.size());
 
   for(long unsigned int i=0; i<cleanTracks.size(); ++i){
     if (Score[cleanTracks[i]] > m_minScore){
@@ -191,16 +192,16 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       }
 
       auto detector = detector_it->second;
-      ACTS_VERBOSE ("---> Found summary information");
-      ACTS_VERBOSE ("---> Number of hits: " << counterMap[detector.detectorId].nhits);
+      ACTS_INFO ("---> Found summary information");
+      ACTS_INFO ("---> Number of hits: " << counterMap[detector.detectorId].nhits);
 
-      if (counterMap[detector.detectorId].nhits < detector.minHits){
+      if (counterMap[detector.detectorId].nhits > detector.minHits){
         TrkCouldBeAccepted = false;
       }
-      else if (counterMap[detector.detectorId].nholes > detector.maxHoles){
+      else if (counterMap[detector.detectorId].nholes < detector.maxHoles){
         TrkCouldBeAccepted = false;
       }
-      else if (counterMap[detector.detectorId].noutliers > detector.maxOutliers){
+      else if (counterMap[detector.detectorId].noutliers < detector.maxOutliers){
         TrkCouldBeAccepted = false;
       }
       else{
