@@ -237,6 +237,8 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       cleanTracks.push_back(iTrack);
       ACTS_INFO("Track " << iTrack << " is clean");
     }
+    iTrack++;
+
   }
   return cleanTracks;
 }
