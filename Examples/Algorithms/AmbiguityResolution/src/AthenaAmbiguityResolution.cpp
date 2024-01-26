@@ -131,7 +131,7 @@ ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
   ACTS_INFO("Min score: " << m_minScore);
 
 
-  for(long unsigned int i=0; i<5; ++i){
+  for(long unsigned int i=0; i<cleanTracks.size(); ++i){
     ACTS_INFO("Track " << i << " score: " << trackScore[cleanTracks[i]]);
     if (trackScore[cleanTracks[i]] > m_minScore){
       goodTracks.push_back(cleanTracks[i]);
