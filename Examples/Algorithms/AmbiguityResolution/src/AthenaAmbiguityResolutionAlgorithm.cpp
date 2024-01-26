@@ -41,7 +41,7 @@ ActsExamples::ProcessCode ActsExamples::AthenaAmbiguityResolutionAlgorithm::exec
   std::vector<int> score = simpleScore(tracks, counterMaps);
 
   for(long unsigned int i=0; i<score.size(); ++i){
-    ACTS_INFO("Track " << i << " score: " << score[cleanTracks[i]]);
+    ACTS_INFO("Track " << i << " score: " << score[i]);
   }
 
   // Select the ID of the track we want to keep
