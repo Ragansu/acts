@@ -51,7 +51,7 @@ ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
 std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
  const ActsExamples::ConstTrackContainer& tracks, std::vector<std::map<std::size_t, Counter>>& counterMaps) const {
 
-  std::vector<int> trackScore;
+  std::vector<int> trackScore = std::vector<int>(tracks.size(), 0);
   int iTrack = 0;  
 
   // Loop over all the trajectories in the events
@@ -100,13 +100,11 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     }
       // TODO: add scored based on eta and phi
 
-    trackScore.push_back(score);
     trackScore[iTrack] = score;
     ACTS_INFO("Track " << iTrack << " score: " << trackScore[iTrack]);
 
 
-    counterMaps.push_back(counterMap)
-
+    counterMaps.push_back(counterMap);
     iTrack++;
 
 
