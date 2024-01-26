@@ -35,14 +35,12 @@ ActsExamples::ProcessCode ActsExamples::AthenaAmbiguityResolutionAlgorithm::exec
   // Read input data
   const auto& tracks = m_inputTracks(ctx);
   // Associate measurement to their respective tracks
-  std::map<std::size_t, Counter> counterMap = {
-    {0,{0,0,0}},
-    {1,{0,0,0}},
-    {2,{0,0,0}}
-  };
-  std::vector<int> score = simpleScore(tracks, counterMap);
+
+  std::vector<std::map<std::size_t, Counter>> counterMaps;
+
+  std::vector<int> score = simpleScore(tracks, counterMaps);
   // Select the ID of the track we want to keep
-  std::vector<std::size_t> goodTracks = solveAmbiguity(tracks,score,counterMap);
+  std::vector<std::size_t> goodTracks = solveAmbiguity(tracks,score,counterMaps);
   // Prepare the output track collection from the IDs
   auto outputTracks = prepareOutputTrack(tracks, goodTracks);
   m_outputTracks(ctx, std::move(outputTracks));
