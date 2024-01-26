@@ -183,7 +183,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
     // if we do not have a measurement, we should just mark it
 
     auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(tracks.trackStateContainer(), track.tipIndex());
-    bool TrkCouldBeAccepted = false;
+    bool TrkCouldBeAccepted;
  
     for(long unsigned int i = 0; i< trajState.measurementVolume.size(); ++i){
       auto detector_it = m_volumeMap.find(trajState.measurementVolume[i]);
@@ -193,20 +193,24 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
 
       auto detector = detector_it->second;
       ACTS_INFO ("---> Found summary information");
+
+      ACTS_INFO ("---> Detector ID: " << detector.detectorId);
       ACTS_INFO ("---> Number of hits: " << counterMap[detector.detectorId].nhits);
-      ACTS_INFO ("---> Number of outliers: " << counterMap[detector.detectorId].noutliers);
       ACTS_INFO ("---> Number of holes: " << counterMap[detector.detectorId].nholes);
+      ACTS_INFO ("---> Number of outliers: " << counterMap[detector.detectorId].noutliers);
 
-      if (counterMap[detector.detectorId].nhits > detector.minHits){
-        TrkCouldBeAccepted = true;
+      TrkCouldBeAccepted = true;
+
+      if (counterMap[detector.detectorId].nhits < detector.minHits){
+        TrkCouldBeAccepted = false;
       }
 
-      else if (counterMap[detector.detectorId].nholes < detector.maxHoles){
-        TrkCouldBeAccepted = true;
+      if (counterMap[detector.detectorId].nholes > detector.maxHoles){
+        TrkCouldBeAccepted = false;
       }
 
-      else if (counterMap[detector.detectorId].noutliers < detector.maxOutliers){
-        TrkCouldBeAccepted = true;
+      if (counterMap[detector.detectorId].noutliers > detector.maxOutliers){
+        TrkCouldBeAccepted = false;
       }
 
     }
