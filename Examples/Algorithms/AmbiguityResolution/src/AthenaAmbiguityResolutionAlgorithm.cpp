@@ -40,10 +40,6 @@ ActsExamples::ProcessCode ActsExamples::AthenaAmbiguityResolutionAlgorithm::exec
 
   std::vector<int> score = simpleScore(tracks, counterMaps);
 
-  for(long unsigned int i=0; i<5; ++i){
-    ACTS_INFO("Track " << i << " score: " << score[i]);
-  }
-
   // Select the ID of the track we want to keep
   std::vector<std::size_t> goodTracks = solveAmbiguity(tracks,score,counterMaps);
   // Prepare the output track collection from the IDs
