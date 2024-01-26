@@ -84,6 +84,10 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
         auto detector = detector_it->second;
         score+=detector.holesScore;
         counterMap[detector.detectorId].nholes++;
+      }
+      else{
+        ACTS_INFO("Detector not found");
+        ACTS_INFO("Detector ID: " << trajState.holeVolume[i]);
       } 
     }
     for (long unsigned int i = 0; i < trajState.outlierVolume.size(); ++i){
@@ -195,12 +199,12 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
         continue;
       }
       auto detector = detector_it->second;
-      ACTS_INFO ("---> Found summary information");
+      // ACTS_INFO ("---> Found summary information");
 
-      ACTS_INFO ("---> Detector ID: " << detector.detectorId);
-      ACTS_INFO ("---> Number of hits: " << counterMap[detector.detectorId].nhits);
-      ACTS_INFO ("---> Number of holes: " << counterMap[detector.detectorId].nholes);
-      ACTS_INFO ("---> Number of outliers: " << counterMap[detector.detectorId].noutliers);
+      // ACTS_INFO ("---> Detector ID: " << detector.detectorId);
+      // ACTS_INFO ("---> Number of hits: " << counterMap[detector.detectorId].nhits);
+      // ACTS_INFO ("---> Number of holes: " << counterMap[detector.detectorId].nholes);
+      // ACTS_INFO ("---> Number of outliers: " << counterMap[detector.detectorId].noutliers);
 
 
       if (counterMap[detector.detectorId].nhits < detector.minHits){
