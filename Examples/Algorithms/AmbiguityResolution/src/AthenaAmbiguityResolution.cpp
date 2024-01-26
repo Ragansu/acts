@@ -115,7 +115,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
 // place holder for goodTracks algorithm
 std::vector<std::size_t> 
 ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
-    const ActsExamples::ConstTrackContainer& tracks ,std::vector<int> score, std::vector<std::map<std::size_t, Counter>>& counterMaps) const {
+    const ActsExamples::ConstTrackContainer& tracks ,std::vector<int> trackScore, std::vector<std::map<std::size_t, Counter>>& counterMaps) const {
   
 
   std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks, counterMaps);
@@ -127,11 +127,11 @@ ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
 
   std::vector<std::size_t> goodTracks;
 
-  ACT_INFO("Min score: " << m_minScore);
+  ACTS_INFO("Min score: " << m_minScore);
 
   for(long unsigned int i=0; i<cleanTracks.size(); ++i){
-    ACTS_INFO("Track " << i << " score: " << score[cleanTracks[i]]);
-    if (score[cleanTracks[i]] > m_minScore){
+    ACTS_INFO("Track " << i << " score: " << trackScore[cleanTracks[i]]);
+    if (trackScore[cleanTracks[i]] > m_minScore){
       goodTracks.push_back(cleanTracks[i]);
     }
   }
