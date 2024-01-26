@@ -238,12 +238,13 @@ else:
         writeCovMat=True,
         # outputDirCsv=outputDir,
     )
-
-addVertexFitting(
-    s,
-    field,
-    vertexFinder=VertexFinder.Iterative,
-    outputDirRoot=outputDir,
-)
+    
+if not athena_ambiguity_resolution:
+    addVertexFitting(
+        s,
+        field,
+        vertexFinder=VertexFinder.Iterative,
+        outputDirRoot=outputDir,
+    )
 
 s.run()
