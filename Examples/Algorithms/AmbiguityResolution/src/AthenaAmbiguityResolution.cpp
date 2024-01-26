@@ -129,6 +129,7 @@ ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
       goodTracks.push_back(cleanTracks[i]);
     }
   }
+  ACTS_INFO("Number of good tracks: " << goodTracks.size());
   return goodTracks;
 }
 
