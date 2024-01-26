@@ -40,7 +40,7 @@ ActsExamples::ProcessCode ActsExamples::AthenaAmbiguityResolutionAlgorithm::exec
 
   std::vector<int> score = simpleScore(tracks, counterMaps);
 
-  for(long unsigned int i=0; i<score.size(); ++i){
+  for(long unsigned int i=0; i<5; ++i){
     ACTS_INFO("Track " << i << " score: " << score[i]);
   }
 
