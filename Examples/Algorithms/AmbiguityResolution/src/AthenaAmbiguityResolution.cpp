@@ -195,12 +195,12 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       }
 
       auto detector = detector_it->second;
-      ACTS_VERBOSE ("---> Found summary information");
+      ACTS_INFO ("---> Found summary information");
 
-      ACTS_VERBOSE ("---> Detector ID: " << detector.detectorId);
-      ACTS_VERBOSE ("---> Number of hits: " << counterMap[detector.detectorId].nhits);
-      ACTS_VERBOSE ("---> Number of holes: " << counterMap[detector.detectorId].nholes);
-      ACTS_VERBOSE ("---> Number of outliers: " << counterMap[detector.detectorId].noutliers);
+      ACTS_INFO ("---> Detector ID: " << detector.detectorId);
+      ACTS_INFO ("---> Number of hits: " << counterMap[detector.detectorId].nhits);
+      ACTS_INFO ("---> Number of holes: " << counterMap[detector.detectorId].nholes);
+      ACTS_INFO ("---> Number of outliers: " << counterMap[detector.detectorId].noutliers);
 
       TrkCouldBeAccepted = true;
 
