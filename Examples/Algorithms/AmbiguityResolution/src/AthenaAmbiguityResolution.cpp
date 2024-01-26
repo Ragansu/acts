@@ -131,12 +131,16 @@ ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
 
   ACTS_INFO("Min score: " << m_minScore);
 
-  for(long unsigned int i=0; i<5; ++i){
-    ACTS_INFO("Track " << i << " score: " << trackScore[cleanTracks[i]]);
-    if (trackScore[cleanTracks[i]] > m_minScore){
-      goodTracks.push_back(cleanTracks[i]);
-    }
+  for (long unsigned int i = 0; i < cleanTracks.size(); ++i){
+    ACTS_INFO("Track " << i << " score: " << cleanTracks[i]);
   }
+
+  // for(long unsigned int i=0; i<5; ++i){
+  //   ACTS_INFO("Track " << i << " score: " << trackScore[cleanTracks[i]]);
+  //   if (trackScore[cleanTracks[i]] > m_minScore){
+  //     goodTracks.push_back(cleanTracks[i]);
+  //   }
+  // }
   ACTS_INFO("Number of good tracks: " << goodTracks.size());
   return goodTracks;
 }
@@ -231,6 +235,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
     }
     if (TrkCouldBeAccepted){
       cleanTracks.push_back(iTrack);
+      ACTS_INFO("Track " << iTrack << " is clean");
     }
   }
   return cleanTracks;
