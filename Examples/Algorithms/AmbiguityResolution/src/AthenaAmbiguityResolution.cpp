@@ -101,9 +101,12 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
       // TODO: add scored based on eta and phi
 
     trackScore.push_back(score);
-    // ACTS_INFO("Track " << iTrack << " score: " << score);
+    trackScore[iTrack] = score;
+    ACTS_INFO("Track " << iTrack << " score: " << trackScore[iTrack]);
 
-    counterMaps.push_back(counterMap);
+
+    counterMaps.push_back(counterMap)
+
     iTrack++;
 
 
