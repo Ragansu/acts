@@ -72,7 +72,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
       auto detector_it = m_volumeMap.find(trajState.measurementVolume[i]);
       if(detector_it != m_volumeMap.end()){
         auto detector = detector_it->second;
-        score+=detector.hitsScore;
+        score+=detector.hitsScoreWeight;
         counterMap[detector.detectorId].nhits++;
       }
     }
@@ -81,7 +81,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
       auto detector_it = m_volumeMap.find(trajState.holeVolume[i]);
       if(detector_it != m_volumeMap.end()){
         auto detector = detector_it->second;
-        score+=detector.holesScore;
+        score+=detector.holesScoreWeight;
         counterMap[detector.detectorId].nholes++;
       }
       else{
@@ -93,7 +93,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
       auto detector_it = m_volumeMap.find(trajState.outlierVolume[i]);
       if(detector_it != m_volumeMap.end()){
         auto detector = detector_it->second;
-        score+=detector.outliersScore;
+        score+=detector.outliersScoreWeight;
         counterMap[detector.detectorId].noutliers++;
       }
     }

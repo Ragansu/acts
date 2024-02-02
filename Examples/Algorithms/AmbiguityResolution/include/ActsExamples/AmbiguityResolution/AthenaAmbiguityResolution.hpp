@@ -30,12 +30,12 @@ class AthenaAmbiguityResolution : public IAlgorithm {
 
   /// Framework execute method of the algorithm
 
-  struct DectectorConfig {
+  struct VolumeConfig {
 
-      int hitsScore;
-      int holesScore;
-      int outliersScore;
-      int otherScore;
+      int hitsScoreWeight;
+      int holesScoreWeight;
+      int outliersScoreWeight;
+      int otherScoreWeight;
 
       int minHits;
       int maxHoles;
@@ -86,7 +86,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   std::vector<std::size_t> solveAmbiguity(const ConstTrackContainer& tracks, std::vector<int> trackScore, std::vector<std::map<std::size_t, Counter>>& counterMaps) const;
 
 private:
-  std::map<unsigned int,DectectorConfig> m_volumeMap {
+  std::map<unsigned int,VolumeConfig> m_volumeMap {
     {16,{20, -10, 2, 0, 0, 10, 10, 0}}, // pixel 1
     {17,{20, -10, 2, 0, 0, 10, 10, 0}}, // pixel 2
     {18,{20, -10, 2, 0, 0, 10, 10, 0}}, // pixel 3
