@@ -48,6 +48,8 @@ class AthenaAmbiguityResolution : public IAlgorithm {
     int nhits;
     int nholes;
     int noutliers;
+
+    int nSharedHits;
   };
 
 // muons TODO etahits and phihits
@@ -101,9 +103,9 @@ private:
 
   };
   std::map<std::size_t, Counter> m_counterMap = {
-    {0,{0,0,0}},
-    {1,{0,0,0}},
-    {2,{0,0,0}}
+    {0,{0,0,0,0}},
+    {1,{0,0,0,0}},
+    {2,{0,0,0,0}}
   };
 };
 

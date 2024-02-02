@@ -52,6 +52,8 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
 
   std::vector<int> trackScore;
   int iTrack = 0;  
+  // std::vector<std::size_t> measurements;
+  // std::vector<std::vector<std::size_t>> measurementsPerTrack;
 
   // Loop over all the trajectories in the events
   for (auto track : tracks){
@@ -60,10 +62,11 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     int score = 100;
     auto counterMap = m_counterMap;
     
-    // --- prob(chi2,NDF), protect for chi2<0
-    // if (track.chi2() > 0 && track.nDoF() > 0) {
-    //   score+= std::log10(1.0-(track.chi2()/track.nDoF())); // place holder
-    // }
+    if (track.chi2() > 0 && track.nDoF() > 0) {
+      score+= std::log10(1.0-(track.chi2()/track.nDoF())); // place holder
+    }
+
+
     // detector score is determined by the number of hits/hole/outliers * hit/hole/outlier score
     // here so instead of calculating nhits/nholes/noutliers per volume, 
     // we just loop over all volumes and add the score.
@@ -102,6 +105,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     trackScore.push_back(score);
     // ACTS_INFO("Track " << iTrack << " score: " << score);
 
+    // measurementPerTrack.push_back(track.measurements();
 
     counterMaps.push_back(counterMap);
     iTrack++;
