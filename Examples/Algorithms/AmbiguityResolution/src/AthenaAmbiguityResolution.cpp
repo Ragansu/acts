@@ -52,8 +52,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
 
   std::vector<int> trackScore;
   int iTrack = 0;  
-  // std::vector<std::size_t> measurements;
-  // std::vector<std::vector<std::size_t>> measurementsPerTrack;
+
 
   // Loop over all the trajectories in the events
   for (auto track : tracks){
@@ -116,6 +115,16 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
   return trackScore;
 }
 
+std::size_t sourceLinkHash(const Acts::SourceLink& a) {
+  return static_cast<std::size_t>(
+      a.get<ActsExamples::IndexSourceLink>().index());
+}
+
+bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
+  return a.get<ActsExamples::IndexSourceLink>().index() ==
+         b.get<ActsExamples::IndexSourceLink>().index();
+}
+
 // place holder for goodTracks algorithm
 std::vector<std::size_t> 
 ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
@@ -163,30 +172,36 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
   };
   // Loop over all detectors
 
+  std::vector<std::vector<std::size_t>> measurementsPerTrack = computeInitialState(tracks, &sourceLinkHash, &sourceLinkEquality);
+
 
   std::vector<int> tsosType = std::vector<int>(tracks.size(), OtherTsos);
 
-  // std::vector<std::vector<std::size_t>> measurementsPerTrack;
-  // boost::container::flat_map<std::size_t,boost::container::flat_set<std::size_t>> tracksPerMeasurement;
-  // std::size_t numberOfTracks = tracks.size();
+  boost::container::flat_map<std::size_t,boost::container::flat_set<std::size_t>> tracksPerMeasurement;
+  std::size_t numberOfTracks = tracks.size();
 
 
 
-  // for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
-  //   for (auto iMeasurement : measurementsPerTrack[iTrack]) {
-  //     tracksPerMeasurement[iMeasurement].insert(iTrack);
-  //   }
-  // }
+  for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
+    for (auto iMeasurement : measurementsPerTrack[iTrack]) {
+      tracksPerMeasurement[iMeasurement].insert(iTrack);
+    }
+  }
 
-  // std::vector<std::size_t> sharedMeasurementsPerTrack = std::vector<std::size_t>(tracks.size(), 0);
-  // for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
-  //   for (auto iMeasurement : measurementsPerTrack[iTrack]) {
-  //     if (tracksPerMeasurement[iMeasurement].size() > 1) {
-  //       ++sharedMeasurementsPerTrack[iTrack];
-  //     }
-  //   }
-  // }
+  std::vector<std::size_t> sharedMeasurementsPerTrack = std::vector<std::size_t>(tracks.size(), 0);
+  for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
+    for (auto iMeasurement : measurementsPerTrack[iTrack]) {
+      if (tracksPerMeasurement[iMeasurement].size() > 1) {
+        ++sharedMeasurementsPerTrack[iTrack];
+      }
+    }
+  }
 
+  std::cout << "Number of shared measurements per track: " << std::endl;
+  for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
+    std::cout << "Track " << iTrack << " has " << sharedMeasurementsPerTrack[iTrack] << " shared measurements" << std::endl;
+  }
+  
   int iTrack = 0;
   for (const auto& track : tracks) {
 

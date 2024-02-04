@@ -58,6 +58,13 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   
 
  protected:
+  template <typename source_link_hash_t,
+          typename source_link_equality_t>
+  std::vector<std::vector<std::size_t>> computeInitialState(
+    const ConstTrackContainer& tracks,
+    source_link_hash_t&& sourceLinkHash,
+    source_link_equality_t&& sourceLinkEquality) const;
+
 
 
   /// Prepare the output track container to be written
@@ -110,3 +117,5 @@ private:
 };
 
 }  // namespace ActsExamples
+
+#include "ActsExamples/AmbiguityResolution/AthenaAmbiguityResolution.ipp"
