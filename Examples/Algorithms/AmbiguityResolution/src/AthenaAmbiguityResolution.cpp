@@ -199,8 +199,6 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
   std::cout << "--- Summary of shared measurements ---" << std::endl;
   std::cout << "======================================" << std::endl;
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
-
-
     std::cout << "----------------------------------------" << std::endl;
     std::cout << "Track " << iTrack << " has " << sharedMeasurementsPerTrack[iTrack] << " shared measurements" << std::endl;
     std::cout << "Track " << iTrack << " has " << measurementsPerTrack[iTrack].size() << " measurements" << std::endl;
