@@ -52,6 +52,10 @@ parser.add_argument(
     help="Use the Athena Ambiguity Solver instead of the classical one",
     action="store_true",
 )
+parser.add_argument(
+    "--GreedySolver",
+    help="Use the Greedy Ambiguity Solvera and then Athena Ambiguity solver"
+)
 
 parser.add_argument(
     "--MLSeedFilter",
