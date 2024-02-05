@@ -65,6 +65,7 @@ ttbar = args["ttbar"]
 g4_simulation = args["geant4"]
 ambiguity_MLSolver = args["MLSolver"]
 athena_ambiguity_resolution = args["AthenaSolver"]
+greedy_ambiguity_resolution = args["GreedySolver"]
 seedFilter_ML = args["MLSeedFilter"]
 u = acts.UnitConstants
 geoDir = getOpenDataDetectorDirectory()
@@ -219,14 +220,8 @@ if ambiguity_MLSolver:
         onnxModelFile=os.path.dirname(__file__)
         + "/MLAmbiguityResolution/duplicateClassifier.onnx",
     )
-elif athena_ambiguity_resolution:
-    addAthenaAmbiguityResolution(
-        s,
-        outputDirRoot=outputDir,
-        writeCovMat=True,
-        # outputDirCsv=outputDir,
-    )
-else:
+
+elif greedy_ambiguity_resolution:
     addAmbiguityResolution(
         s,
         AmbiguityResolutionConfig(
@@ -237,6 +232,20 @@ else:
         outputDirRoot=outputDir,
         writeCovMat=True,
         # outputDirCsv=outputDir,
+    )
+
+    addAthenaAmbiguityResolution(
+        s,
+        outputDirRoot=outputDir,
+        writeCovMat=True,
+        # outputDirCsv=outputDir,
+    )
+
+else:
+    addAthenaAmbiguityResolution(
+        s,
+        outputDirRoot=outputDir,
+        writeCovMat=True,
     )
     
 if not athena_ambiguity_resolution:
