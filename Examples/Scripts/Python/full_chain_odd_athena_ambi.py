@@ -54,7 +54,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--GreedySolver",
-    help="Use the Greedy Ambiguity Solvera and then Athena Ambiguity solver"
+    help="Use the Greedy Ambiguity Solvera and then Athena Ambiguity solver",
+    action="store_true",
 )
 
 parser.add_argument(
