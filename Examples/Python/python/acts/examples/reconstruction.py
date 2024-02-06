@@ -1611,7 +1611,7 @@ def addAthenaAmbiguityResolution(
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    alg = AthenaAmbiguityResolutionAlgorithm(
+    algAthena = AthenaAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=tracks,
         outputTracks="ambiTracks",
@@ -1620,13 +1620,13 @@ def addAthenaAmbiguityResolution(
         #     nMeasurementsMin=config.nMeasurementsMin,
         # ),
     )
-    s.addAlgorithm(alg)
-    s.addWhiteboardAlias("tracks", alg.config.outputTracks)
+    s.addAlgorithm(algAthena)
+    s.addWhiteboardAlias("tracks", algAthena.config.outputTracks)
 
     addTrackWriters(
         s,
-        name="ambi",
-        tracks=alg.config.outputTracks,
+        name="ambi_athena",
+        tracks=algAthena.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
