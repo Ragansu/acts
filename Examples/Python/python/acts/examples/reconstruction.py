@@ -1614,7 +1614,7 @@ def addAthenaAmbiguityResolution(
     algAthena = AthenaAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=tracks,
-        outputTracks="ambiTracks",
+        outputTracks="ambiTracksAthena",
         # **acts.examples.defaultKWArgs(
         #     maximumSharedHits=config.maximumSharedHits,
         #     nMeasurementsMin=config.nMeasurementsMin,
