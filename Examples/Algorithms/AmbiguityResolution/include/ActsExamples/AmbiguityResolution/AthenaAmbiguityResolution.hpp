@@ -85,7 +85,8 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   ///
   /// @param tracks is the input track container
   /// @return a vector of IDs of the tracks we want to keep
-  std::vector<std::size_t> getCleanedOutTracks(const ConstTrackContainer& tracks,   std::vector<std::map<std::size_t, Counter>>& counterMaps) const;
+  std::vector<std::size_t> getCleanedOutTracks(const ActsExamples::ConstTrackContainer& tracks ,
+  std::vector<int> trackScore, std::vector<std::map<std::size_t, Counter>>& counterMaps) const;
 
   /// Remove tracks that are not good enough
   ///

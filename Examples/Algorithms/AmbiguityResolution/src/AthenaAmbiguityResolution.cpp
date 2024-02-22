@@ -133,7 +133,7 @@ ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
   for(long unsigned int i=0; i<5; ++i){
     ACTS_INFO("Track " << i << " score: " << trackScore[i]);
   }
-  std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks, counterMaps);
+  std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks, trackScore, counterMaps);
 
   ACTS_INFO("Number of tracks: " << tracks.size());
 
@@ -156,7 +156,7 @@ ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
 
 
 std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
-    const ActsExamples::ConstTrackContainer& tracks,   std::vector<std::map<std::size_t, Counter>>& counterMaps) const {
+    const ActsExamples::ConstTrackContainer& tracks ,std::vector<int> trackScore, std::vector<std::map<std::size_t, Counter>>& counterMaps) const {
   std::vector<std::size_t> cleanTracks;
     enum TsosTypes {
     // A measurement not yet used in any other track
