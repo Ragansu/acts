@@ -61,10 +61,11 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     int score = 100;
     auto counterMap = m_counterMap;
     
-    if (track.chi2() > 0 && track.nDoF() > 0) {
-      score+= std::log10(1.0-(track.chi2()/track.nDoF())); // place holder
-    }
+    // if (track.chi2() > 0 && track.nDoF() > 0) {
+    //   score+= std::log10(1.0-(track.chi2()/track.nDoF())); // place holder
+    // }
 
+    // TODO: add scored based on chi2 and ndof
 
     // detector score is determined by the number of hits/hole/outliers * hit/hole/outlier score
     // here so instead of calculating nhits/nholes/noutliers per volume, 
@@ -196,6 +197,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       }
     }
   }
+  
   std::cout << "--- Summary of shared measurements ---" << std::endl;
   std::cout << "======================================" << std::endl;
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
