@@ -259,7 +259,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       if (tracksPerMeasurement[iMeasurement].size() > 1) {
         tsosType[iTrack] = SharedHit;
       }
-      if tracksPerMeasurement[iMeasurement].size() > m_maxSharedTrackspermeasurement {
+      if (tracksPerMeasurement[iMeasurement].size() > m_maxSharedTrackspermeasurement) {
         TrkCouldBeAccepted = false;
         break;
       } 
