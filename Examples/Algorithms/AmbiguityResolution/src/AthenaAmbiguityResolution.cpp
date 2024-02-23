@@ -198,15 +198,15 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
     }
   }
   
-  std::cout << "--- Summary of shared measurements ---" << std::endl;
-  std::cout << "======================================" << std::endl;
-  for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
-    std::cout << "----------------------------------------" << std::endl;
-    std::cout << "Track " << iTrack << " has " << sharedMeasurementsPerTrack[iTrack] << " shared measurements" << std::endl;
-    std::cout << "Track " << iTrack << " has " << measurementsPerTrack[iTrack].size() << " measurements" << std::endl;
-    std::cout << "Track " << iTrack << " has " << trackScore[iTrack] << " score" << std::endl;
-    std::cout << "----------------------------------------" << std::endl;
-  }
+  // std::cout << "--- Summary of shared measurements ---" << std::endl;
+  // std::cout << "======================================" << std::endl;
+  // for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
+  //   std::cout << "----------------------------------------" << std::endl;
+  //   std::cout << "Track " << iTrack << " has " << sharedMeasurementsPerTrack[iTrack] << " shared measurements" << std::endl;
+  //   std::cout << "Track " << iTrack << " has " << measurementsPerTrack[iTrack].size() << " measurements" << std::endl;
+  //   std::cout << "Track " << iTrack << " has " << trackScore[iTrack] << " score" << std::endl;
+  //   std::cout << "----------------------------------------" << std::endl;
+  // }
   
   int iTrack = 0;
   for (const auto& track : tracks) {
@@ -228,12 +228,12 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
         continue;
       }
       auto detector = detector_it->second;
-      // ACTS_INFO ("---> Found summary information");
-
-      // ACTS_INFO ("---> Detector ID: " << detector.detectorId);
-      // ACTS_INFO ("---> Number of hits: " << counterMap[detector.detectorId].nhits);
-      // ACTS_INFO ("---> Number of holes: " << counterMap[detector.detectorId].nholes);
-      // ACTS_INFO ("---> Number of outliers: " << counterMap[detector.detectorId].noutliers);
+      
+      ACTS_DEBUG ("---> Found summary information");
+      ACTS_DEBUG ("---> Detector ID: " << detector.detectorId);
+      ACTS_DEBUG ("---> Number of hits: " << counterMap[detector.detectorId].nhits);
+      ACTS_DEBUG ("---> Number of holes: " << counterMap[detector.detectorId].nholes);
+      ACTS_DEBUG ("---> Number of outliers: " << counterMap[detector.detectorId].noutliers);
 
 
       if (counterMap[detector.detectorId].nhits < detector.minHits){
@@ -259,10 +259,14 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       if (tracksPerMeasurement[iMeasurement].size() > 1) {
         tsosType[iTrack] = SharedHit;
       }
-      if tracksPerMeasurement[iMeasurement].size() < m_maxSharedTrackspermeasurement {
+      if tracksPerMeasurement[iMeasurement].size() > m_maxSharedTrackspermeasurement {
         TrkCouldBeAccepted = false;
         break;
       } 
+      if (tsosType[iTrack] == SharedHit && trackScore[iTrack] < m_minScoreSharedTracks) {
+        TrkCouldBeAccepted = false;
+        break;
+      }
     }
     
 
@@ -270,6 +274,11 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
     if (TrkCouldBeAccepted){
       cleanTracks.push_back(iTrack);
       // ACTS_INFO("Track " << iTrack << " is clean");
+      std::cout << "----------------------------------------" << std::endl;
+      std::cout << "Track " << iTrack << " has " << sharedMeasurementsPerTrack[iTrack] << " shared measurements" << std::endl;
+      std::cout << "Track " << iTrack << " has " << measurementsPerTrack[iTrack].size() << " measurements" << std::endl;
+      std::cout << "Track " << iTrack << " has " << trackScore[iTrack] << " score" << std::endl;
+      std::cout << "----------------------------------------" << std::endl;
     }
     iTrack++;
 

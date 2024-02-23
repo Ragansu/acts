@@ -56,6 +56,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
 
   int m_minScore = 0;
   int m_maxSharedTrackspermeasurement = 2;
+  int m_minScoreSharedTracks = 0;
   
 
  protected:
