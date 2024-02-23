@@ -55,6 +55,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
 // muons TODO etahits and phihits
 
   int m_minScore = 0;
+  int m_maxSharedTrackspermeasurement = 2;
   
 
  protected:
