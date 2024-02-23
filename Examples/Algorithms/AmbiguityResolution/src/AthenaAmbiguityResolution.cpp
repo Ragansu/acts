@@ -61,10 +61,11 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     int score = 100;
     auto counterMap = m_counterMap;
     
-    if (track.chi2() > 0 && track.nDoF() > 0) {
-      score+= std::log10(1.0-(track.chi2()/track.nDoF())); // place holder
-    }
+    // if (track.chi2() > 0 && track.nDoF() > 0) {
+    //   score+= std::log10(1.0-(track.chi2()/track.nDoF())); // place holder
+    // }
 
+    // TODO: add scored based on chi2 and ndof
 
     // detector score is determined by the number of hits/hole/outliers * hit/hole/outlier score
     // here so instead of calculating nhits/nholes/noutliers per volume, 
@@ -133,7 +134,7 @@ ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
   for(long unsigned int i=0; i<5; ++i){
     ACTS_INFO("Track " << i << " score: " << trackScore[i]);
   }
-  std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks, counterMaps);
+  std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks, trackScore, counterMaps);
 
   ACTS_INFO("Number of tracks: " << tracks.size());
 
@@ -156,7 +157,7 @@ ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
 
 
 std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutTracks(
-    const ActsExamples::ConstTrackContainer& tracks,   std::vector<std::map<std::size_t, Counter>>& counterMaps) const {
+    const ActsExamples::ConstTrackContainer& tracks ,std::vector<int> trackScore, std::vector<std::map<std::size_t, Counter>>& counterMaps) const {
   std::vector<std::size_t> cleanTracks;
     enum TsosTypes {
     // A measurement not yet used in any other track
@@ -196,12 +197,14 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       }
     }
   }
+  
   std::cout << "--- Summary of shared measurements ---" << std::endl;
   std::cout << "======================================" << std::endl;
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
     std::cout << "----------------------------------------" << std::endl;
     std::cout << "Track " << iTrack << " has " << sharedMeasurementsPerTrack[iTrack] << " shared measurements" << std::endl;
     std::cout << "Track " << iTrack << " has " << measurementsPerTrack[iTrack].size() << " measurements" << std::endl;
+    std::cout << "Track " << iTrack << " has " << trackScore[iTrack] << " score" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
   }
   
