@@ -162,7 +162,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
 
   // Loop over all detectors
 
-  std::vector<std::vector<std::size_t>> measurementsPerTrack = computeInitialState(tracks, &sourceLinkHash, &sourceLinkEquality);
+  std::vector<std::vector<std::pair<std::size_t, std::size_t>>> measurementsPerTrack = computeInitialState(tracks, &sourceLinkHash, &sourceLinkEquality);
 
   boost::container::flat_map<std::size_t,boost::container::flat_set<std::size_t>> tracksPerMeasurement;
   std::size_t numberOfTracks = tracks.size();
@@ -170,14 +170,16 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
 
 
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
-    for (auto iMeasurement : measurementsPerTrack[iTrack]) {
+    for (auto measurement_pair : measurementsPerTrack[iTrack]) {
+      auto iMeasurement = measurement_pair.first;
       tracksPerMeasurement[iMeasurement].insert(iTrack);
     }
   }
 
   std::vector<std::size_t> sharedMeasurementsPerTrack = std::vector<std::size_t>(tracks.size(), 0);
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
-    for (auto iMeasurement : measurementsPerTrack[iTrack]) {
+    for (auto measurement_pair : measurementsPerTrack[iTrack]) {
+      auto iMeasurement = measurement_pair.first;
       if (tracksPerMeasurement[iMeasurement].size() > 1) {
         ++sharedMeasurementsPerTrack[iTrack];
       }
@@ -246,14 +248,19 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       break;
     }
 
-    for (auto iMeasurement : measurementsPerTrack[iTrack]) {
-      if (tracksPerMeasurement[iMeasurement].size() > 1) {
-        tsosType[iTrack] = SharedHit;
-      }
+    for (auto measurement_pair : measurementsPerTrack[iTrack]) {
+      auto iMeasurement = measurement_pair.first;
+      auto iVolume = measurement_pair.second;
       if (tracksPerMeasurement[iMeasurement].size() > m_maxSharedTrackspermeasurement) {
         TrkCouldBeAccepted = false;
         continue;
       } 
+      auto detector_it = m_volumeMap.find(iVolume);
+      if(detector_it == m_volumeMap.end()){
+        continue;
+      }
+      // auto detector = detector_it->second;
+      
 
     }
     

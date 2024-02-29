@@ -62,7 +62,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
  protected:
   template <typename source_link_hash_t,
           typename source_link_equality_t>
-  std::vector<std::vector<std::size_t>> computeInitialState(
+  std::vector<std::vector<std::pair<std::size_t, std::size_t>>> computeInitialState(
     const ConstTrackContainer& tracks,
     source_link_hash_t&& sourceLinkHash,
     source_link_equality_t&& sourceLinkEquality) const;
