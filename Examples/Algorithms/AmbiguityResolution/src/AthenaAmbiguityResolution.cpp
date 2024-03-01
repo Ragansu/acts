@@ -332,7 +332,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       iTrack++;
       continue;
     }
-    // temporary solution for access detector information
+    
     for ( std::size_t i = 0; i< volumeList.size(); ++i){
       auto detector_it = m_volumeMap.find(volumeList[i]);
       if(detector_it == m_volumeMap.end()){
