@@ -40,6 +40,8 @@ class AthenaAmbiguityResolution : public IAlgorithm {
       int minHits;
       int maxHoles;
       int maxOutliers;
+      int maxUnused;
+      int maxSharedHits;
       
       std::size_t detectorId;
   };
@@ -48,6 +50,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
     int nhits;
     int nholes;
     int noutliers;
+    int nUnused;
 
     int nSharedHits;
   };
@@ -62,10 +65,11 @@ class AthenaAmbiguityResolution : public IAlgorithm {
  protected:
   template <typename source_link_hash_t,
           typename source_link_equality_t>
-  std::vector<std::vector<std::pair<std::size_t, std::size_t>>> computeInitialState(
-    const ConstTrackContainer& tracks,
-    source_link_hash_t&& sourceLinkHash,
-    source_link_equality_t&& sourceLinkEquality) const;
+    std::vector<std::vector<std::tuple<std::size_t, std::size_t, Acts::ConstTrackStateType>>> 
+      computeInitialState(
+        const ConstTrackContainer& tracks,
+        source_link_hash_t&& sourceLinkHash,
+        source_link_equality_t&& sourceLinkEquality) const;
 
 
 
@@ -99,23 +103,23 @@ class AthenaAmbiguityResolution : public IAlgorithm {
 
 private:
   std::map<unsigned int,VolumeConfig> m_volumeMap {
-    {16,{20, -10, 2, 0, 0, 10, 10, 0}}, // pixel 1
-    {17,{20, -10, 2, 0, 0, 10, 10, 0}}, // pixel 2
-    {18,{20, -10, 2, 0, 0, 10, 10, 0}}, // pixel 3
+    {16,{20, -10, 2, 0, 0, 10, 10, 1000, 1000, 0}}, // pixel 1
+    {17,{20, -10, 2, 0, 0, 10, 10, 1000, 1000, 0}}, // pixel 2
+    {18,{20, -10, 2, 0, 0, 10, 10, 1000, 1000, 0}}, // pixel 3
 
-    {23,{15, -8, 2, 0, 0, 10, 10, 1}}, // short strip 1
-    {24,{15, -8, 2, 0, 0, 10, 10, 1}}, // short strip 2
-    {25,{15, -8, 2, 0, 0, 10, 10, 1}}, // short strip 3
+    {23,{15, -8, 2, 0, 0, 10, 10, 1000, 1000, 1}}, // short strip 1
+    {24,{15, -8, 2, 0, 0, 10, 10, 1000, 1000, 1}}, // short strip 2
+    {25,{15, -8, 2, 0, 0, 10, 10, 1000, 1000, 1}}, // short strip 3
 
-    {28,{10, -5, 2, 0, 0, 10, 10, 2}}, // long strip 1
-    {29,{10, -5, 2, 0, 0, 10, 10, 2}}, // long strip 2
-    {30,{10, -5, 2, 0, 0, 10, 10, 2}} // long strip 3
+    {28,{10, -5, 2, 0, 0, 10, 10, 1000, 1000, 2}}, // long strip 1
+    {29,{10, -5, 2, 0, 0, 10, 10, 1000, 1000, 2}}, // long strip 2
+    {30,{10, -5, 2, 0, 0, 10, 10, 1000, 1000, 2}} // long strip 3
 
   };
   std::map<std::size_t, Counter> m_counterMap = {
-    {0,{0,0,0,0}},
-    {1,{0,0,0,0}},
-    {2,{0,0,0,0}}
+    {0,{0,0,0,0,0}},
+    {1,{0,0,0,0,0}},
+    {2,{0,0,0,0,0}}
   };
 };
 

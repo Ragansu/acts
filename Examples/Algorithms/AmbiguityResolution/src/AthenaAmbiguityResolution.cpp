@@ -130,10 +130,7 @@ bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
 std::vector<std::size_t> 
 ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
     const ActsExamples::ConstTrackContainer& tracks ,std::vector<int> trackScore, std::vector<std::map<std::size_t, Counter>>& counterMaps) const {
-  
-  for(long unsigned int i=0; i<5; ++i){
-    ACTS_INFO("Track " << i << " score: " << trackScore[i]);
-  }
+
   std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks, trackScore, counterMaps);
 
   ACTS_INFO("Number of tracks: " << tracks.size());
@@ -162,7 +159,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
 
   // Loop over all detectors
 
-  std::vector<std::vector<std::pair<std::size_t, std::size_t>>> measurementsPerTrack = computeInitialState(tracks, &sourceLinkHash, &sourceLinkEquality);
+  std::vector<std::vector<std::tuple<std::size_t, std::size_t, Acts::ConstTrackStateType>>>  measurementsPerTrack = computeInitialState(tracks, &sourceLinkHash, &sourceLinkEquality);
 
   boost::container::flat_map<std::size_t,boost::container::flat_set<std::size_t>> tracksPerMeasurement;
   std::size_t numberOfTracks = tracks.size();
@@ -170,16 +167,16 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
 
 
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
-    for (auto measurement_pair : measurementsPerTrack[iTrack]) {
-      auto iMeasurement = measurement_pair.first;
+    for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
+      auto iMeasurement = std::get<0>(measurements_tuples);
       tracksPerMeasurement[iMeasurement].insert(iTrack);
     }
   }
 
   std::vector<std::size_t> sharedMeasurementsPerTrack = std::vector<std::size_t>(tracks.size(), 0);
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
-    for (auto measurement_pair : measurementsPerTrack[iTrack]) {
-      auto iMeasurement = measurement_pair.first;
+    for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
+      auto iMeasurement = std::get<0>(measurements_tuples);
       if (tracksPerMeasurement[iMeasurement].size() > 1) {
         ++sharedMeasurementsPerTrack[iTrack];
       }
@@ -200,24 +197,26 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
     OtherTsos   = 5
   };
 
-  std::vector<int> tsosType = std::vector<int>(tracks.size(), OtherTsos);
-
 
   int iTrack = 0;
   for (const auto& track : tracks) {
 
+    int numUnused         = 0;
+    int numShared         = 0;
+
+    // int numWeightedShared = 0;
+
     auto counterMap = counterMaps[iTrack];
-
-    // init array
-    tsosType[iTrack] = OtherTsos;
-
-    // if we do not have a measurement, we should just mark it
 
     auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(tracks.trackStateContainer(), track.tipIndex());
     bool TrkCouldBeAccepted = true;
+    auto volumeList = trajState.measurementVolume;
+    auto volumeIterator = std::unique(volumeList.begin(), volumeList.end());
+
+    volumeList.resize(std::distance(volumeList.begin(), volumeIterator));
  
-    for(long unsigned int i = 0; i< trajState.measurementVolume.size(); ++i){
-      auto detector_it = m_volumeMap.find(trajState.measurementVolume[i]);
+    for(long unsigned int i = 0; i< volumeList.size(); ++i){
+      auto detector_it = m_volumeMap.find(volumeList[i]);
       if(detector_it == m_volumeMap.end()){
         continue;
       }
@@ -229,41 +228,123 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       ACTS_DEBUG ("---> Number of holes: " << counterMap[detector.detectorId].nholes);
       ACTS_DEBUG ("---> Number of outliers: " << counterMap[detector.detectorId].noutliers);
 
-
       if (counterMap[detector.detectorId].nhits < detector.minHits){
         TrkCouldBeAccepted = false;
+        break;
       }
 
-      else if (counterMap[detector.detectorId].nholes > detector.maxHoles){
+      if (counterMap[detector.detectorId].nholes > detector.maxHoles){
         TrkCouldBeAccepted = false;
+        break;
       }
 
-      else if (counterMap[detector.detectorId].noutliers > detector.maxOutliers){
+      if (counterMap[detector.detectorId].noutliers > detector.maxOutliers){
         TrkCouldBeAccepted = false;
-      }      
+        break;
+      }
+      
     }
 
-    if (sharedMeasurementsPerTrack[iTrack] > 0 && trackScore[iTrack] < m_minScoreSharedTracks) {
-      TrkCouldBeAccepted = false;
-      break;
+    if (!TrkCouldBeAccepted){
+      iTrack++;
+      continue;
     }
 
-    for (auto measurement_pair : measurementsPerTrack[iTrack]) {
-      auto iMeasurement = measurement_pair.first;
-      auto iVolume = measurement_pair.second;
-      if (tracksPerMeasurement[iMeasurement].size() > m_maxSharedTrackspermeasurement) {
-        TrkCouldBeAccepted = false;
-        continue;
-      } 
+    // for tracks with shared hits, we need to check and remove bad hits
+
+    std::vector<int> tsosTypes(trajState.measurementVolume.size(), 0);
+    int index = 0;
+    bool firstisshared = true;
+
+    std::size_t* lastrot       = nullptr;
+    std::size_t* lastbutonerot = nullptr;
+    int          lastrotindex  = 0;
+
+    for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
+
+      tsosTypes[index] = OtherTsos;
+    
+      auto iMeasurement = std::get<0>(measurements_tuples);
+      auto iVolume = std::get<1>(measurements_tuples);
+      auto iTypeFlags = std::get<2>(measurements_tuples);
+
       auto detector_it = m_volumeMap.find(iVolume);
       if(detector_it == m_volumeMap.end()){
         continue;
       }
-      // auto detector = detector_it->second;
-      
 
+      auto detector = detector_it->second;
+
+      if (iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+        ACTS_VERBOSE ("Measurement is outlier on a fitter track, copy it over");
+        tsosTypes[index] = Outlier;
+        continue;
+      }  
+          
+      if (tracksPerMeasurement[iMeasurement].size() > 1) {
+          ACTS_VERBOSE ("Measurement is shared, copy it over");
+        
+        if (!iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+          ACTS_VERBOSE ("Measurement is outlier on a shared track, copy it over");
+
+          tsosTypes[index] = UnusedHit;
+          (counterMap[detector.detectorId].nUnused)++;
+          numUnused++;
+          if (numShared == 0) firstisshared = false;
+
+          lastbutonerot = lastrot;
+          lastrot       = &iMeasurement;
+          lastrotindex  = index;
+
+          continue;
+        }
+
+        if (lastrot != nullptr && lastbutonerot != nullptr) {
+
+          std::cout << lastrotindex << std::endl;
+          std::cout << firstisshared << std::endl;
+
+        }
+
+
+        tsosTypes[index] = SharedHit;
+        (counterMap[detector.detectorId].nSharedHits)++;
+        numShared++;
+
+        // Yet to be implemented
+        // numWeightedShared += (isPixel ? 2 : 1);
+
+        lastbutonerot = lastrot;
+        lastrot       = &iMeasurement;
+        lastrotindex  = index;    
+
+        continue;      
+      }
+
+      ACTS_VERBOSE ("Measurement is not shared, Reject it");
+      tsosTypes[index] = RejectedHit;
+      TrkCouldBeAccepted = false;
+      index++;
     }
-    
+
+    if (sharedMeasurementsPerTrack[iTrack] > 0 && trackScore[iTrack] < m_minScoreSharedTracks) {
+      TrkCouldBeAccepted = false;
+      iTrack++;
+      continue;
+    }
+    // temporary solution for access detector information
+    for ( std::size_t i = 0; i< volumeList.size(); ++i){
+      auto detector_it = m_volumeMap.find(volumeList[i]);
+      if(detector_it == m_volumeMap.end()){
+        continue;
+      }
+      auto detector = detector_it->second;
+      if (counterMap[detector.detectorId].nSharedHits > detector.maxSharedHits){
+
+        TrkCouldBeAccepted = false;
+        iTrack++;
+      }
+    }
 
 
     if (TrkCouldBeAccepted){

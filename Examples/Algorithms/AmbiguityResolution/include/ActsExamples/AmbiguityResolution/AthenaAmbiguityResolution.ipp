@@ -15,10 +15,11 @@
 
 template <typename source_link_hash_t,
           typename source_link_equality_t>
-  std::vector<std::vector<std::pair<std::size_t, std::size_t>>> ActsExamples::AthenaAmbiguityResolution::computeInitialState(
-    const ActsExamples::ConstTrackContainer& tracks,
-    source_link_hash_t&& sourceLinkHash,
-    source_link_equality_t&& sourceLinkEquality) const {
+  std::vector<std::vector<std::tuple<std::size_t, std::size_t, Acts::ConstTrackStateType>>> 
+    ActsExamples::AthenaAmbiguityResolution::computeInitialState(
+      const ActsExamples::ConstTrackContainer& tracks,
+      source_link_hash_t&& sourceLinkHash,
+      source_link_equality_t&& sourceLinkEquality) const {
   auto measurementIndexMap =
       std::unordered_map<Acts::SourceLink, std::size_t, source_link_hash_t,
                          source_link_equality_t>(0, sourceLinkHash,
@@ -27,16 +28,13 @@ template <typename source_link_hash_t,
   // std::vector<std::vector<std::size_t>> measurementsPerTrack;
   // std::vector<std::vector<std::size_t>> volumeIdsPerMeasurement;
 
-  std::vector<std::vector<std::pair<std::size_t, std::size_t>>> measurementsPerTrack;
+  std::vector<std::vector<std::tuple<std::size_t, std::size_t, Acts::ConstTrackStateType>>> measurementsPerTrack;
 
 
   int numberOfTracks = 0;
   for (const auto& track : tracks) {
 
-    std::vector<std::pair<std::size_t, std::size_t>> measurements_pairs;
-
-
-
+    std::vector<std::tuple<std::size_t, std::size_t, Acts::ConstTrackStateType>> measurements_tuples;
 
     for (auto ts : track.trackStatesReversed()) {
       if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
@@ -47,12 +45,14 @@ template <typename source_link_hash_t,
         // assign a new measurement index if the source link was not seen yet
         auto emplace = measurementIndexMap.try_emplace(
             sourceLink, measurementIndexMap.size());
+
+        auto typeFlags = ts.typeFlags();
         
-        measurements_pairs.push_back(std::make_pair(emplace.first->second, geoID.volume()));
+        measurements_tuples.push_back(std::make_tuple(emplace.first->second, geoID.volume(), typeFlags));
       }
     }
 
-    measurementsPerTrack.push_back(std::move(measurements_pairs));
+    measurementsPerTrack.push_back(std::move(measurements_tuples));
 
     ++numberOfTracks;
   }
