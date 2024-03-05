@@ -112,7 +112,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
 
 
     trackScore.push_back(score);
-    // ACTS_INFO("Track " << iTrack << " score: " << score);
+    ACTS_INFO("Track " << iTrack << " score: " << score);
 
 
     counterMaps.push_back(counterMap);
