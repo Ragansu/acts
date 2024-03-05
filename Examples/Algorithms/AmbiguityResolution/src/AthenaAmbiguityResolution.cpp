@@ -47,65 +47,73 @@ ActsExamples::AthenaAmbiguityResolution::prepareOutputTrack(
   return outputTracks;
 }
 
+std::size_t sourceLinkHash(const Acts::SourceLink& a) {
+  return static_cast<std::size_t>(
+      a.get<ActsExamples::IndexSourceLink>().index());
+}
+
+bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
+  return a.get<ActsExamples::IndexSourceLink>().index() ==
+         b.get<ActsExamples::IndexSourceLink>().index();
+}
+
 std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
  const ActsExamples::ConstTrackContainer& tracks, std::vector<std::map<std::size_t, Counter>>& counterMaps) const {
 
   std::vector<int> trackScore;
   int iTrack = 0;  
 
+  std::vector<std::vector<std::tuple<std::size_t, std::size_t, Acts::ConstTrackStateType>>>  measurementsPerTrack = computeInitialState(tracks, &sourceLinkHash, &sourceLinkEquality);
+
 
   // Loop over all the trajectories in the events
   for (auto track : tracks){
-    auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
-      tracks.trackStateContainer(), track.tipIndex());
+
     int score = 100;
     auto counterMap = m_counterMap;
     
-    // if (track.chi2() > 0 && track.nDoF() > 0) {
-    //   score+= std::log10(1.0-(track.chi2()/track.nDoF())); // place holder
-    // }
+    if (track.chi2() > 0 && track.nDoF() > 0) {
+      score+= std::log10(1.0-(track.chi2())); // place holder
+    }
 
     // TODO: add scored based on chi2 and ndof
 
+
     // detector score is determined by the number of hits/hole/outliers * hit/hole/outlier score
-    // here so instead of calculating nhits/nholes/noutliers per volume, 
+    // here so instead of calculating nHits/nHoles/nOutliers per volume, 
     // we just loop over all volumes and add the score.
 
-    for (long unsigned int i = 0; i < trajState.measurementVolume.size(); ++i){
-      auto detector_it = m_volumeMap.find(trajState.measurementVolume[i]);
+
+    for (auto ts : track.trackStatesReversed()) {
+      auto iVolume = ts.referenceSurface().geometryId().volume();
+      auto iTypeFlags = ts.typeFlags();  
+
+      auto detector_it = m_volumeMap.find(iVolume);
       if(detector_it != m_volumeMap.end()){
         auto detector = detector_it->second;
-        score+=detector.hitsScoreWeight;
-        counterMap[detector.detectorId].nhits++;
+
+        if (iTypeFlags.test(Acts::TrackStateFlag::MeasurementFlag)){
+          if (iTypeFlags.test(Acts::TrackStateFlag::SharedHitFlag)){
+            counterMap[detector.detectorId].nSharedHits++;
+          }
+          score+=detector.hitsScoreWeight;
+          counterMap[detector.detectorId].nHits++;
+        }
+        else if (iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+          score+=detector.outliersScoreWeight;
+          counterMap[detector.detectorId].nOutliers++;
+        }
+        else if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+          score+=detector.holesScoreWeight;
+          counterMap[detector.detectorId].nHoles++;
+        }
       }
     }
 
-    for (long unsigned int i = 0; i < trajState.holeVolume.size(); ++i){
-      auto detector_it = m_volumeMap.find(trajState.holeVolume[i]);
-      if(detector_it != m_volumeMap.end()){
-        auto detector = detector_it->second;
-        score+=detector.holesScoreWeight;
-        counterMap[detector.detectorId].nholes++;
-      }
-      else{
-        ACTS_INFO("Detector not found");
-        ACTS_INFO("Detector ID: " << trajState.holeVolume[i]);
-      } 
-    }
-    for (long unsigned int i = 0; i < trajState.outlierVolume.size(); ++i){
-      auto detector_it = m_volumeMap.find(trajState.outlierVolume[i]);
-      if(detector_it != m_volumeMap.end()){
-        auto detector = detector_it->second;
-        score+=detector.outliersScoreWeight;
-        counterMap[detector.detectorId].noutliers++;
-      }
-    }
-      // TODO: add scored based on eta and phi
 
     trackScore.push_back(score);
     // ACTS_INFO("Track " << iTrack << " score: " << score);
 
-    // measurementPerTrack.push_back(track.measurements();
 
     counterMaps.push_back(counterMap);
     iTrack++;
@@ -116,15 +124,6 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
   return trackScore;
 }
 
-std::size_t sourceLinkHash(const Acts::SourceLink& a) {
-  return static_cast<std::size_t>(
-      a.get<ActsExamples::IndexSourceLink>().index());
-}
-
-bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
-  return a.get<ActsExamples::IndexSourceLink>().index() ==
-         b.get<ActsExamples::IndexSourceLink>().index();
-}
 
 // place holder for goodTracks algorithm
 std::vector<std::size_t> 
@@ -224,21 +223,21 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       
       ACTS_DEBUG ("---> Found summary information");
       ACTS_DEBUG ("---> Detector ID: " << detector.detectorId);
-      ACTS_DEBUG ("---> Number of hits: " << counterMap[detector.detectorId].nhits);
-      ACTS_DEBUG ("---> Number of holes: " << counterMap[detector.detectorId].nholes);
-      ACTS_DEBUG ("---> Number of outliers: " << counterMap[detector.detectorId].noutliers);
+      ACTS_DEBUG ("---> Number of hits: " << counterMap[detector.detectorId].nHits);
+      ACTS_DEBUG ("---> Number of holes: " << counterMap[detector.detectorId].nHoles);
+      ACTS_DEBUG ("---> Number of outliers: " << counterMap[detector.detectorId].nOutliers);
 
-      if (counterMap[detector.detectorId].nhits < detector.minHits){
+      if (counterMap[detector.detectorId].nHits < detector.minHits){
         TrkCouldBeAccepted = false;
         break;
       }
 
-      if (counterMap[detector.detectorId].nholes > detector.maxHoles){
+      if (counterMap[detector.detectorId].nHoles > detector.maxHoles){
         TrkCouldBeAccepted = false;
         break;
       }
 
-      if (counterMap[detector.detectorId].noutliers > detector.maxOutliers){
+      if (counterMap[detector.detectorId].nOutliers > detector.maxOutliers){
         TrkCouldBeAccepted = false;
         break;
       }
@@ -355,8 +354,11 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       std::cout << "Track " << iTrack << " has " << measurementsPerTrack[iTrack].size() << " measurements" << std::endl;
       std::cout << "Track " << iTrack << " has " << trackScore[iTrack] << " score" << std::endl;
       std::cout << "----------------------------------------" << std::endl;
-    }
     iTrack++;
+    continue;
+    }
+
+
 
   }
   return cleanTracks;

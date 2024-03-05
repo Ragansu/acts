@@ -25,9 +25,6 @@ template <typename source_link_hash_t,
                          source_link_equality_t>(0, sourceLinkHash,
                                                  sourceLinkEquality);
 
-  // std::vector<std::vector<std::size_t>> measurementsPerTrack;
-  // std::vector<std::vector<std::size_t>> volumeIdsPerMeasurement;
-
   std::vector<std::vector<std::tuple<std::size_t, std::size_t, Acts::ConstTrackStateType>>> measurementsPerTrack;
 
 

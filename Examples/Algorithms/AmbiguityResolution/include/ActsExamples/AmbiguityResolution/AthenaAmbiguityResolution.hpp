@@ -47,9 +47,9 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   };
 
   struct Counter {
-    int nhits;
-    int nholes;
-    int noutliers;
+    int nHits;
+    int nHoles;
+    int nOutliers;
     int nUnused;
 
     int nSharedHits;
