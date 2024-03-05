@@ -73,7 +73,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     auto counterMap = m_counterMap;
     
     if (track.chi2() > 0 && track.nDoF() > 0) {
-      score+= (1.0-std::log10(track.chi2())); // place holder
+      score+= (1.0-std::log10(track.chi2()/track.nDoF())); // place holder
     }
 
     // TODO: add scored based on chi2 and ndof
