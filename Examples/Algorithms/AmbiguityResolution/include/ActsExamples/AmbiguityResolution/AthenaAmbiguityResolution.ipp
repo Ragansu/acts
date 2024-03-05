@@ -27,6 +27,7 @@ template <typename source_link_hash_t,
 
   std::vector<std::vector<std::tuple<std::size_t, std::size_t, Acts::ConstTrackStateType>>> measurementsPerTrack;
 
+  std::cout << "Starting to compute initial state" << std::endl;
 
   int numberOfTracks = 0;
   for (const auto& track : tracks) {

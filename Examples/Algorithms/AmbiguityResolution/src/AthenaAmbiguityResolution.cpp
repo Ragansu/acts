@@ -130,6 +130,8 @@ std::vector<std::size_t>
 ActsExamples::AthenaAmbiguityResolution::solveAmbiguity(
     const ActsExamples::ConstTrackContainer& tracks ,std::vector<int> trackScore, std::vector<std::map<std::size_t, Counter>>& counterMaps) const {
 
+  std::cout << "Solving ambiguity" << std::endl;
+
   std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks, trackScore, counterMaps);
 
   ACTS_INFO("Number of tracks: " << tracks.size());
@@ -156,7 +158,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
     const ActsExamples::ConstTrackContainer& tracks ,std::vector<int> trackScore, std::vector<std::map<std::size_t, Counter>>& counterMaps) const {
   std::vector<std::size_t> cleanTracks;
 
-  // Loop over all detectors
+  std::cout << "Cleaning tracks" << std::endl;
 
   std::vector<std::vector<std::tuple<std::size_t, std::size_t, Acts::ConstTrackStateType>>>  measurementsPerTrack = computeInitialState(tracks, &sourceLinkHash, &sourceLinkEquality);
 
