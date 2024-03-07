@@ -160,8 +160,13 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
   std::vector<std::vector<std::tuple<std::size_t, std::size_t, Acts::ConstTrackStateType>>>  measurementsPerTrack = computeInitialState(tracks, &sourceLinkHash, &sourceLinkEquality);
 
   boost::container::flat_map<std::size_t,boost::container::flat_set<std::size_t>> tracksPerMeasurement;
+  
+  std::cout << "Number of measurements: " << measurementsPerTrack.size() << std::endl;
+  
   std::size_t numberOfTracks = tracks.size();
 
+
+  std::cout << "Number of tracks: " << numberOfTracks << std::endl;
 
 
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
