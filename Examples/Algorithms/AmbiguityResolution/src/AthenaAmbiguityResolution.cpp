@@ -263,9 +263,12 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
     std::size_t* lastbutonerot = nullptr;
     int          lastrotindex  = 0;
 
-    std::cout << " computing tsos types" << std::endl;
+    std::cout << " computing tsos types for track " << iTrack << std::endl;
+    std::cout << "Number of measurements: " << measurementsPerTrack[iTrack].size() << std::endl;
 
     for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
+
+      std::cout << " computing tsos for measurement " << index << std::endl;
 
       tsosTypes[index] = OtherTsos;
     
