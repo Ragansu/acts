@@ -63,9 +63,6 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
   std::vector<int> trackScore;
   int iTrack = 0;  
 
-  std::vector<std::vector<std::tuple<std::size_t, std::size_t, Acts::ConstTrackStateType>>>  measurementsPerTrack = computeInitialState(tracks, &sourceLinkHash, &sourceLinkEquality);
-
-
   // Loop over all the trajectories in the events
   for (auto track : tracks){
 
