@@ -263,6 +263,8 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
     std::size_t* lastbutonerot = nullptr;
     int          lastrotindex  = 0;
 
+    std::cout << " computing tsos types" << std::endl;
+
     for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
 
       tsosTypes[index] = OtherTsos;
@@ -319,7 +321,9 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
 
         lastbutonerot = lastrot;
         lastrot       = &iMeasurement;
-        lastrotindex  = index;    
+        lastrotindex  = index;   
+
+        std::cout << lastrotindex << std::endl; 
 
         continue;      
       }
