@@ -279,7 +279,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       auto detector = detector_it->second;
 
       if (iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
-        ACTS_VERBOSE ("Measurement is outlier on a fitter track, copy it over");
+        ACTS_INFO ("Measurement is outlier on a fitter track, copy it over");
         tsosTypes[index] = Outlier;
         index++;
         continue;
