@@ -60,6 +60,7 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   int m_minScore = 0;
   std::size_t m_maxSharedTrackspermeasurement = 2;
   int m_minScoreSharedTracks = 1;
+  std::size_t m_maxSharedTracksPerMeasurement = 2;
   
 
  protected:
