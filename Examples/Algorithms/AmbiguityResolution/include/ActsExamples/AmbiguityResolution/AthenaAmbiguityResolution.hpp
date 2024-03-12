@@ -42,6 +42,8 @@ class AthenaAmbiguityResolution : public IAlgorithm {
       int maxOutliers;
       int maxUnused;
       int maxSharedHits;
+
+      bool sharedHitsFlag;
       
       std::size_t detectorId;
   };
@@ -104,17 +106,17 @@ class AthenaAmbiguityResolution : public IAlgorithm {
 
 private:
   std::map<unsigned int,VolumeConfig> m_volumeMap {
-    {16,{20, -10, 2, 0, 0, 10, 10, 1000, 1000, 0}}, // pixel 1
-    {17,{20, -10, 2, 0, 0, 10, 10, 1000, 1000, 0}}, // pixel 2
-    {18,{20, -10, 2, 0, 0, 10, 10, 1000, 1000, 0}}, // pixel 3
+    {16,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // pixel 1
+    {17,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // pixel 2
+    {18,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // pixel 3
 
-    {23,{15, -8, 2, 0, 0, 10, 10, 1000, 1000, 1}}, // short strip 1
-    {24,{15, -8, 2, 0, 0, 10, 10, 1000, 1000, 1}}, // short strip 2
-    {25,{15, -8, 2, 0, 0, 10, 10, 1000, 1000, 1}}, // short strip 3
+    {23,{15, -8, 2, 0, 0, 10, 10, 1000, 1000,true, 1}}, // short strip 1
+    {24,{15, -8, 2, 0, 0, 10, 10, 1000, 1000,true, 1}}, // short strip 2
+    {25,{15, -8, 2, 0, 0, 10, 10, 1000, 1000,true, 1}}, // short strip 3
 
-    {28,{10, -5, 2, 0, 0, 10, 10, 1000, 1000, 2}}, // long strip 1
-    {29,{10, -5, 2, 0, 0, 10, 10, 1000, 1000, 2}}, // long strip 2
-    {30,{10, -5, 2, 0, 0, 10, 10, 1000, 1000, 2}} // long strip 3
+    {28,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // long strip 1
+    {29,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // long strip 2
+    {30,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}} // long strip 3
 
   };
   std::map<std::size_t, Counter> m_counterMap = {

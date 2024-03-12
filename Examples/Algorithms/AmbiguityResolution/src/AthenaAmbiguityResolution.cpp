@@ -310,6 +310,12 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
 
         }
 
+        if (detector.sharedHitsFlag == true) {
+          ACTS_VERBOSE ("Measurement is shared, Reject it");
+          tsosTypes[index] = RejectedHit;
+          index++;
+          continue;
+        }
 
         tsosTypes[index] = SharedHit;
         (counterMap[detector.detectorId].nSharedHits)++;
@@ -370,7 +376,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
   
   
 
-    if (sharedMeasurementsPerTrack > 5 && trackScore[iTrack] < m_minScoreSharedTracks) {
+    if (sharedMeasurementsPerTrack > 0 && trackScore[iTrack] < m_minScoreSharedTracks) {
       TrkCouldBeAccepted = false;
       std::cout << "Track " << iTrack << " could not be accepted" << std::endl;
       iTrack++;
