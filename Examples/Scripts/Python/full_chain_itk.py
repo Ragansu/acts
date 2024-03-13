@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import pathlib, acts, acts.examples, acts.examples.itk
+import argparse
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -32,7 +33,30 @@ detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
+parser = argparse.ArgumentParser(description="Full chain with the ITk detector")
+
+parser.add_argument(
+    "--MLSolver",
+    help="Use the Ml Ambiguity Solver instead of the classical one",
+    action="store_true",
+)
+parser.add_argument(
+    "--AthenaSolver",
+    help="Use the Athena Ambiguity Solver instead of the classical one",
+    action="store_true",
+)
+parser.add_argument(
+    "--GreedySolver",
+    help="Use the Greedy Ambiguity Solvera and then Athena Ambiguity solver",
+    action="store_true",
+)
+
+ambiguity_MLSolver = args["MLSolver"]
+athena_ambiguity_resolution = args["AthenaSolver"]
+greedy_ambiguity_resolution = args["GreedySolver"]
+
 s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))
+
 
 if not ttbar_pu200:
     addParticleGun(
@@ -119,21 +143,52 @@ addCKFTracks(
     outputDirRoot=outputDir,
 )
 
-addAmbiguityResolution(
-    s,
-    AmbiguityResolutionConfig(
-        maximumSharedHits=3,
-        maximumIterations=10000,
-        nMeasurementsMin=6,
-    ),
-    outputDirRoot=outputDir,
-)
 
-addVertexFitting(
-    s,
-    field,
-    vertexFinder=VertexFinder.Iterative,
-    outputDirRoot=outputDir,
-)
+if ambiguity_MLSolver:
+    addAmbiguityResolutionML(
+        s,
+        AmbiguityResolutionMLConfig(
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
+        ),
+        outputDirRoot=outputDir,
+        # outputDirCsv=outputDir,
+        onnxModelFile=os.path.dirname(__file__)
+        + "/MLAmbiguityResolution/duplicateClassifier.onnx",
+    )
+
+elif greedy_ambiguity_resolution:
+    addAmbiguityResolution(
+        s,
+        AmbiguityResolutionConfig(
+            maximumSharedHits=3,
+            maximumIterations=1000000,
+            nMeasurementsMin=7,
+        ),
+        outputDirRoot=outputDir,
+        writeCovMat=True,
+        # outputDirCsv=outputDir,
+    )
+
+    addAthenaAmbiguityResolution(
+        s,
+        outputDirRoot=outputDir,
+        writeCovMat=True,
+        # outputDirCsv=outputDir,
+    )
+
+else:
+    addAthenaAmbiguityResolution(
+        s,
+        outputDirRoot=outputDir,
+        writeCovMat=True,
+    )
+
+
+# addVertexFitting(
+#     s,
+#     field,
+#     vertexFinder=VertexFinder.Iterative,
+#     outputDirRoot=outputDir,
+# )
 
 s.run()
