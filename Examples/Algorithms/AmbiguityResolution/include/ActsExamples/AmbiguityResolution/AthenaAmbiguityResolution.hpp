@@ -60,9 +60,9 @@ class AthenaAmbiguityResolution : public IAlgorithm {
 // muons TODO etahits and phihits
 
   int m_minScore = 0;
-  std::size_t m_maxSharedTrackspermeasurement = 2;
-  int m_minScoreSharedTracks = 1;
-  std::size_t m_maxSharedTracksPerMeasurement = 2;
+  int m_minScoreSharedTracks = 200;
+  std::size_t m_maxSharedTracksPerMeasurement = 3;
+  std::size_t m_maxShared = 5;
   
 
  protected:
