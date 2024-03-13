@@ -105,6 +105,10 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
           counterMap[detector.detectorId].nHoles++;
         }
       }
+      else {
+        ACTS_INFO("Detector not found");
+        ACTS_INFO("Volume: " << iVolume);
+      }
     }
 
 
