@@ -355,7 +355,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       std::cout << "Tsos type " << i << " is " << tsosTypes[i] << std::endl;
       if (tsosTypes[i] == RejectedHit){
         std::cout << "Droping rejected hit" << std::endl;
-      }
+      }m_minScoreSharedTracks
       else if (tsosTypes[i] != SharedHit){
         std::cout << "Good TSOS, copy hit" << std::endl;
         newMeasurementsPerTrack.push_back(measurment);
@@ -366,7 +366,7 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       else {
         std::cout << "Try to recover shared hit " << std::endl;
         if (tracksPerMeasurement[measurment].size() < m_maxSharedTracksPerMeasurement &&
-            track_score > m_minScoreSharedTracks) { 
+            track_score > ) { 
           
           std::cout << "Accepted hit shared with " << tracksPerMeasurement[measurment].size() << " tracks" <<std::endl;
           newMeasurementsPerTrack.push_back(measurment);
@@ -379,12 +379,12 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
     }
 
 
-    std::size_t sharedMeasurementsPerTrack = 0;
-    for (auto iMeasurement : newMeasurementsPerTrack) {
-      if (tracksPerMeasurement[iMeasurement].size() > 1) {
-        ++sharedMeasurementsPerTrack;
-      }
-    }
+    // std::size_t sharedMeasurementsPerTrack = 0;
+    // for (auto iMeasurement : newMeasurementsPerTrack) {
+    //   if (tracksPerMeasurement[iMeasurement].size() > 1) {
+    //     ++sharedMeasurementsPerTrack;
+    //   }
+    // }
   
     if (newMeasurementsPerTrack.size() < 3) {
       TrkCouldBeAccepted = false;

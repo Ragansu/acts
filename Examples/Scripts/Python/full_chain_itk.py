@@ -46,7 +46,7 @@ else:
     addPythia8(
         s,
         hardProcess=["Top:qqbar2ttbar=on"],
-        npileup=200,
+        npileup=50,
         vtxGen=acts.examples.GaussianVertexGenerator(
             stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
             mean=acts.Vector4(0, 0, 0, 0),
