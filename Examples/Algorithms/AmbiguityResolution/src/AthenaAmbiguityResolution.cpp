@@ -70,7 +70,7 @@ std::vector<int> ActsExamples::AthenaAmbiguityResolution::simpleScore(
     auto counterMap = m_counterMap;
     
     if (track.chi2() > 0 && track.nDoF() > 0) {
-      score+= (1.0-std::log10(track.chi2()/track.nDoF())); // place holder
+      score+= 10*(1.0-std::log10(track.chi2()/track.nDoF())); // place holder
     }
 
     // TODO: add scored based on chi2 and ndof
@@ -302,9 +302,10 @@ std::vector<std::size_t> ActsExamples::AthenaAmbiguityResolution::getCleanedOutT
       if (tracksPerMeasurement[iMeasurement].size() > 1) {
           ACTS_VERBOSE ("Measurement is shared, copy it over");
         
-        if (!iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+        if (iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
           ACTS_VERBOSE ("Measurement is outlier on a shared track, copy it over");
-
+          tsosTypes[index] = Outlier;
+          continue;
         }
 
         if (lastrot != nullptr && lastbutonerot != nullptr) {
