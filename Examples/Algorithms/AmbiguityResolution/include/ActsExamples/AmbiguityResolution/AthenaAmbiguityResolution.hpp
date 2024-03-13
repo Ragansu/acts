@@ -105,18 +105,43 @@ class AthenaAmbiguityResolution : public IAlgorithm {
   std::vector<std::size_t> solveAmbiguity(const ConstTrackContainer& tracks, std::vector<int> trackScore, std::vector<std::map<std::size_t, Counter>>& counterMaps) const;
 
 private:
+  // std::map<unsigned int,VolumeConfig> m_volumeMap {
+  //   {16,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // pixel 1
+  //   {17,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // pixel 2
+  //   {18,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // pixel 3
+
+  //   {23,{15, -8, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // short strip 1
+  //   {24,{15, -8, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // short strip 2
+  //   {25,{15, -8, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // short strip 3
+
+  //   {28,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // long strip 1
+  //   {29,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // long strip 2
+  //   {30,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}} // long strip 3
+
+  // };
+
   std::map<unsigned int,VolumeConfig> m_volumeMap {
-    {16,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // pixel 1
-    {17,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // pixel 2
-    {18,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // pixel 3
 
-    {23,{15, -8, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // short strip 1
-    {24,{15, -8, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // short strip 2
-    {25,{15, -8, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // short strip 3
+    {8,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // inner pixel 1
+    {9,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // inner pixel 2 (barrel)
+    {10,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // inner pixel 3
 
-    {28,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // long strip 1
-    {29,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // long strip 2
-    {30,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}} // long strip 3
+    {13,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 1 
+    {14,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 2
+    {15,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 3
+    {16,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 4 (barrel)
+    {18,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 5
+    {19,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 6
+    {20,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 7
+
+    {22,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // strip 1
+    {23,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // strip 2 (barrel)
+    {24,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // strip 3
+
+    {25,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // HGTD 1
+    {2,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // HGTD 2
+
+
 
   };
   std::map<std::size_t, Counter> m_counterMap = {

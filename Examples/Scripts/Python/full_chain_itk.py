@@ -27,19 +27,11 @@ from acts.examples.reconstruction import (
     VertexFinder,
 )
 
-ttbar_pu200 = False
-u = acts.UnitConstants
-geo_dir = pathlib.Path("/homeijclab/chakkappai/Acts/acts-itk")
-outputDir = pathlib.Path.cwd() / "itk_output"
-# acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
-
-detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
-field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
-rnd = acts.examples.RandomNumbers(seed=42)
-
 parser = argparse.ArgumentParser(description="Full chain with the ITk detector")
 
 parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
+parser.add_argument("--geo_dir", help="Path to the ITk geometry", type=str, default="/homeijclab/chakkappai/Acts/acts-itk")
+
 parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
 )
@@ -69,6 +61,16 @@ args = vars(parser.parse_args())
 ambiguity_MLSolver = args["MLSolver"]
 athena_ambiguity_resolution = args["AthenaSolver"]
 greedy_ambiguity_resolution = args["GreedySolver"]
+geo_dir = pathlib.Path(args["geo_dir"])
+
+ttbar_pu200 = False
+u = acts.UnitConstants
+outputDir = pathlib.Path.cwd() / "itk_output"
+# acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
+
+detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
+field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
+rnd = acts.examples.RandomNumbers(seed=42)
 
 s = acts.examples.Sequencer(
     events=args["events"],
