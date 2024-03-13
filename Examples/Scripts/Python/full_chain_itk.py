@@ -39,6 +39,15 @@ rnd = acts.examples.RandomNumbers(seed=42)
 
 parser = argparse.ArgumentParser(description="Full chain with the ITk detector")
 
+parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
+parser.add_argument(
+    "--geant4", help="Use Geant4 instead of fatras", action="store_true"
+)
+parser.add_argument(
+    "--ttbar",
+    help="Use Pythia8 (ttbar, pile-up 200) instead of particle gun",
+    action="store_true",
+)
 parser.add_argument(
     "--MLSolver",
     help="Use the Ml Ambiguity Solver instead of the classical one",
@@ -61,8 +70,11 @@ ambiguity_MLSolver = args["MLSolver"]
 athena_ambiguity_resolution = args["AthenaSolver"]
 greedy_ambiguity_resolution = args["GreedySolver"]
 
-s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))
-
+s = acts.examples.Sequencer(
+    events=args["events"],
+    numThreads=-1,
+    outputDir=str(outputDir),
+)
 
 if not ttbar_pu200:
     addParticleGun(
@@ -76,7 +88,7 @@ else:
     addPythia8(
         s,
         hardProcess=["Top:qqbar2ttbar=on"],
-        npileup=50,
+        npileup=200,
         vtxGen=acts.examples.GaussianVertexGenerator(
             stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
             mean=acts.Vector4(0, 0, 0, 0),
