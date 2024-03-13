@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import pathlib, acts, acts.examples, acts.examples.itk
+import pathlib,os, acts, acts.examples, acts.examples.itk
 import argparse
 from acts.examples.simulation import (
     addParticleGun,
@@ -19,6 +19,10 @@ from acts.examples.reconstruction import (
     TrackSelectorConfig,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
+    addAthenaAmbiguityResolution,
+    AthenaAmbiguityResolutionConfig,
+    addAmbiguityResolutionML,
+    AmbiguityResolutionMLConfig,
     addVertexFitting,
     VertexFinder,
 )
@@ -50,6 +54,8 @@ parser.add_argument(
     help="Use the Greedy Ambiguity Solvera and then Athena Ambiguity solver",
     action="store_true",
 )
+
+args = vars(parser.parse_args())
 
 ambiguity_MLSolver = args["MLSolver"]
 athena_ambiguity_resolution = args["AthenaSolver"]
