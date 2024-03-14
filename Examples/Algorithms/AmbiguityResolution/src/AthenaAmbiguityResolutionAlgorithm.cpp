@@ -7,18 +7,38 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/AmbiguityResolution/AthenaAmbiguityResolutionAlgorithm.hpp"
-
+#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.hpp"
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <iterator>
 #include <map>
 
-ActsExamples::AthenaAmbiguityResolutionAlgorithm::AthenaAmbiguityResolutionAlgorithm(
-    ActsExamples::AthenaAmbiguityResolutionAlgorithm::Config cfg,
-    Acts::Logging::Level lvl)
-    : ActsExamples::AthenaAmbiguityResolution("AthenaAmbiguityResolutionAlgorithm",
-                                           lvl),
-      m_cfg(std::move(cfg)){
+namespace {
+
+std::size_t sourceLinkHash(const Acts::SourceLink& a) {
+  return static_cast<std::size_t>(
+      a.get<ActsExamples::IndexSourceLink>().index());
+}
+
+bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
+  return a.get<ActsExamples::IndexSourceLink>().index() ==
+         b.get<ActsExamples::IndexSourceLink>().index();
+}
+
+}  // namespace
+
+ActsExamples::AthenaAmbiguityResolutionAlgorithm::
+    GreedyAmbiguityResolutionAlgorithm(
+        ActsExamples::AthenaAmbiguityResolutionAlgorithm::Config cfg,
+        Acts::Logging::Level lvl)
+    : ActsExamples::IAlgorithm("AthenaAmbiguityResolutionAlgorithm", lvl),
+      m_cfg(std::move(cfg)),
+      m_core(transformConfig(cfg), logger().clone()) {
   
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");
@@ -32,18 +52,16 @@ ActsExamples::AthenaAmbiguityResolutionAlgorithm::AthenaAmbiguityResolutionAlgor
 
 ActsExamples::ProcessCode ActsExamples::AthenaAmbiguityResolutionAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  // Read input data
-  const auto& tracks = m_inputTracks(ctx);
-  // Associate measurement to their respective tracks
+  const auto& tracks = m_inputTracks(ctx);  // Read input data
+  ACTS_VERBOSE("Number of input tracks: " << tracks.size());
 
-  std::vector<std::map<std::size_t, Counter>> counterMaps;
+  std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>> measurementsPerTracks;
+  measurementsPerTracks = m_core.computeInitialState(tracks, &sourceLinkHash,
+                              &sourceLinkEquality);
 
-  std::vector<int> score = simpleScore(tracks, counterMaps);
-
-  // Select the ID of the track we want to keep
-  std::vector<std::size_t> goodTracks = solveAmbiguity(tracks,score,counterMaps);
+  std::vector<std::size_t> goodTracks =  m_core.solveAmbiguity(tracks, measurementsPerTracks);
   // Prepare the output track collection from the IDs
-  auto outputTracks = prepareOutputTrack(tracks, goodTracks);
+  auto outputTracks = m_core.prepareOutputTrack(tracks, goodTracks);
   m_outputTracks(ctx, std::move(outputTracks));
 
   return ActsExamples::ProcessCode::SUCCESS;

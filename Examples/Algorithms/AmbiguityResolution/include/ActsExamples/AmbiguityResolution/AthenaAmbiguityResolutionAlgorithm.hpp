@@ -8,10 +8,12 @@
 
 #pragma once
 
+#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
-
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include <string>
 
 namespace ActsExamples {
@@ -22,7 +24,7 @@ namespace ActsExamples {
 ///  1) Cluster together nearby tracks using shared hits
 ///  2) For each track use a neural network to compute a score
 ///  3) In each cluster keep the track with the highest score
-class AthenaAmbiguityResolutionAlgorithm final : public AthenaAmbiguityResolution {
+class AthenaAmbiguityResolutionAlgorithm final :  public IAlgorithm {
  public:
   /// Configuration for the ambiguity resolution algorithm.
 
@@ -51,6 +53,8 @@ class AthenaAmbiguityResolutionAlgorithm final : public AthenaAmbiguityResolutio
 
  private:
   Config m_cfg;
+  Acts::AthenaAmbiguityResolution m_core;
+
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };

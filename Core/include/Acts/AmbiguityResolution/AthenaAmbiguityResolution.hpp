@@ -27,15 +27,6 @@ namespace Acts {
 /// Contains method for data preparations
 class AthenaAmbiguityResolution {
  public:
-  /// Construct the ambiguity resolution algorithm.
-  ///
-  /// @param name name of the algorithm
-  /// @param lvl is the logging level
-  AthenaAmbiguityResolution(std::string name, std::unique_ptr<const Logger> logger =
-                            getDefaultLogger("AthenaAmbiguityResolution", Logging::INFO))
-      : m_logger{std::move(logger)} {}
-  ///
-
   /// Framework execute method of the algorithm
 
   struct VolumeConfig {
@@ -64,6 +55,16 @@ class AthenaAmbiguityResolution {
 
     int nSharedHits;
   };
+
+  /// Construct the ambiguity resolution algorithm.
+  ///
+  /// @param name name of the algorithm
+  /// @param lvl is the logging level
+  AthenaAmbiguityResolution(const std::map<unsigned int,VolumeConfig>& cfg,
+                            std::unique_ptr<const Logger> logger =
+                                getDefaultLogger("AthenaAmbiguityResolution",
+                                                 Logging::INFO))
+      : m_volumeMap{cfg}, m_logger{std::move(logger)} {}
 
 // muons TODO etahits and phihits
 
