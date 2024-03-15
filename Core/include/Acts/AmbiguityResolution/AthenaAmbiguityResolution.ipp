@@ -173,7 +173,7 @@ Acts::AthenaAmbiguityResolution::solveAmbiguity(
   std::vector<std::map<std::size_t, Counter>> counterMaps;
   std::vector<int> trackScore = simpleScore(tracks, counterMaps);
 
-  std::vector<std::size_t> cleanTracks = getCleanedOutTracks(tracks, trackScore, counterMaps, measurementsPerTrack);
+  std::vector<std::size_t> cleanTracks = getCleanedOutTracks(trackScore, counterMaps, measurementsPerTrack);
 
   ACTS_INFO("Number of tracks: " << tracks.size());
 
