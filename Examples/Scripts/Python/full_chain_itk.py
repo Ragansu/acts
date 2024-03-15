@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import pathlib,os, acts, acts.examples, acts.examples.itk
-import argparse, sys
+import argparse
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -63,9 +63,8 @@ ambiguity_MLSolver = args["MLSolver"]
 athena_ambiguity_resolution = args["AthenaSolver"]
 greedy_ambiguity_resolution = args["GreedySolver"]
 geo_dir = pathlib.Path(args["geo_dir"])
-ambi_config = pathlib.Path(args["ambi_config"])
-ttbar_pu200 = args["ttbar"]
 
+ttbar_pu200 = False
 u = acts.UnitConstants
 outputDir = pathlib.Path.cwd() / "itk_output"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
@@ -190,13 +189,11 @@ elif greedy_ambiguity_resolution:
         writeCovMat=True,
         # outputDirCsv=outputDir,
     )
-    sys.path.append(ambi_config)
-    import read_ambi_config
-    ambiguity_config = read_ambi_config.read_config_from_json(ambi_config)
+
     addAthenaAmbiguityResolution(
         s,
         AthenaAmbiguityResolutionConfig(
-            volumeMap = ambiguity_config
+            volumeMap = None
             ),
         outputDirRoot=outputDir,
         writeCovMat=True,
@@ -204,16 +201,8 @@ elif greedy_ambiguity_resolution:
     )
 
 else:
-    sys.path.append(ambi_config)
-    print(ambi_config)
-    import read_ambi_config
-    config_file = os.path.join(ambi_config, "ambiguity_resolution_config.json")
-    ambiguity_config = read_ambi_config.read_config_from_json(config_file)
     addAthenaAmbiguityResolution(
         s,
-        AthenaAmbiguityResolutionConfig(
-            volumeMap = ambiguity_config
-            ),
         outputDirRoot=outputDir,
         writeCovMat=True,
     )
