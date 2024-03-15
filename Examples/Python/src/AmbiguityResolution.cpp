@@ -30,10 +30,14 @@ void addAmbiguityResolution(Context& ctx) {
       ActsExamples::GreedyAmbiguityResolutionAlgorithm, mex,
       "GreedyAmbiguityResolutionAlgorithm", inputTracks, outputTracks,
       maximumSharedHits, maximumIterations, nMeasurementsMin);
+}
+void addAthenaAmbiguityResolution(Context& ctx) {
+  auto [m, mex] = ctx.get("main", "examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AthenaAmbiguityResolutionAlgorithm, mex,
-      "AthenaAmbiguityResolutionAlgorithm", inputTracks, outputTracks);
+      "AthenaAmbiguityResolutionAlgorithm", inputTracks, outputTracks,
+      volumeMap);
 }
 
 }  // namespace Acts::Python

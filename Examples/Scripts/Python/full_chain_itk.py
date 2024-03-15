@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import pathlib,os, acts, acts.examples, acts.examples.itk
-import argparse
+import argparse, sys
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -31,6 +31,7 @@ parser = argparse.ArgumentParser(description="Full chain with the ITk detector")
 
 parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
 parser.add_argument("--geo_dir", help="Path to the ITk geometry", type=str, default="/homeijclab/chakkappai/Acts/acts-itk")
+parser.add_argument("--ambi_config", help="Path to the ambiguity resolution config", type=str, default="/homeijclab/chakkappai/Acts/acts-itk/ambiguity_resolution_config.json")
 
 parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
@@ -62,8 +63,9 @@ ambiguity_MLSolver = args["MLSolver"]
 athena_ambiguity_resolution = args["AthenaSolver"]
 greedy_ambiguity_resolution = args["GreedySolver"]
 geo_dir = pathlib.Path(args["geo_dir"])
+ambi_config = pathlib.Path(args["ambi_config"])
+ttbar_pu200 = args["ttbar"]
 
-ttbar_pu200 = False
 u = acts.UnitConstants
 outputDir = pathlib.Path.cwd() / "itk_output"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
@@ -188,17 +190,30 @@ elif greedy_ambiguity_resolution:
         writeCovMat=True,
         # outputDirCsv=outputDir,
     )
-
+    sys.path.append(ambi_config)
+    import read_ambi_config
+    ambiguity_config = read_ambi_config.read_config_from_json(ambi_config)
     addAthenaAmbiguityResolution(
         s,
+        AthenaAmbiguityResolutionConfig(
+            volumeMap = ambiguity_config
+            ),
         outputDirRoot=outputDir,
         writeCovMat=True,
         # outputDirCsv=outputDir,
     )
 
 else:
+    sys.path.append(ambi_config)
+    print(ambi_config)
+    import read_ambi_config
+    config_file = os.path.join(ambi_config, "ambiguity_resolution_config.json")
+    ambiguity_config = read_ambi_config.read_config_from_json(config_file)
     addAthenaAmbiguityResolution(
         s,
+        AthenaAmbiguityResolutionConfig(
+            volumeMap = ambiguity_config
+            ),
         outputDirRoot=outputDir,
         writeCovMat=True,
     )
