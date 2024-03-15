@@ -23,7 +23,7 @@ const TrackContainer<track_container_t, traj_t, holder_t>
 Acts::AthenaAmbiguityResolution::prepareOutputTrack(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     std::vector<std::size_t>& goodTracks) const {
-  std::shared_ptr<VectorMultiTrajectory> trackStateContainer =
+  auto trackStateContainer =
       tracks.trackStateContainerHolder();
   auto trackContainer = std::make_shared<VectorTrackContainer>();
   trackContainer->reserve(goodTracks.size());
@@ -107,7 +107,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
   int iTrack = 0;  
 
   // Loop over all the trajectories in the events
-  for (auto track : tracks){
+  for (const auto& track : tracks){
 
     int score = 100;
     auto counterMap = m_counterMap;
@@ -126,8 +126,8 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
       auto iVolume = ts.referenceSurface().geometryId().volume();
       auto iTypeFlags = ts.typeFlags();  
 
-      auto detector_it = m_volumeMap.find(iVolume);
-      if(detector_it != m_volumeMap.end()){
+      auto detector_it = m_cfg.volumeMap.find(iVolume);
+      if(detector_it != m_cfg.volumeMap.end()){
         auto detector = detector_it->second;
 
         if (iTypeFlags.test(Acts::TrackStateFlag::MeasurementFlag)){
@@ -164,7 +164,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
 
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t>
-std::vector<std::size_t> 
+std::vector<int>
 Acts::AthenaAmbiguityResolution::solveAmbiguity(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>> measurementsPerTrack) const {
@@ -179,17 +179,18 @@ Acts::AthenaAmbiguityResolution::solveAmbiguity(
 
   ACTS_INFO("Number of clean tracks: " << cleanTracks.size());
 
-  std::vector<std::size_t> goodTracks;
+  std::vector<int> goodTracks;
 
   ACTS_INFO("Min score: " << m_minScore);
 
-
-  for(long unsigned int i=0; i<cleanTracks.size(); ++i){
-    // ACTS_INFO("Track " << i << " score: " << trackScore[cleanTracks[i]]);
-    if (trackScore[cleanTracks[i]] > m_minScore){
-      goodTracks.push_back(cleanTracks[i]);
+  std::size_t iTrack = 0;
+  for (auto track : tracks) {
+    if (trackScore[iTrack] > m_minScore) {
+      goodTracks.push_back(track.index());
     }
+    iTrack++;
   }
+
   ACTS_INFO("Number of good tracks: " << goodTracks.size());
   return goodTracks;
 }

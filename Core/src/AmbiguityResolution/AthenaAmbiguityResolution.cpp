@@ -52,7 +52,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
 
  
   std::vector<std::vector<std::size_t>>  newMeasurements;
-  for (std::size_t iTrack = 0; iTrack < numberOfTracks; ) {
+  for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
 
     int track_score = trackScore[iTrack];
 
@@ -74,8 +74,8 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     std::cout << "Number of volumes: " << volumeList.size() << std::endl;
  
     for(long unsigned int i = 0; i< volumeList.size(); ++i){
-      auto detector_it = m_volumeMap.find(volumeList[i]);
-      if(detector_it == m_volumeMap.end()){
+      auto detector_it = m_cfg.volumeMap.find(volumeList[i]);
+      if(detector_it == m_cfg.volumeMap.end()){
         continue;
       }
       auto detector = detector_it->second;
@@ -124,8 +124,8 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       auto iVolume = std::get<1>(measurements_tuples);
       auto isoutliner = std::get<2>(measurements_tuples);
 
-      auto detector_it = m_volumeMap.find(iVolume);
-      if(detector_it == m_volumeMap.end()){
+      auto detector_it = m_cfg.volumeMap.find(iVolume);
+      if(detector_it == m_cfg.volumeMap.end()){
         index++;
         continue;
       }
@@ -216,8 +216,8 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     }
     
     for ( std::size_t i = 0; i< volumeList.size(); ++i){
-      auto detector_it = m_volumeMap.find(volumeList[i]);
-      if(detector_it == m_volumeMap.end()){
+      auto detector_it = m_cfg.volumeMap.find(volumeList[i]);
+      if(detector_it == m_cfg.volumeMap.end()){
         continue;
       }
       auto detector = detector_it->second;

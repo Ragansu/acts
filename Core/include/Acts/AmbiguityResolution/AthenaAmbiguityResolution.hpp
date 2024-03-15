@@ -47,6 +47,31 @@ class AthenaAmbiguityResolution {
       std::size_t detectorId;
   };
 
+  struct Config {
+      std::map<unsigned int,VolumeConfig> volumeMap = {
+
+      {8,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // inner pixel 1
+      {9,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // inner pixel 2 (barrel)
+      {10,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // inner pixel 3
+
+      {13,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 1 
+      {14,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 2
+      {15,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 3
+      {16,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 4 (barrel)
+      {18,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 5
+      {19,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 6
+      {20,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 7
+
+      {22,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // strip 1
+      {23,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // strip 2 (barrel)
+      {24,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // strip 3
+
+      {25,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // HGTD 1
+      {2,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // HGTD 2
+    };
+  };
+
+
   struct Counter {
     int nHits;
     int nHoles;
@@ -60,11 +85,11 @@ class AthenaAmbiguityResolution {
   ///
   /// @param name name of the algorithm
   /// @param lvl is the logging level
-  AthenaAmbiguityResolution(const std::map<unsigned int,VolumeConfig>& cfg,
+  AthenaAmbiguityResolution(const Config& cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("AthenaAmbiguityResolution",
                                                  Logging::INFO))
-      : m_volumeMap{cfg}, m_logger{std::move(logger)} {}
+      : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
 // muons TODO etahits and phihits
 
@@ -73,8 +98,6 @@ class AthenaAmbiguityResolution {
   std::size_t m_maxSharedTracksPerMeasurement = 3;
   std::size_t m_maxShared = 5;
   
-
- protected:
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t, typename source_link_hash_t,
           typename source_link_equality_t>
@@ -119,13 +142,14 @@ std::vector<int> simpleScore(
   /// @param tracks is the input track container
   /// @param trackScore is the score of each track
   /// @return a vector of IDs of the tracks we want to keep
-template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t>
-std::vector<std::size_t> solveAmbiguity(
-    const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>> measurementsPerTrack) const;
+  template <typename track_container_t, typename traj_t,
+            template <typename> class holder_t>
+  std::vector<int> solveAmbiguity(
+      const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
+      std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>> measurementsPerTrack) const;
 
 private:
+  /// ODD volume map
   // std::map<unsigned int,VolumeConfig> m_volumeMap {
   //   {16,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // pixel 1
   //   {17,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // pixel 2
@@ -141,30 +165,8 @@ private:
 
   // };
 
-  std::map<unsigned int,VolumeConfig> m_volumeMap {
+  Config m_cfg;
 
-    {8,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // inner pixel 1
-    {9,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // inner pixel 2 (barrel)
-    {10,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // inner pixel 3
-
-    {13,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 1 
-    {14,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 2
-    {15,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 3
-    {16,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 4 (barrel)
-    {18,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 5
-    {19,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 6
-    {20,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 7
-
-    {22,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // strip 1
-    {23,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // strip 2 (barrel)
-    {24,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // strip 3
-
-    {25,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // HGTD 1
-    {2,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // HGTD 2
-
-
-
-  };
   std::map<std::size_t, Counter> m_counterMap = {
     {0,{0,0,0,0,0}},
     {1,{0,0,0,0,0}},
