@@ -191,13 +191,13 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
         std::cout << "Good TSOS, copy hit" << std::endl;
         newMeasurementsPerTrack.push_back(measurment);
       }
-      else if (cntIns >= m_maxShared){
+      else if (cntIns >= m_cfg.maxShared){
           std::cout << "Too many shared hit, drop it" << std::endl;
       }
       else {
         std::cout << "Try to recover shared hit " << std::endl;
-        if (tracksPerMeasurement[measurment].size() < m_maxSharedTracksPerMeasurement &&
-            track_score > m_minScoreSharedTracks) {
+        if (tracksPerMeasurement[measurment].size() < m_cfg.maxSharedTracksPerMeasurement &&
+            track_score > m_cfg.minScoreSharedTracks) {
           
           std::cout << "Accepted hit shared with " << tracksPerMeasurement[measurment].size() << " tracks" <<std::endl;
           newMeasurementsPerTrack.push_back(measurment);

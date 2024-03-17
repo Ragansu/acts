@@ -148,8 +148,8 @@ AmbiguityResolutionConfig = namedtuple(
 
 AthenaAmbiguityResolutionConfig = namedtuple(
     "AthenaAmbiguityResolutionConfig",
-    ["volumeMap"],
-    defaults=[None] * 1,
+    ["minScore", "minScoreSharedTracks", "maxShared", "maxSharedTracksPerMeasurement"],
+    defaults=[None] * 4,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(
@@ -1648,7 +1648,10 @@ def addAthenaAmbiguityResolution(
         inputTracks=tracks,
         outputTracks="ambiTracksAthena",
         **acts.examples.defaultKWArgs(
-            volumeMap = config.volumeMap,
+            minScore = config.minScore,
+            minScoreSharedTracks = config.minScoreSharedTracks,
+            maxShared = config.maxShared,
+            maxSharedTracksPerMeasurement = config.maxSharedTracksPerMeasurement,
         ),
     )
     s.addAlgorithm(algAthena)

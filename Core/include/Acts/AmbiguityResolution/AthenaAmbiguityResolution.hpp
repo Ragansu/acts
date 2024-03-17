@@ -48,7 +48,16 @@ class AthenaAmbiguityResolution {
   };
 
   struct Config {
-      std::map<unsigned int,VolumeConfig> volumeMap;
+  
+    std::map<unsigned int,VolumeConfig> volumeMap;
+
+    int minScore = 0;
+
+    int minScoreSharedTracks = 0;
+
+    std::size_t maxSharedTracksPerMeasurement = 10;
+
+    std::size_t maxShared = 5;
   };
 
 
@@ -72,11 +81,6 @@ class AthenaAmbiguityResolution {
       : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
 // muons TODO etahits and phihits
-
-  int m_minScore = 0;
-  int m_minScoreSharedTracks = 200;
-  std::size_t m_maxSharedTracksPerMeasurement = 3;
-  std::size_t m_maxShared = 5;
   
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t, typename source_link_hash_t,
@@ -130,6 +134,7 @@ std::vector<int> simpleScore(
 
 private:
   Config m_cfg;
+  
   std::map<std::size_t, Counter> m_counterMap = {
     {0,{0,0,0,0,0}},
     {1,{0,0,0,0,0}},

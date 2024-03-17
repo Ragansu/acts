@@ -181,11 +181,11 @@ Acts::AthenaAmbiguityResolution::solveAmbiguity(
 
   std::vector<int> goodTracks;
 
-  ACTS_INFO("Min score: " << m_minScore);
+  ACTS_INFO("Min score: " << m_cfg.minScore);
 
   std::size_t iTrack = 0;
   for (auto track : tracks) {
-    if (trackScore[iTrack] > m_minScore) {
+    if (trackScore[iTrack] > m_cfg.minScore) {
       goodTracks.push_back(track.index());
     }
     iTrack++;

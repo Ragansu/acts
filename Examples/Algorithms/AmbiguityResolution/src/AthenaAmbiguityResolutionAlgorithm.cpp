@@ -44,6 +44,11 @@ Acts::AthenaAmbiguityResolution::Config transformConfig(
       {2,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // HGTD 2
     };
   std::cout<<"Volume map size: "<<cfg.volumeMap.size()<<std::endl;
+  result.minScore = cfg.minScore;
+  
+  result.minScoreSharedTracks = cfg.minScoreSharedTracks;
+  result.maxSharedTracksPerMeasurement = cfg.maxSharedTracksPerMeasurement;
+  result.maxShared = cfg.maxShared;
   result.volumeMap = volumeMap;  // temporary hard-coded volume map
   return result;
 }
