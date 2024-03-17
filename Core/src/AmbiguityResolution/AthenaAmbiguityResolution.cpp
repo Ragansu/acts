@@ -55,6 +55,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
 
     int track_score = trackScore[iTrack];
+    std::cout << "Track score: " << track_score << std::endl;
 
 
     int numUnused         = 0;
@@ -248,7 +249,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     std::cout << "-------------------------------------" << std::endl;
     std::cout << "Number of shared measurements: " << sharedMeasurementsPerTrack << std::endl;
     std::cout << "Number of measurements: " << newMeasurements[track_id].size() << std::endl;
-    std::cout << "Score of the track: " << trackScore[track_id] << std::endl;
+    std::cout << "Score of the track: " << trackScore[cleanTracks[track_id]] << std::endl;
     std::cout << "------------------------------------ " << std::endl;
   }
 

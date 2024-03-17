@@ -49,6 +49,10 @@ Acts::AthenaAmbiguityResolution::Config transformConfig(
   result.minScoreSharedTracks = cfg.minScoreSharedTracks;
   result.maxSharedTracksPerMeasurement = cfg.maxSharedTracksPerMeasurement;
   result.maxShared = cfg.maxShared;
+  result.phiMin = cfg.phiMin;
+  result.phiMax = cfg.phiMax;
+  result.etaMin = cfg.etaMin;
+  result.etaMax = cfg.etaMax;
   result.volumeMap = volumeMap;  // temporary hard-coded volume map
   return result;
 }

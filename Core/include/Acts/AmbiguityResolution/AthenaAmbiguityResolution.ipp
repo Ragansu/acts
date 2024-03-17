@@ -11,6 +11,7 @@
 #include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 
 #include <unordered_map>
@@ -151,11 +152,20 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
         ACTS_INFO("Volume: " << iVolume);
       }
     }
-
-    trackScore.push_back(score);
-    ACTS_INFO("Track " << iTrack << " score: " << score);
     counterMaps.push_back(counterMap);
+        if (Acts::VectorHelpers::phi(track.momentum()) > m_cfg.phiMax || 
+        Acts::VectorHelpers::phi(track.momentum()) < m_cfg.phiMin) {
+      score = 0;
+    }
+
+    if (Acts::VectorHelpers::eta(track.momentum()) > m_cfg.etaMax || 
+        Acts::VectorHelpers::eta(track.momentum()) < m_cfg.etaMin) {
+      score = 0;
+    }
     iTrack++;
+    trackScore.push_back(score);
+    ACTS_INFO("Track score: " << score);
+
   } // end of loop over tracks
     
   return trackScore;
@@ -191,7 +201,5 @@ Acts::AthenaAmbiguityResolution::solveAmbiguity(
   ACTS_INFO("Number of good tracks: " << goodTracks.size());
   return goodTracks;
 }
-
-
 
 }  // namespace Acts

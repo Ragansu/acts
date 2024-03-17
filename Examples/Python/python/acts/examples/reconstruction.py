@@ -148,8 +148,8 @@ AmbiguityResolutionConfig = namedtuple(
 
 AthenaAmbiguityResolutionConfig = namedtuple(
     "AthenaAmbiguityResolutionConfig",
-    ["minScore", "minScoreSharedTracks", "maxShared", "maxSharedTracksPerMeasurement"],
-    defaults=[None] * 4,
+    ["minScore", "minScoreSharedTracks", "maxShared", "maxSharedTracksPerMeasurement", "phiMax", "phiMin", "etaMax", "etaMin"],
+    defaults=[None] * 8,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(
@@ -1652,6 +1652,10 @@ def addAthenaAmbiguityResolution(
             minScoreSharedTracks = config.minScoreSharedTracks,
             maxShared = config.maxShared,
             maxSharedTracksPerMeasurement = config.maxSharedTracksPerMeasurement,
+            phiMax = config.phiMax,
+            phiMin = config.phiMin,
+            etaMax = config.etaMax,
+            etaMin = config.etaMin,
         ),
     )
     s.addAlgorithm(algAthena)

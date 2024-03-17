@@ -38,12 +38,16 @@ class AthenaAmbiguityResolutionAlgorithm final :  public IAlgorithm {
     std::map<unsigned int,Acts::AthenaAmbiguityResolution::VolumeConfig> volumeMap;
         
     int minScore = 0;
-
     int minScoreSharedTracks = 0;
 
     std::size_t maxSharedTracksPerMeasurement = 10;
-    
     std::size_t maxShared = 5;
+
+    double phiMin = -M_PI;
+    double phiMax = M_PI;
+
+    double etaMin = -5;
+    double etaMax = 5;
   };
 
 

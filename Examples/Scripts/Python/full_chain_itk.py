@@ -196,7 +196,11 @@ elif greedy_ambiguity_resolution:
             minScore = 0,
             minScoreSharedTracks = 0,
             maxShared = 5,
-            maxSharedTracksPerMeasurement = 10
+            maxSharedTracksPerMeasurement = 10,
+            phiMax = 3.14,
+            phiMin = -3.14,
+            etaMax = 2.7,
+            etaMin = -2.7
             ),
         outputDirRoot=outputDir,
         writeCovMat=True,
@@ -207,10 +211,14 @@ else:
     addAthenaAmbiguityResolution(
         s,
         AthenaAmbiguityResolutionConfig(
-            minScore = 0,
-            minScoreSharedTracks = 0,
+            minScore = 200,
+            minScoreSharedTracks = 350,
             maxShared = 5,
-            maxSharedTracksPerMeasurement = 8
+            maxSharedTracksPerMeasurement = 25,
+            phiMax = 3.14,
+            phiMin = -3.14,
+            etaMax = 3.7,
+            etaMin = -3.7
             ),
         outputDirRoot=outputDir,
         writeCovMat=True,

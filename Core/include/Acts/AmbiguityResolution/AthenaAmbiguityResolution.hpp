@@ -58,6 +58,12 @@ class AthenaAmbiguityResolution {
     std::size_t maxSharedTracksPerMeasurement = 10;
 
     std::size_t maxShared = 5;
+
+    double phiMin = -M_PI;
+    double phiMax = M_PI;
+
+    double etaMin = -5;
+    double etaMax = 5;
   };
 
 
