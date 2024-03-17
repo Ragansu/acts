@@ -176,13 +176,10 @@ Acts::AthenaAmbiguityResolution::solveAmbiguity(
   std::vector<std::size_t> cleanTracks = getCleanedOutTracks(trackScore, counterMaps, measurementsPerTrack);
 
   ACTS_INFO("Number of tracks: " << tracks.size());
-
   ACTS_INFO("Number of clean tracks: " << cleanTracks.size());
-
-  std::vector<int> goodTracks;
-
   ACTS_INFO("Min score: " << m_cfg.minScore);
 
+  std::vector<int> goodTracks;
   std::size_t iTrack = 0;
   for (auto track : tracks) {
     if (trackScore[iTrack] > m_cfg.minScore) {

@@ -116,8 +116,6 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
 
     for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
 
-      // std::cout << " computing tsos for measurement " << index << std::endl;
-
       tsosTypes[index] = OtherTsos;
     
       auto iMeasurement = std::get<0>(measurements_tuples);
@@ -164,7 +162,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
         // Yet to be implemented
         // numWeightedShared += (isPixel ? 2 : 1);
 
-         index++;
+        index++;
         continue;      
       }
     }
