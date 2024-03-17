@@ -168,10 +168,6 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
          index++;
         continue;      
       }
-
-      ACTS_VERBOSE ("Measurement is not shared, Reject it");
-      tsosTypes[index] = RejectedHit;
-      index++;
     }
 
     std::vector<std::size_t> newMeasurementsPerTrack;
