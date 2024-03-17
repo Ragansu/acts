@@ -159,7 +159,6 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
         }
 
         tsosTypes[index] = SharedHit;
-        (counterMap[detector.detectorId].nSharedHits)++;
         numShared++;
 
         // Yet to be implemented
