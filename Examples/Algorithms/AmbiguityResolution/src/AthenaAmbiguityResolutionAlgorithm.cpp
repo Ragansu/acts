@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "ActsExamples/AmbiguityResolution/AthenaAmbiguityResolutionAlgorithm.hpp"
 #include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -22,30 +23,8 @@ namespace {
 Acts::AthenaAmbiguityResolution::Config transformConfig(
     const ActsExamples::AthenaAmbiguityResolutionAlgorithm::Config& cfg) {
   Acts::AthenaAmbiguityResolution::Config result;
-    std::map<unsigned int,Acts::AthenaAmbiguityResolution::VolumeConfig> volumeMap = {
-
-      {8,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // inner pixel 1
-      {9,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // inner pixel 2 (barrel)
-      {10,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 0}}, // inner pixel 3
-
-      {13,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 1 
-      {14,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 2
-      {15,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 3
-      {16,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 4 (barrel)
-      {18,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 5
-      {19,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 6
-      {20,{20, -10, 2, 0, 0, 10, 10, 1000, 1000,false, 1}}, // outer pixel 7
-
-      {22,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // strip 1
-      {23,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // strip 2 (barrel)
-      {24,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // strip 3
-
-      {25,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // HGTD 1
-      {2,{10, -5, 2, 0, 0, 10, 10, 1000, 1000,false, 2}}, // HGTD 2
-    };
-  std::cout<<"Volume map size: "<<cfg.volumeMap.size()<<std::endl;
+  result.volumeMap = readJsonFile(cfg.volumeFile);
   result.minScore = cfg.minScore;
-  
   result.minScoreSharedTracks = cfg.minScoreSharedTracks;
   result.maxSharedTracksPerMeasurement = cfg.maxSharedTracksPerMeasurement;
   result.maxShared = cfg.maxShared;
@@ -53,7 +32,6 @@ Acts::AthenaAmbiguityResolution::Config transformConfig(
   result.phiMax = cfg.phiMax;
   result.etaMin = cfg.etaMin;
   result.etaMax = cfg.etaMax;
-  result.volumeMap = volumeMap;  // temporary hard-coded volume map
   return result;
 }
 
@@ -85,6 +63,53 @@ ActsExamples::AthenaAmbiguityResolutionAlgorithm::
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
+std::map<unsigned int,Acts::AthenaAmbiguityResolution::VolumeConfig>
+ActsExamples::AthenaAmbiguityResolutionAlgorithm::readVolumeMap(const std::string& filename) const {
+  std::ifstream file(filename);
+  if (!file.is_open()) {
+      std::cerr << "Error opening file: " << filename << std::endl;
+      return {};
+  }
+  std::map<unsigned int,Acts::AthenaAmbiguityResolution::VolumeConfig> volumeMap;
+
+  nlohmann::json j;
+  file >> j;
+
+  for (const auto& [key, value] : j.items()) {
+
+    unsigned int volumeId = std::stoi(key);
+    int hitsScoreWeight = value.at("hitsScoreWeight");
+    int holesScoreWeight  = value.at("holesScoreWeight");
+    int outliersScoreWeight = value.at("outliersScoreWeight");
+    int otherScoreWeight = value.at("otherScoreWeight");
+
+    int minHits = value.at("minHits");
+    int maxHoles = value.at("maxHoles");
+    int maxOutliers = value.at("maxOutliers");
+    int maxUnused = value.at("maxUnused");
+    int maxSharedHits = value.at("maxSharedHits");
+
+    bool sharedHitsFlag = value.at("sharedHitsFlag");
+    std::size_t detectorId = value.at("detectorId");
+
+    volumeMap[volumeId] = {
+      hitsScoreWeight, 
+      holesScoreWeight, 
+      outliersScoreWeight, 
+      otherScoreWeight,
+      minHits, 
+      maxHoles, 
+      maxOutliers, 
+      maxUnused, 
+      maxSharedHits, 
+      sharedHitsFlag, 
+      detectorId
+    };
+  }
+
+  return volumeMap;
+}
+
 
 ActsExamples::ProcessCode ActsExamples::AthenaAmbiguityResolutionAlgorithm::execute(
     const AlgorithmContext& ctx) const {

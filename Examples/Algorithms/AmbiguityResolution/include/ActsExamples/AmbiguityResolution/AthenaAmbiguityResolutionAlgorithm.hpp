@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
-
+#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -40,6 +40,8 @@ class AthenaAmbiguityResolutionAlgorithm final :  public IAlgorithm {
     int minScore = 0;
     int minScoreSharedTracks = 0;
 
+    std::string volumeFile = "volumeMap.json";
+
     std::size_t maxSharedTracksPerMeasurement = 10;
     std::size_t maxShared = 5;
 
@@ -65,6 +67,9 @@ class AthenaAmbiguityResolutionAlgorithm final :  public IAlgorithm {
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
+
+std::map<unsigned int,Acts::AthenaAmbiguityResolution::VolumeConfig>
+readVolumeMap(const std::string& filename) const ;
 
  private:
   Config m_cfg;

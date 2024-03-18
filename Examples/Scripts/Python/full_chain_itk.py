@@ -63,6 +63,7 @@ ambiguity_MLSolver = args["MLSolver"]
 athena_ambiguity_resolution = args["AthenaSolver"]
 greedy_ambiguity_resolution = args["GreedySolver"]
 geo_dir = pathlib.Path(args["geo_dir"])
+ambi_config = pathlib.Path(args["ambi_config"])
 
 ttbar_pu200 = False
 u = acts.UnitConstants
@@ -193,6 +194,7 @@ elif greedy_ambiguity_resolution:
     addAthenaAmbiguityResolution(
         s,
         AthenaAmbiguityResolutionConfig(
+            volumeFile=ambi_config,
             minScore = 0,
             minScoreSharedTracks = 0,
             maxShared = 5,
@@ -211,6 +213,7 @@ else:
     addAthenaAmbiguityResolution(
         s,
         AthenaAmbiguityResolutionConfig(
+            volumeFile=ambi_config,
             minScore = 200,
             minScoreSharedTracks = 350,
             maxShared = 5,

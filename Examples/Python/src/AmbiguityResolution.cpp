@@ -37,8 +37,8 @@ void addAthenaAmbiguityResolution(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AthenaAmbiguityResolutionAlgorithm, mex,
       "AthenaAmbiguityResolutionAlgorithm", inputTracks, outputTracks,
-      minScore, minScoreSharedTracks, maxShared, maxSharedTracksPerMeasurement,
-      phiMin, phiMax, etaMin, etaMax);
+      volumeFile, minScore, minScoreSharedTracks, maxShared,
+      maxSharedTracksPerMeasurement, phiMin, phiMax, etaMin, etaMax);
 }
 
 }  // namespace Acts::Python
