@@ -138,11 +138,7 @@ std::vector<int> simpleScore(
 private:
   Config m_cfg;
   
-  std::map<std::size_t, Counter> m_counterMap = {
-    {0,{0,0,0,0,0}},
-    {1,{0,0,0,0,0}},
-    {2,{0,0,0,0,0}}
-  };
+  std::map<std::size_t, Counter> m_counterMap;
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
 
