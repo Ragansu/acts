@@ -48,17 +48,13 @@ class AthenaAmbiguityResolution {
   };
 
   struct Config {
-  
     std::map<unsigned int,VolumeConfig> volumeMap;
-
     std::string volumeFile = "volumeFile.json";
 
     int minScore = 0;
-
     int minScoreSharedTracks = 0;
 
     std::size_t maxSharedTracksPerMeasurement = 10;
-
     std::size_t maxShared = 5;
 
     double phiMin = -M_PI;
@@ -67,7 +63,6 @@ class AthenaAmbiguityResolution {
     double etaMin = -5;
     double etaMax = 5;
   };
-
 
   struct Counter {
     int nHits;
