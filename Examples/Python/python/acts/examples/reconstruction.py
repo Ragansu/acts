@@ -159,7 +159,7 @@ AthenaAmbiguityResolutionConfig = namedtuple(
         "etaMax", 
         "etaMin"
     ],
-    defaults=[None] * 8,
+    defaults=[None] * 9,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(

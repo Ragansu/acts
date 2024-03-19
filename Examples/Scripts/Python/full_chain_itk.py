@@ -31,7 +31,7 @@ parser = argparse.ArgumentParser(description="Full chain with the ITk detector")
 
 parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
 parser.add_argument("--geo_dir", help="Path to the ITk geometry", type=str, default="/homeijclab/chakkappai/Acts/acts-itk")
-parser.add_argument("--ambi_config", help="Path to the ambiguity resolution config", type=str, default="/homeijclab/chakkappai/Acts/acts-itk/ambiguity_resolution_config.json")
+parser.add_argument("--ambi_config", help="Path to the ambiguity resolution config", type=str, default="/Acts/acts-itk/ambiguity_resolution_config.json")
 
 parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
