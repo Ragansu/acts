@@ -51,6 +51,8 @@ class AthenaAmbiguityResolution {
   
     std::map<unsigned int,VolumeConfig> volumeMap;
 
+    std::string volumeFile = "volumeFile.json";
+
     int minScore = 0;
 
     int minScoreSharedTracks = 0;

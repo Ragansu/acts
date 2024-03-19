@@ -31,7 +31,7 @@ parser = argparse.ArgumentParser(description="Full chain with the ITk detector")
 
 parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
 parser.add_argument("--geo_dir", help="Path to the ITk geometry", type=str, default="/homeijclab/chakkappai/Acts/acts-itk")
-parser.add_argument("--ambi_config", help="Path to the ambiguity resolution config", type=str, default="/Acts/acts-itk/ambiguity_resolution_config.json")
+parser.add_argument("--ambi_config", help="Path to the ambiguity resolution config", type=str, default="/ACTS_itk/ambiguity_resolution_config.json")
 
 parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
@@ -64,7 +64,7 @@ athena_ambiguity_resolution = args["AthenaSolver"]
 greedy_ambiguity_resolution = args["GreedySolver"]
 geo_dir = pathlib.Path(args["geo_dir"])
 ambi_config = pathlib.Path(args["ambi_config"])
-
+ambi_config = str(ambi_config)
 ttbar_pu200 = False
 u = acts.UnitConstants
 outputDir = pathlib.Path.cwd() / "itk_output"
@@ -191,10 +191,12 @@ elif greedy_ambiguity_resolution:
         # outputDirCsv=outputDir,
     )
 
+    print("Python message: Ambiguity Resolution Config: ", ambi_config)
+    print("Python message: Ambiguity Resolution Config type: ", type(ambi_config))
+
     addAthenaAmbiguityResolution(
         s,
         AthenaAmbiguityResolutionConfig(
-            volumeFile=ambi_config,
             minScore = 0,
             minScoreSharedTracks = 0,
             maxShared = 5,
@@ -205,6 +207,7 @@ elif greedy_ambiguity_resolution:
             etaMin = -2.7
             ),
         outputDirRoot=outputDir,
+        AmbiVolumeFile=ambi_config,
         writeCovMat=True,
         # outputDirCsv=outputDir,
     )
@@ -213,18 +216,19 @@ else:
     addAthenaAmbiguityResolution(
         s,
         AthenaAmbiguityResolutionConfig(
-            volumeFile=ambi_config,
-            minScore = 200,
-            minScoreSharedTracks = 350,
+            minScore = 0,
+            minScoreSharedTracks = 0,
             maxShared = 5,
-            maxSharedTracksPerMeasurement = 25,
+            maxSharedTracksPerMeasurement = 10,
             phiMax = 3.14,
             phiMin = -3.14,
-            etaMax = 3.7,
-            etaMin = -3.7
+            etaMax = 2.7,
+            etaMin = -2.7
             ),
         outputDirRoot=outputDir,
+        volumeFile=ambi_config,
         writeCovMat=True,
+        # outputDirCsv=outputDir,
     )
 
 

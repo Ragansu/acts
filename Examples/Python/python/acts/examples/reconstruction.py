@@ -149,7 +149,6 @@ AmbiguityResolutionConfig = namedtuple(
 AthenaAmbiguityResolutionConfig = namedtuple(
     "AthenaAmbiguityResolutionConfig",
     [
-        "volumeFile",
         "minScore", 
         "minScoreSharedTracks", 
         "maxShared", 
@@ -159,7 +158,7 @@ AthenaAmbiguityResolutionConfig = namedtuple(
         "etaMax", 
         "etaMin"
     ],
-    defaults=[None] * 9,
+    defaults=[None] * 8,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(
@@ -1645,6 +1644,7 @@ def addAthenaAmbiguityResolution(
     tracks: str = "tracks",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    AmbiVolumeFile: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
@@ -1656,9 +1656,9 @@ def addAthenaAmbiguityResolution(
     algAthena = AthenaAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=tracks,
+        volumeFile=AmbiVolumeFile,
         outputTracks="ambiTracksAthena",
         **acts.examples.defaultKWArgs(
-            volumeFile=config.volumeFile,
             minScore = config.minScore,
             minScoreSharedTracks = config.minScoreSharedTracks,
             maxShared = config.maxShared,

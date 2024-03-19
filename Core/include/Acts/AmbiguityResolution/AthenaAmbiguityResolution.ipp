@@ -179,7 +179,9 @@ Acts::AthenaAmbiguityResolution::solveAmbiguity(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>> measurementsPerTrack) const {
 
-  std::cout << "Solving ambiguity" << std::endl;
+  std::cout << "Solving ambiguity" << std::endl;  
+  std::cout << "Number of tracks: " << tracks.size() << std::endl;
+  std::cout << "Config file location: " << m_cfg.volumeFile << std::endl;
   std::vector<std::map<std::size_t, Counter>> counterMaps;
   std::vector<int> trackScore = simpleScore(tracks, counterMaps);
 

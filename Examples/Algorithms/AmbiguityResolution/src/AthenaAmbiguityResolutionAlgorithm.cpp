@@ -74,9 +74,13 @@ readVolumeMap(std::string volumeFile) {
 
 
 Acts::AthenaAmbiguityResolution::Config transformConfig(
-    const ActsExamples::AthenaAmbiguityResolutionAlgorithm::Config& cfg) {
+    const ActsExamples::AthenaAmbiguityResolutionAlgorithm::Config& cfg, std::string volumeFile) {
   Acts::AthenaAmbiguityResolution::Config result;
-  result.volumeMap = readVolumeMap(cfg.volumeFile);
+
+  std::cout << "Volume File is "<<volumeFile << std::endl;
+
+  result.volumeFile = volumeFile;
+  result.volumeMap = readVolumeMap(result.volumeFile);
   result.minScore = cfg.minScore;
   result.minScoreSharedTracks = cfg.minScoreSharedTracks;
   result.maxSharedTracksPerMeasurement = cfg.maxSharedTracksPerMeasurement;
@@ -87,86 +91,6 @@ Acts::AthenaAmbiguityResolution::Config transformConfig(
   result.etaMax = cfg.etaMax;
   return result;
 }
-
-
-// std::map<unsigned int,Acts::AthenaAmbiguityResolution::VolumeConfig>
-// readVolumeMap(std::string volumeFile) {
-//   std::ifstream file(volumeFile);
-//   if (!file.is_open()) {
-//       std::cerr << "Error opening file: " << volumeFile << std::endl;
-//       return {};
-//   }
-
-//   std::map<unsigned int,Acts::AthenaAmbiguityResolution::VolumeConfig> volumeMap;
-
-//   std::string line;
-//   while (std::getline(file, line)) {
-//     std::istringstream iss(line);
-//     std::string key_str, value_str;
-//     if (std::getline(iss, key_str, ':') && std::getline(iss, value_str)) {
-//       // Remove leading/trailing whitespace
-//       key_str.erase(0, key_str.find_first_not_of(" \t"));
-//       key_str.erase(key_str.find_last_not_of(" \t") + 1);
-//       value_str.erase(0, value_str.find_first_not_of(" \t"));
-//       value_str.erase(value_str.find_last_not_of(" \t") + 1);
-
-//       unsigned int volumeId = std::stoi(key_str);
-
-//       int hitsScoreWeight;
-//       int holesScoreWeight;
-//       int outliersScoreWeight;
-//       int otherScoreWeight;
-
-//       int minHits;
-//       int maxHoles;
-//       int maxOutliers;
-//       int maxUnused;
-//       int maxSharedHits;
-
-//       bool sharedHitsFlag;
-//       std::size_t detectorId;
-
-//       std::istringstream valueStream(value_str);
-//       valueStream >> hitsScoreWeight ;
-//       valueStream >> holesScoreWeight ;
-
-//       valueStream >> outliersScoreWeight ;
-
-//       valueStream >> otherScoreWeight ;
-
-//       valueStream >> minHits ;
-
-//       valueStream >> maxHoles ;
-
-//       valueStream >> maxOutliers ;
-
-//       valueStream >> maxUnused ;
-
-//       valueStream >> maxSharedHits ;
-
-//       valueStream >> sharedHitsFlag ;
-
-//       valueStream >> detectorId ;
-
-//       volumeMap[volumeId] = {
-//         hitsScoreWeight, 
-//         holesScoreWeight, 
-//         outliersScoreWeight, 
-//         otherScoreWeight,
-//         minHits, 
-//         maxHoles, 
-//         maxOutliers, 
-//         maxUnused, 
-//         maxSharedHits, 
-//         sharedHitsFlag, 
-//         detectorId
-//       };
-//     }
-//   }
-//   return volumeMap;
-// }
-
-
 
 std::size_t sourceLinkHash(const Acts::SourceLink& a) {
   return static_cast<std::size_t>(
@@ -186,7 +110,7 @@ ActsExamples::AthenaAmbiguityResolutionAlgorithm::
         Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("AthenaAmbiguityResolutionAlgorithm", lvl),
       m_cfg(std::move(cfg)),
-      m_core(transformConfig(cfg), logger().clone()) {
+      m_core(transformConfig(cfg,m_cfg.volumeFile), logger().clone()) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");
   }
