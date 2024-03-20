@@ -57,6 +57,9 @@ class AthenaAmbiguityResolution {
     std::size_t maxSharedTracksPerMeasurement = 10;
     std::size_t maxShared = 5;
 
+    double pTMin = 0;
+    double pTMax = 1e9;
+
     double phiMin = -M_PI;
     double phiMax = M_PI;
 
@@ -114,6 +117,17 @@ template <typename track_container_t, typename traj_t,
 std::vector<int> simpleScore(
  const TrackContainer<track_container_t, traj_t, holder_t>& tracks, 
  std::vector<std::map<std::size_t, Counter>>& counterMaps) const;
+
+  /// Compute the score of each track
+  ///
+  /// @param tracks is the input track container
+  /// @return a vector of scores for each track
+  template <typename track_container_t, typename traj_t,
+          template <typename> class holder_t>
+  std::vector<int> ambigScore(
+    const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
+    std::vector<int> trackScore) const;
+ 
   /// Remove tracks that are not good enough based on cuts
   ///
   /// @param trackScore is the score of each track
@@ -137,6 +151,8 @@ std::vector<int> simpleScore(
 
 private:
   Config m_cfg;
+
+  bool m_useAmbigFcn = false;
   
   std::map<std::size_t, Counter> m_counterMap;
   /// Logging instance

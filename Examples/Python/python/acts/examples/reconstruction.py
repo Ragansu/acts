@@ -153,12 +153,14 @@ AthenaAmbiguityResolutionConfig = namedtuple(
         "minScoreSharedTracks", 
         "maxShared", 
         "maxSharedTracksPerMeasurement", 
+        "pTMax",
+        "pTMin",
         "phiMax", 
         "phiMin", 
         "etaMax", 
         "etaMin"
     ],
-    defaults=[None] * 8,
+    defaults=[None] * 10,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(

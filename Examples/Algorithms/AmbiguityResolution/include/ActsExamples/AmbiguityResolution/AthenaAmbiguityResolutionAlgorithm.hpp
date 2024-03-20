@@ -45,6 +45,9 @@ class AthenaAmbiguityResolutionAlgorithm final :  public IAlgorithm {
     std::size_t maxSharedTracksPerMeasurement = 10;
     std::size_t maxShared = 5;
 
+    double pTMin = 0;
+    double pTMax = 1e9;
+
     double phiMin = -M_PI;
     double phiMax = M_PI;
 

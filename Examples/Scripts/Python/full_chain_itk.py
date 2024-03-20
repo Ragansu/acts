@@ -198,14 +198,17 @@ elif greedy_ambiguity_resolution:
         s,
         AthenaAmbiguityResolutionConfig(
             minScore = 0,
-            minScoreSharedTracks = 0,
+            minScoreSharedTracks = 450,
             maxShared = 5,
             maxSharedTracksPerMeasurement = 10,
+            pTMax = 1_000_000_000,
+            pTMin = 0,
             phiMax = 3.14,
             phiMin = -3.14,
-            etaMax = 2.7,
-            etaMin = -2.7
+            etaMax = 3.7,
+            etaMin = -3.7
             ),
+        level=2,
         outputDirRoot=outputDir,
         AmbiVolumeFile=ambi_config,
         writeCovMat=True,
@@ -220,13 +223,15 @@ else:
             minScoreSharedTracks = 0,
             maxShared = 5,
             maxSharedTracksPerMeasurement = 10,
+            pTMax = 1_000_000_000,
+            pTMin = 0,
             phiMax = 3.14,
             phiMin = -3.14,
-            etaMax = 2.7,
-            etaMin = -2.7
+            etaMax = 3.7,
+            etaMin = -3.7
             ),
         outputDirRoot=outputDir,
-        volumeFile=ambi_config,
+        AmbiVolumeFile=ambi_config,
         writeCovMat=True,
         # outputDirCsv=outputDir,
     )
