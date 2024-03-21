@@ -44,29 +44,26 @@ readVolumeMap(std::string volumeFile) {
     int outliersScoreWeight = value["outliersScoreWeight"];
     int otherScoreWeight = value["otherScoreWeight"];
 
-    int minHits = value["minHits"];
-    int maxHoles = value["maxHoles"];
-    int maxOutliers = value["maxOutliers"];
-    int maxUnused = value["maxUnused"];
-    int maxSharedHits = value["maxSharedHits"];
+    std::size_t  minHits = value["minHits"];
+    std::size_t  maxHits = value["maxHits"];
+    std::size_t  maxHoles = value["maxHoles"];
+    std::size_t  maxOutliers = value["maxOutliers"];
+    std::size_t  maxUnused = value["maxUnused"];
+    std::size_t  maxSharedHits = value["maxSharedHits"];
 
     bool sharedHitsFlag = value["sharedHitsFlag"];
     std::size_t detectorId = value["detectorId"];
 
+    std::vector<double> goodHits = value["goodHits"];
+    std::vector<double> fakeHits = value["fakeHits"];
+    std::vector<double> goodHoles = value["goodHoles"];
+    std::vector<double> fakeHoles = value["fakeHoles"];
 
-    volumeMap[volumeId] = {
-      hitsScoreWeight, 
-      holesScoreWeight, 
-      outliersScoreWeight, 
-      otherScoreWeight,
-      minHits, 
-      maxHoles, 
-      maxOutliers, 
-      maxUnused, 
-      maxSharedHits, 
-      sharedHitsFlag, 
-      detectorId
-    };
+    auto volumeConfig = Acts::AthenaAmbiguityResolution::VolumeConfig(hitsScoreWeight, holesScoreWeight, outliersScoreWeight,
+                  otherScoreWeight, minHits, maxHits, maxHoles, maxOutliers, maxUnused, maxSharedHits, sharedHitsFlag, detectorId,
+                  goodHits, fakeHits, goodHoles, fakeHoles);
+
+    volumeMap[volumeId] = volumeConfig;
   }
 
   return volumeMap;

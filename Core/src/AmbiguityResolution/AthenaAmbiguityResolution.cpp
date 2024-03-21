@@ -10,18 +10,33 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/Measurement.hpp"
 
+#include <stdexcept>
 
+void Acts::AthenaAmbiguityResolution::VolumeConfig::setupScoreModifiers() {
+
+  if ((goodHits.size() != fakeHits.size())||goodHits.size() != maxHits+1) {
+    throw std::runtime_error("The number of good and fake hits must be the same");
+    return;
+  } 
+  for (std::size_t i=0; i<=maxHits; ++i) m_factorHits.push_back(goodHits[i]/fakeHits[i]);
+
+  if ((goodHoles.size() != fakeHoles.size())||goodHoles.size() != maxHoles+1) {
+    throw std::runtime_error("The number of good and fake holes must be the same");
+    return;
+  }
+  for (std::size_t i=0; i<=maxHoles; ++i) m_factorHoles.push_back(goodHoles[i]/fakeHoles[i]);
+}
 
 std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     std::vector<int> trackScore, std::vector<std::map<std::size_t, Counter>>& counterMaps,
     std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>> measurementsPerTrack) const {
     std::vector<std::size_t> cleanTracks;
 
-  std::cout << "Cleaning tracks" << std::endl;
+  ACTS_INFO("Cleaning tracks");
   
   std::size_t numberOfTracks = measurementsPerTrack.size();
-  std::vector<std::size_t> volumeList; 
-
+  std::map<std::size_t,VolumeConfig> detectorMap;
+  std::vector<std::size_t> detectorList;
   std::cout << "Number of tracks: " << numberOfTracks << std::endl;
 
   boost::container::flat_map<std::size_t,
@@ -32,8 +47,17 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
       auto iMeasurement = std::get<0>(measurements_tuples);
       auto iVolume = std::get<1>(measurements_tuples);
-      volumeList.push_back(iVolume);
-      tracksPerMeasurement[iMeasurement].insert(iTrack);
+      auto detector_it = m_cfg.volumeMap.find(iVolume);
+      if(detector_it != m_cfg.volumeMap.end()){
+        auto detector = detector_it->second;
+
+        auto volume_it = detectorMap.find(detector.detectorId);
+        if(volume_it == detectorMap.end()){
+          detectorMap[detector.detectorId] = detector;
+          detectorList.push_back(detector.detectorId);
+        }      
+        tracksPerMeasurement[iMeasurement].insert(iTrack);
+      }
     }
   }
 
@@ -67,44 +91,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
 
     bool TrkCouldBeAccepted = true;
 
-    // auto volumeList = trajState.measurementVolume;
-    auto volumeIterator = std::unique(volumeList.begin(), volumeList.end());
-
-    volumeList.resize(std::distance(volumeList.begin(), volumeIterator));
-
-    std::cout << "Number of volumes: " << volumeList.size() << std::endl;
- 
-    for(long unsigned int i = 0; i< volumeList.size(); ++i){
-      auto detector_it = m_cfg.volumeMap.find(volumeList[i]);
-      if(detector_it == m_cfg.volumeMap.end()){
-        continue;
-      }
-      auto detector = detector_it->second;
-      
-      ACTS_DEBUG ("---> Found summary information");
-      ACTS_DEBUG ("---> Detector ID: " << detector.detectorId);
-      ACTS_DEBUG ("---> Number of hits: " << counterMap[detector.detectorId].nHits);
-      ACTS_DEBUG ("---> Number of holes: " << counterMap[detector.detectorId].nHoles);
-      ACTS_DEBUG ("---> Number of outliers: " << counterMap[detector.detectorId].nOutliers);
-
-      if (counterMap[detector.detectorId].nHits < detector.minHits){
-        TrkCouldBeAccepted = false;
-      }
-
-      if (counterMap[detector.detectorId].nHoles > detector.maxHoles){
-        TrkCouldBeAccepted = false;
-      }
-
-      if (counterMap[detector.detectorId].nOutliers > detector.maxOutliers){
-        TrkCouldBeAccepted = false;
-      }
-      
-    }
-
-    if (!TrkCouldBeAccepted){
-      std::cout << "Track " << iTrack << " could not be accepted" << std::endl;
-      continue;
-    }
+    std::cout << "Number of Detectors: " << detectorList.size() << std::endl;
 
     // for tracks with shared hits, we need to check and remove bad hits
 
@@ -209,21 +196,20 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       continue;
     }
     
-    for ( std::size_t i = 0; i< volumeList.size(); ++i){
-      auto detector_it = m_cfg.volumeMap.find(volumeList[i]);
-      if(detector_it == m_cfg.volumeMap.end()){
-        continue;
-      }
-      auto detector = detector_it->second;
+    for(long unsigned int i = 0; i< detectorList.size(); i++){
+
+      auto volume_it = detectorMap.find(detectorList[i]);
+      auto detector = volume_it->second;
       if (counterMap[detector.detectorId].nSharedHits > detector.maxSharedHits){
         TrkCouldBeAccepted = false;
+        break;
       }
     }
 
     if (TrkCouldBeAccepted){
       cleanTracks.push_back(iTrack);
       newMeasurements.push_back(newMeasurementsPerTrack);
-    continue;
+      continue;
     }
   }
 
