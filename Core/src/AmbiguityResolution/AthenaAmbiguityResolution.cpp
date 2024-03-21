@@ -14,14 +14,22 @@
 
 void Acts::AthenaAmbiguityResolution::VolumeConfig::setupScoreModifiers() {
 
-  if ((goodHits.size() != fakeHits.size())||goodHits.size() != maxHits+1) {
-    throw std::runtime_error("The number of good and fake hits must be the same");
+  if (goodHits.size() != fakeHits.size()) {
+      throw std::runtime_error("The number of good and fake hits must be the same");
+      return;
+  }
+  else if(goodHits.size() != maxHits+1) {
+    throw std::runtime_error("The number of goodHits = maxHits+1");
     return;
   } 
   for (std::size_t i=0; i<=maxHits; ++i) m_factorHits.push_back(goodHits[i]/fakeHits[i]);
 
-  if ((goodHoles.size() != fakeHoles.size())||goodHoles.size() != maxHoles+1) {
+  if (goodHoles.size() != fakeHoles.size()){
     throw std::runtime_error("The number of good and fake holes must be the same");
+    return;
+  }
+  else if(goodHoles.size() != maxHoles+1) {
+    throw std::runtime_error("The number of goodHoles = maxHoles+1");
     return;
   }
   for (std::size_t i=0; i<=maxHoles; ++i) m_factorHoles.push_back(goodHoles[i]/fakeHoles[i]);

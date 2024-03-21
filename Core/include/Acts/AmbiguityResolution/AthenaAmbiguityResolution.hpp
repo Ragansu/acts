@@ -74,10 +74,15 @@ class AthenaAmbiguityResolution {
           goodHits(goodHits_),
           fakeHits(fakeHits_),
           goodHoles(goodHoles_),
-          fakeHoles(fakeHoles_) {}
+          fakeHoles(fakeHoles_) {
+            setupScoreModifiers();
+          }
 
     VolumeConfig() = default;
     VolumeConfig(const VolumeConfig&) = default;
+
+    double getFactorHits(int index) const { return m_factorHits[index]; }
+    double getFactorHoles(int index) const { return m_factorHoles[index]; }
 
    private:
     std::vector<double> m_factorHits;
@@ -165,6 +170,8 @@ std::vector<int> simpleScore(
           template <typename> class holder_t>
   std::vector<int> ambigScore(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
+  std::map<std::size_t,VolumeConfig> detectorMap,
+    std::vector<std::size_t> detectorList,
     std::vector<int> trackScore) const;
  
   /// Remove tracks that are not good enough based on cuts

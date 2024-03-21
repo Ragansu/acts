@@ -107,6 +107,9 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
   std::vector<int> trackScore;
   int iTrack = 0;  
 
+  std::map<std::size_t,VolumeConfig> detectorMap;
+  std::vector<std::size_t> detectorList;
+
   // Loop over all the trajectories in the events
   for (const auto& track : tracks){
 
@@ -116,8 +119,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
     // here so instead of calculating nHits/nHoles/nOutliers per volume, 
     // we just loop over all volumes and add the score.
 
-    std::map<std::size_t,VolumeConfig> detectorMap;
-    std::vector<std::size_t> detectorList;
+
 
     for (auto ts : track.trackStatesReversed()) {
       auto iVolume = ts.referenceSurface().geometryId().volume();
@@ -259,7 +261,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
 
   if (m_useAmbigFcn) {
     ACTS_VERBOSE ( "Using ambiguity function" << std::endl);
-    trackScore = ambigScore(tracks, trackScore);
+    trackScore = ambigScore(tracks, detectorMap, detectorList,trackScore);
   }
   else {
     ACTS_VERBOSE ( "Not using ambiguity function" << std::endl);
@@ -268,16 +270,17 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
   return trackScore;
 }
 
-
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t>
 std::vector<int> Acts::AthenaAmbiguityResolution::ambigScore(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
+  std::map<std::size_t,VolumeConfig> detectorMap,
+    std::vector<std::size_t> detectorList,
     std::vector<int> trackScore) const {
 
   std::vector<int> trackScoreAmbig;
-  int iTrack = 0;
-  for (auto track : tracks) {
+  int numberOfTracks = trackScore.size();
+  for (int iTrack = 0; iTrack < numberOfTracks; iTrack++) {
     double score = trackScore[iTrack];
     if (score >= 0) {
       trackScoreAmbig.push_back(score);
@@ -287,11 +290,31 @@ std::vector<int> Acts::AthenaAmbiguityResolution::ambigScore(
 
     double pT = Acts::VectorHelpers::perp(track.momentum());
 
-    double prob = log10(pT);
+    double prob = log10(pT) - 1.;
+    ACTS_DEBUG ("Modifier for pT = " << pT << " TeV is : "<< prob << "  New score now: " << prob);
 
+    for(int i = 0; i < detectorList.size(); i++){
+      auto volume_it = detectorMap.find(detectorList[i]);
+      auto detector = volume_it->second;
+
+      iHoles = counterMap[detector.detectorId].nHoles;
+      if ( iHoles > -1 && detector.maxHoles > -1) {
+        if (iHoles > detector.maxHoles) {
+          prob /= (iHoles - detector.maxHoles + 1); // holes are bad ! 
+          iHoles = detector.maxHoles;
+        }
+        prob *= m_factorHoles[iHoles];
+        ACTS_DEBUG ("Modifier for " << iHoles << " holes: "<<getfactorHoles[iHoles]
+          << "  New score now: " << prob);
+      }
+    }
     if (track.chi2() > 0 && track.nDoF() > 0) {
-      double p = 1. / log10 (10. + 10. * track.chi2() / track.nDoF());
-      prob *= p;
+      double chi2 = track.chi2();
+      int indf = track.nDoF();
+      double fac = 1. / log10 (10. + 10. * chi2 / indf);
+      prob *= fac;
+      ACTS_DEBUG ("Modifier for chi2 = " << chi2 << " and NDF = " << indf
+         << " is : "<< fac << "  New score now: " << prob)
     }
    
     trackScoreAmbig.push_back(prob);
