@@ -29,7 +29,7 @@ class AthenaAmbiguityResolution {
  public:
   /// Framework execute method of the algorithm
 
-  struct VolumeConfig {
+  struct DetectorConfig {
     int hitsScoreWeight;
     int holesScoreWeight;
     int outliersScoreWeight;
@@ -53,7 +53,7 @@ class AthenaAmbiguityResolution {
 
     void setupScoreModifiers();
 
-    VolumeConfig(int hitsScoreWeight_, int holesScoreWeight_, int outliersScoreWeight_,
+    DetectorConfig(int hitsScoreWeight_, int holesScoreWeight_, int outliersScoreWeight_,
            int otherScoreWeight_, std::size_t minHits_, std::size_t maxHits_,
            std::size_t maxHoles_, std::size_t maxOutliers_, std::size_t maxUnused_,
            std::size_t maxSharedHits_, bool sharedHitsFlag_, std::size_t detectorId_,
@@ -78,8 +78,8 @@ class AthenaAmbiguityResolution {
             setupScoreModifiers();
           }
 
-    VolumeConfig() = default;
-    VolumeConfig(const VolumeConfig&) = default;
+    DetectorConfig() = default;
+    DetectorConfig(const DetectorConfig&) = default;
 
     double getFactorHits(int index) const { return m_factorHits[index]; }
     double getFactorHoles(int index) const { return m_factorHoles[index]; }
@@ -92,8 +92,10 @@ class AthenaAmbiguityResolution {
   
 
   struct Config {
-    std::map<unsigned int,VolumeConfig> volumeMap;
-    std::string volumeFile = "volumeFile.json";
+    std::map<std::size_t,std::size_t> volumeMap = {{0,0}};
+    std::map<std::size_t,DetectorConfig> detectorMap;
+
+    std::string configFile = "configFile.json";
 
     int minScore = 0;
     int minScoreSharedTracks = 0;
@@ -188,7 +190,6 @@ private:
 
   bool m_useAmbigFcn = false;
   
-  std::map<std::size_t, Counter> m_counterMap;
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
 

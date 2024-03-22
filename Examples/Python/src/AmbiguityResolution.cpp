@@ -36,7 +36,7 @@ void addAthenaAmbiguityResolution(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AthenaAmbiguityResolutionAlgorithm, mex,
-      "AthenaAmbiguityResolutionAlgorithm", inputTracks, volumeFile, outputTracks,
+      "AthenaAmbiguityResolutionAlgorithm", inputTracks, configFile, outputTracks,
       minScore, minScoreSharedTracks, maxShared,
       maxSharedTracksPerMeasurement, pTMin, pTMax,
       phiMin, phiMax, etaMin, etaMax);

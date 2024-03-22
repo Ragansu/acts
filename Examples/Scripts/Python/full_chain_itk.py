@@ -216,10 +216,10 @@ else:
         s,
         AthenaAmbiguityResolutionConfig(
             minScore = 0,
-            minScoreSharedTracks = 0,
+            minScoreSharedTracks = 1,
             maxShared = 5,
             maxSharedTracksPerMeasurement = 10,
-            pTMax = 1_000_000_000,
+            pTMax = 2,
             pTMin = 0,
             phiMax = 3.14,
             phiMin = -3.14,

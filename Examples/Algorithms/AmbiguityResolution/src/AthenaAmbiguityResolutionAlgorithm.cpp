@@ -20,16 +20,19 @@
 #include <map>
 
 namespace {
-
-std::map<unsigned int,Acts::AthenaAmbiguityResolution::VolumeConfig>
-readVolumeMap(std::string volumeFile) {
-  std::ifstream file(volumeFile);
+std::pair<std::map<std::size_t,std::size_t>,
+std::map<std::size_t,Acts::AthenaAmbiguityResolution::DetectorConfig>>
+setConfig(std::string configFile) {
+  std::ifstream file(configFile);
   if (!file.is_open()) {
-      std::cerr << "Error opening file: " << volumeFile << std::endl;
+      std::cerr << "Error opening file: " << configFile << std::endl;
       return {};
   }
 
-  std::map<unsigned int,Acts::AthenaAmbiguityResolution::VolumeConfig> volumeMap;
+  std::cout<<"Reading configuration file: " << configFile << std::endl;
+
+  std::map<std::size_t,Acts::AthenaAmbiguityResolution::DetectorConfig> detectorMap;
+  std::map<std::size_t,std::size_t> volumeMap;
 
   nlohmann::json j;
 
@@ -37,7 +40,7 @@ readVolumeMap(std::string volumeFile) {
 
   for (auto& [key, value] : j.items()) {
 
-    unsigned int volumeId = std::stoi(key);
+    std::size_t detectorId = std::stoi(key);
 
     int hitsScoreWeight = value["hitsScoreWeight"];
     int holesScoreWeight = value["holesScoreWeight"];
@@ -52,32 +55,38 @@ readVolumeMap(std::string volumeFile) {
     std::size_t  maxSharedHits = value["maxSharedHits"];
 
     bool sharedHitsFlag = value["sharedHitsFlag"];
-    std::size_t detectorId = value["detectorId"];
 
     std::vector<double> goodHits = value["goodHits"];
     std::vector<double> fakeHits = value["fakeHits"];
     std::vector<double> goodHoles = value["goodHoles"];
     std::vector<double> fakeHoles = value["fakeHoles"];
 
-    auto volumeConfig = Acts::AthenaAmbiguityResolution::VolumeConfig(hitsScoreWeight, holesScoreWeight, outliersScoreWeight,
+    auto detectorConfig = Acts::AthenaAmbiguityResolution::DetectorConfig(hitsScoreWeight, holesScoreWeight, outliersScoreWeight,
                   otherScoreWeight, minHits, maxHits, maxHoles, maxOutliers, maxUnused, maxSharedHits, sharedHitsFlag, detectorId,
                   goodHits, fakeHits, goodHoles, fakeHoles);
 
-    volumeMap[volumeId] = volumeConfig;
+    detectorMap[detectorId] = detectorConfig;
+
+    std::vector<std::size_t> volumesIds = value["volumesIds"];
+    for (auto volumeId : volumesIds) {
+      volumeMap[volumeId] = detectorId;
+    }
   }
 
-  return volumeMap;
+  return std::make_pair(volumeMap, detectorMap);
 }
 
 
 Acts::AthenaAmbiguityResolution::Config transformConfig(
-    const ActsExamples::AthenaAmbiguityResolutionAlgorithm::Config& cfg, std::string volumeFile) {
+    const ActsExamples::AthenaAmbiguityResolutionAlgorithm::Config& cfg, std::string configFile) {
   Acts::AthenaAmbiguityResolution::Config result;
 
-  std::cout << "Volume File is "<<volumeFile << std::endl;
+  std::cout << "Volume File is "<<configFile << std::endl;
 
-  result.volumeFile = volumeFile;
-  result.volumeMap = readVolumeMap(result.volumeFile);
+  result.configFile = configFile;
+  auto configPair = setConfig(configFile);
+  result.volumeMap = configPair.first;
+  result.detectorMap = configPair.second;
   result.minScore = cfg.minScore;
   result.minScoreSharedTracks = cfg.minScoreSharedTracks;
   result.maxSharedTracksPerMeasurement = cfg.maxSharedTracksPerMeasurement;
@@ -109,7 +118,7 @@ ActsExamples::AthenaAmbiguityResolutionAlgorithm::
         Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("AthenaAmbiguityResolutionAlgorithm", lvl),
       m_cfg(std::move(cfg)),
-      m_core(transformConfig(cfg,m_cfg.volumeFile), logger().clone()) {
+      m_core(transformConfig(cfg,m_cfg.configFile), logger().clone()) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");
   }
