@@ -18,21 +18,21 @@ void Acts::AthenaAmbiguityResolution::VolumeConfig::setupScoreModifiers() {
       throw std::runtime_error("The number of good and fake hits must be the same");
       return;
   }
-  else if(goodHits.size() != maxHits+1) {
-    throw std::runtime_error("The number of goodHits = maxHits+1");
+  else if(goodHits.size() != maxHits) {
+    throw std::runtime_error("The number of goodHits = maxHits+1. Size of goodHits: " + std::to_string(goodHits.size()) + " maxHits: " + std::to_string(maxHits));
     return;
   } 
-  for (std::size_t i=0; i<=maxHits; ++i) m_factorHits.push_back(goodHits[i]/fakeHits[i]);
+  for (std::size_t i=0; i< maxHits; ++i) m_factorHits.push_back(goodHits[i]/fakeHits[i]);
 
   if (goodHoles.size() != fakeHoles.size()){
     throw std::runtime_error("The number of good and fake holes must be the same");
     return;
   }
-  else if(goodHoles.size() != maxHoles+1) {
-    throw std::runtime_error("The number of goodHoles = maxHoles+1");
+  else if(goodHoles.size() != maxHoles) {
+    throw std::runtime_error("The number of goodHoles = maxHoles+1. Size of goodHoles: " + std::to_string(goodHoles.size()) + " maxHoles: " + std::to_string(maxHoles));
     return;
   }
-  for (std::size_t i=0; i<=maxHoles; ++i) m_factorHoles.push_back(goodHoles[i]/fakeHoles[i]);
+  for (std::size_t i=0; i<maxHoles; ++i) m_factorHoles.push_back(goodHoles[i]/fakeHoles[i]);
 }
 
 std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(

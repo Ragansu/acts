@@ -161,18 +161,6 @@ template <typename track_container_t, typename traj_t,
 std::vector<int> simpleScore(
  const TrackContainer<track_container_t, traj_t, holder_t>& tracks, 
  std::vector<std::map<std::size_t, Counter>>& counterMaps) const;
-
-  /// Compute the score of each track
-  ///
-  /// @param tracks is the input track container
-  /// @return a vector of scores for each track
-  template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t>
-  std::vector<int> ambigScore(
-    const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-  std::map<std::size_t,VolumeConfig> detectorMap,
-    std::vector<std::size_t> detectorList,
-    std::vector<int> trackScore) const;
  
   /// Remove tracks that are not good enough based on cuts
   ///

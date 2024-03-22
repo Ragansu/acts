@@ -191,9 +191,6 @@ elif greedy_ambiguity_resolution:
         # outputDirCsv=outputDir,
     )
 
-    print("Python message: Ambiguity Resolution Config: ", ambi_config)
-    print("Python message: Ambiguity Resolution Config type: ", type(ambi_config))
-
     addAthenaAmbiguityResolution(
         s,
         AthenaAmbiguityResolutionConfig(
@@ -208,7 +205,6 @@ elif greedy_ambiguity_resolution:
             etaMax = 3.7,
             etaMin = -3.7
             ),
-        level=2,
         outputDirRoot=outputDir,
         AmbiVolumeFile=ambi_config,
         writeCovMat=True,

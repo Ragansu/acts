@@ -107,6 +107,9 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
   std::vector<int> trackScore;
   int iTrack = 0;  
 
+
+  ACTS_INFO ( "Starting to score tracks" << std::endl);
+
   std::map<std::size_t,VolumeConfig> detectorMap;
   std::vector<std::size_t> detectorList;
 
@@ -156,17 +159,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
 
     ACTS_VERBOSE ( "Number of detectors: " << detectorList.size() << std::endl);
 
-    bool TrkCouldBeAccepted = true;
     int score = 0;
-
-    if (!TrkCouldBeAccepted){
-      ACTS_VERBOSE ( "Track " << iTrack << " could not be accepted" << std::endl);
-      score = 0;
-      iTrack++;
-      trackScore.push_back(score);
-      ACTS_VERBOSE("Track: "<< iTrack <<" score: " << score << " could not be accepted");
-      continue;    
-    }
 
     if (Acts::VectorHelpers::perp(track.momentum()) > m_cfg.pTMax || 
         Acts::VectorHelpers::perp(track.momentum()) < m_cfg.pTMin) {
@@ -209,7 +202,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
         auto detector = volume_it->second;
         
         ACTS_DEBUG ("---> Found summary information");
-        ACTS_DEBUG("---> Detector ID: " << detector.detectorId);
+        ACTS_DEBUG ("---> Detector ID: " << detector.detectorId);
         ACTS_DEBUG ("---> Number of hits: " << counterMap[detector.detectorId].nHits);
         ACTS_DEBUG ("---> hitsScoreWeight: " << detector.hitsScoreWeight);
         ACTS_DEBUG ("---> Number of holes: " << counterMap[detector.detectorId].nHoles);
@@ -223,16 +216,11 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
         ACTS_DEBUG ("---> Max outliers: " << detector.maxOutliers);
         ACTS_DEBUG ("---> Max unused: " << detector.maxUnused);
 
-        if (counterMap[detector.detectorId].nHits < detector.minHits){
-          TrkCouldBeAccepted = false;
-        }
-
-        else if (counterMap[detector.detectorId].nHoles > detector.maxHoles){
-          TrkCouldBeAccepted = false;
-        }
-
-        else if (counterMap[detector.detectorId].nOutliers > detector.maxOutliers){
-          TrkCouldBeAccepted = false;
+        if((counterMap[detector.detectorId].nHits < detector.minHits) || 
+          (counterMap[detector.detectorId].nHits > detector.maxHits) ||
+          (counterMap[detector.detectorId].nHoles > detector.maxHoles) ||
+          (counterMap[detector.detectorId].nOutliers > detector.maxOutliers)) {
+          continue;
         }
         else {
 
@@ -259,54 +247,51 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
 
   } // end of loop over tracks
 
-  if (m_useAmbigFcn) {
-    ACTS_VERBOSE ( "Using ambiguity function" << std::endl);
-    trackScore = ambigScore(tracks, detectorMap, detectorList,trackScore);
-  }
-  else {
+  if (!m_useAmbigFcn) {
     ACTS_VERBOSE ( "Not using ambiguity function" << std::endl);
+    return trackScore;
   }
+
+  ACTS_VERBOSE ( "Using ambiguity function" << std::endl);
+  
     
-  return trackScore;
-}
-
-template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t>
-std::vector<int> Acts::AthenaAmbiguityResolution::ambigScore(
-    const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-  std::map<std::size_t,VolumeConfig> detectorMap,
-    std::vector<std::size_t> detectorList,
-    std::vector<int> trackScore) const {
-
   std::vector<int> trackScoreAmbig;
-  int numberOfTracks = trackScore.size();
-  for (int iTrack = 0; iTrack < numberOfTracks; iTrack++) {
+  iTrack = 0;
+  for (auto track : tracks) {
     double score = trackScore[iTrack];
     if (score >= 0) {
       trackScoreAmbig.push_back(score);
       iTrack++;
       continue;
     }
-
+    auto counterMap = counterMaps[iTrack];
     double pT = Acts::VectorHelpers::perp(track.momentum());
 
     double prob = log10(pT) - 1.;
     ACTS_DEBUG ("Modifier for pT = " << pT << " TeV is : "<< prob << "  New score now: " << prob);
 
-    for(int i = 0; i < detectorList.size(); i++){
+    for(std::size_t i = 0; i < detectorList.size(); i++){
       auto volume_it = detectorMap.find(detectorList[i]);
       auto detector = volume_it->second;
+      std::size_t iHits = counterMap[detector.detectorId].nHits;
 
-      iHoles = counterMap[detector.detectorId].nHoles;
-      if ( iHoles > -1 && detector.maxHoles > -1) {
-        if (iHoles > detector.maxHoles) {
-          prob /= (iHoles - detector.maxHoles + 1); // holes are bad ! 
-          iHoles = detector.maxHoles;
-        }
-        prob *= m_factorHoles[iHoles];
-        ACTS_DEBUG ("Modifier for " << iHoles << " holes: "<<getfactorHoles[iHoles]
-          << "  New score now: " << prob);
+      if (iHits < detector.minHits) {
+        prob /= (detector.minHits - iHits + 1); // missing hits are bad ! 
+        iHits = detector.minHits;
       }
+      prob *= detector.getFactorHits(iHits);
+      ACTS_DEBUG ("Modifier for " << iHits << " hits: "<<detector.getFactorHits(iHits)
+        << "  New score now: " << prob);
+
+      std::size_t iHoles = counterMap[detector.detectorId].nHoles;
+      if (iHoles > detector.maxHoles) {
+        prob /= (iHoles - detector.maxHoles + 1); // holes are bad ! 
+        iHoles = detector.maxHoles;
+      }
+      prob *= detector.getFactorHoles(iHoles);
+      ACTS_DEBUG ("Modifier for " << iHoles << " holes: "<<detector.getFactorHoles(iHoles)
+        << "  New score now: " << prob);
+     
     }
     if (track.chi2() > 0 && track.nDoF() > 0) {
       double chi2 = track.chi2();
@@ -335,6 +320,10 @@ Acts::AthenaAmbiguityResolution::solveAmbiguity(
   ACTS_INFO ( "Config file location: " << m_cfg.volumeFile << std::endl);
   std::vector<std::map<std::size_t, Counter>> counterMaps;
   std::vector<int> trackScore = simpleScore(tracks, counterMaps);
+
+  for (auto track : tracks) {
+    ACTS_INFO ("Track: " << track.index() << " pT: " << Acts::VectorHelpers::perp(track.momentum()) << " eta: " << Acts::VectorHelpers::eta(track.momentum()) << " phi: " << Acts::VectorHelpers::phi(track.momentum()));
+  }
 
   std::vector<std::size_t> cleanTracks = getCleanedOutTracks(trackScore, counterMaps, measurementsPerTrack);
 
