@@ -65,7 +65,7 @@ greedy_ambiguity_resolution = args["GreedySolver"]
 geo_dir = pathlib.Path(args["geo_dir"])
 ambi_config = pathlib.Path(args["ambi_config"])
 ambi_config = str(ambi_config)
-ttbar_pu200 = False
+ttbar_pu200 = True
 u = acts.UnitConstants
 outputDir = pathlib.Path.cwd() / "itk_output"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
@@ -194,16 +194,16 @@ elif greedy_ambiguity_resolution:
     addAthenaAmbiguityResolution(
         s,
         AthenaAmbiguityResolutionConfig(
-            minScore = 0,
-            minScoreSharedTracks = 450,
+            minScore = 100,
+            minScoreSharedTracks = 400,
             maxShared = 5,
-            maxSharedTracksPerMeasurement = 10,
-            pTMax = 1_000_000_000,
-            pTMin = 0,
+            maxSharedTracksPerMeasurement = 15,
+            pTMax = 1400,
+            pTMin = 0.5,
             phiMax = 3.14,
             phiMin = -3.14,
-            etaMax = 3.7,
-            etaMin = -3.7
+            etaMax = 2.7,
+            etaMin = -2.7
             ),
         outputDirRoot=outputDir,
         AmbiVolumeFile=ambi_config,
@@ -215,16 +215,16 @@ else:
     addAthenaAmbiguityResolution(
         s,
         AthenaAmbiguityResolutionConfig(
-            minScore = 0,
-            minScoreSharedTracks = 1,
+            minScore = 100,
+            minScoreSharedTracks = 300,
             maxShared = 5,
-            maxSharedTracksPerMeasurement = 10,
-            pTMax = 2,
-            pTMin = 0,
+            maxSharedTracksPerMeasurement = 2,
+            pTMax = 1400,
+            pTMin = 0.5,
             phiMax = 3.14,
             phiMin = -3.14,
-            etaMax = 3.7,
-            etaMin = -3.7
+            etaMax = 2.7,
+            etaMin = -2.7
             ),
         outputDirRoot=outputDir,
         AmbiVolumeFile=ambi_config,

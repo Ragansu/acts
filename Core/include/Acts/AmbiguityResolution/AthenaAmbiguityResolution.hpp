@@ -51,14 +51,11 @@ class AthenaAmbiguityResolution {
     std::vector<double> goodHoles;
     std::vector<double> fakeHoles;
 
-    void setupScoreModifiers();
-
     DetectorConfig(int hitsScoreWeight_, int holesScoreWeight_, int outliersScoreWeight_,
            int otherScoreWeight_, std::size_t minHits_, std::size_t maxHits_,
            std::size_t maxHoles_, std::size_t maxOutliers_, std::size_t maxUnused_,
            std::size_t maxSharedHits_, bool sharedHitsFlag_, std::size_t detectorId_,
-           const std::vector<double>& goodHits_, const std::vector<double>& fakeHits_,
-           const std::vector<double>& goodHoles_, const std::vector<double>& fakeHoles_)
+           const std::vector<double>& factorHits_, const std::vector<double>& factorHoles_)
         : hitsScoreWeight(hitsScoreWeight_),
           holesScoreWeight(holesScoreWeight_),
           outliersScoreWeight(outliersScoreWeight_),
@@ -71,22 +68,14 @@ class AthenaAmbiguityResolution {
           maxSharedHits(maxSharedHits_),
           sharedHitsFlag(sharedHitsFlag_),
           detectorId(detectorId_),
-          goodHits(goodHits_),
-          fakeHits(fakeHits_),
-          goodHoles(goodHoles_),
-          fakeHoles(fakeHoles_) {
-            setupScoreModifiers();
-          }
+          factorHits(factorHits_),
+          factorHoles(factorHoles_){}
 
     DetectorConfig() = default;
     DetectorConfig(const DetectorConfig&) = default;
 
-    double getFactorHits(int index) const { return m_factorHits[index]; }
-    double getFactorHoles(int index) const { return m_factorHoles[index]; }
-
-   private:
-    std::vector<double> m_factorHits;
-    std::vector<double> m_factorHoles;
+    std::vector<double> factorHits;
+    std::vector<double> factorHoles;
   };
 
   

@@ -12,28 +12,6 @@
 
 #include <stdexcept>
 
-void Acts::AthenaAmbiguityResolution::DetectorConfig::setupScoreModifiers() {
-
-  if (goodHits.size() != fakeHits.size()) {
-      throw std::runtime_error("The number of good and fake hits must be the same");
-      return;
-  }
-  else if(goodHits.size() != maxHits) {
-    throw std::runtime_error("The number of goodHits = maxHits+1. Size of goodHits: " + std::to_string(goodHits.size()) + " maxHits: " + std::to_string(maxHits));
-    return;
-  } 
-  for (std::size_t i=0; i< maxHits; ++i) m_factorHits.push_back(goodHits[i]/fakeHits[i]);
-
-  if (goodHoles.size() != fakeHoles.size()){
-    throw std::runtime_error("The number of good and fake holes must be the same");
-    return;
-  }
-  else if(goodHoles.size() != maxHoles) {
-    throw std::runtime_error("The number of goodHoles = maxHoles+1. Size of goodHoles: " + std::to_string(goodHoles.size()) + " maxHoles: " + std::to_string(maxHoles));
-    return;
-  }
-  for (std::size_t i=0; i<maxHoles; ++i) m_factorHoles.push_back(goodHoles[i]/fakeHoles[i]);
-}
 
 std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     std::vector<int> trackScore, std::vector<std::map<std::size_t, Counter>>& counterMaps,
@@ -41,6 +19,10 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     std::vector<std::size_t> cleanTracks;
 
   ACTS_INFO("Cleaning tracks");
+
+  if (trackScore.size() != measurementsPerTrack.size()) {
+    throw std::invalid_argument("Track score and measurementsPerTrack size mismatch");
+  }
   
   std::size_t numberOfTracks = measurementsPerTrack.size();
   std::cout << "Number of tracks: " << numberOfTracks << std::endl;
@@ -50,9 +32,14 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     tracksPerMeasurement;
 
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
+    if (trackScore[iTrack] <= 0) {
+      measurementsPerTrack[iTrack].clear();
+      continue;
+    }
     for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
       auto iMeasurement = std::get<0>(measurements_tuples);     
       tracksPerMeasurement[iMeasurement].insert(iTrack);
+      std::cout << "Track " << iTrack << " has measurement " << iMeasurement << std::endl;
       
     }
   }
@@ -72,10 +59,16 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
 
  
   std::vector<std::vector<std::size_t>>  newMeasurements;
+
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
 
     int track_score = trackScore[iTrack];
     std::cout << "Track score: " << track_score << std::endl;
+
+    if (track_score <= 0) {
+      std::cout << "Track " << iTrack << " could not be accepted - low score" << std::endl;
+      continue;
+    }
 
 
     int numUnused         = 0;
@@ -163,19 +156,19 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       auto measurement_tuples  = measurementsPerTrack[iTrack][i];
       measurment = std::get<0>(measurement_tuples);
       
-      std::cout << "Tsos type " << i << " is " << tsosTypes[i] << std::endl;
+      // std::cout << "Tsos type " << i << " is " << tsosTypes[i] << std::endl;
       if (tsosTypes[i] == RejectedHit){
-        std::cout << "Droping rejected hit" << std::endl;
+        // std::cout << "Droping rejected hit" << std::endl;
       }
       else if (tsosTypes[i] != SharedHit){
-        std::cout << "Good TSOS, copy hit" << std::endl;
+        // std::cout << "Good TSOS, copy hit" << std::endl;
         newMeasurementsPerTrack.push_back(measurment);
       }
       else if (cntIns >= m_cfg.maxShared){
-          std::cout << "Too many shared hit, drop it" << std::endl;
+          // std::cout << "Too many shared hit, drop it" << std::endl;
       }
       else {
-        std::cout << "Try to recover shared hit " << std::endl;
+        // std::cout << "Try to recover shared hit " << std::endl;
         if (tracksPerMeasurement[measurment].size() < m_cfg.maxSharedTracksPerMeasurement &&
             track_score > m_cfg.minScoreSharedTracks) {
           
@@ -192,6 +185,9 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     if (newMeasurementsPerTrack.size() < 3) {
       TrkCouldBeAccepted = false;
       std::cout << "Track " << iTrack << " could not be accepted - not enought hits" << std::endl;
+      std::cout << "Number of hits: " << measurementsPerTrack[iTrack].size() << std::endl;
+      std::cout << "Number of good hits: " << newMeasurementsPerTrack.size() << std::endl;
+      std::cout << "-------------------------------------" << std::endl;
       continue;
     }
     
@@ -207,6 +203,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     if (TrkCouldBeAccepted){
       cleanTracks.push_back(iTrack);
       newMeasurements.push_back(newMeasurementsPerTrack);
+      std::cout << "Track " << iTrack << " is accepted" << std::endl;
       continue;
     }
   }
@@ -231,6 +228,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       }
     }
     std::cout << "-------------------------------------" << std::endl;
+    std::cout << "Track ID: " << cleanTracks[track_id] << std::endl;
     std::cout << "Number of shared measurements: " << sharedMeasurementsPerTrack << std::endl;
     std::cout << "Number of measurements: " << newMeasurements[track_id].size() << std::endl;
     std::cout << "Score of the track: " << trackScore[cleanTracks[track_id]] << std::endl;

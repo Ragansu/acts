@@ -56,14 +56,12 @@ setConfig(std::string configFile) {
 
     bool sharedHitsFlag = value["sharedHitsFlag"];
 
-    std::vector<double> goodHits = value["goodHits"];
-    std::vector<double> fakeHits = value["fakeHits"];
-    std::vector<double> goodHoles = value["goodHoles"];
-    std::vector<double> fakeHoles = value["fakeHoles"];
+    std::vector<double> factorHits = value["factorHits"];
+    std::vector<double> factorHoles = value["factorHoles"];
 
     auto detectorConfig = Acts::AthenaAmbiguityResolution::DetectorConfig(hitsScoreWeight, holesScoreWeight, outliersScoreWeight,
                   otherScoreWeight, minHits, maxHits, maxHoles, maxOutliers, maxUnused, maxSharedHits, sharedHitsFlag, detectorId,
-                  goodHits, fakeHits, goodHoles, fakeHoles);
+                  factorHits, factorHoles);
 
     detectorMap[detectorId] = detectorConfig;
 
