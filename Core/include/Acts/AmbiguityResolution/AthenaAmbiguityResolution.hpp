@@ -46,10 +46,8 @@ class AthenaAmbiguityResolution {
 
     std::size_t detectorId;
 
-    std::vector<double> goodHits;
-    std::vector<double> fakeHits;
-    std::vector<double> goodHoles;
-    std::vector<double> fakeHoles;
+    std::vector<double> factorHits;
+    std::vector<double> factorHoles;
 
     DetectorConfig(int hitsScoreWeight_, int holesScoreWeight_, int outliersScoreWeight_,
            int otherScoreWeight_, std::size_t minHits_, std::size_t maxHits_,
@@ -74,8 +72,6 @@ class AthenaAmbiguityResolution {
     DetectorConfig() = default;
     DetectorConfig(const DetectorConfig&) = default;
 
-    std::vector<double> factorHits;
-    std::vector<double> factorHoles;
   };
 
   
