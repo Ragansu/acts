@@ -149,34 +149,34 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     }
 
     std::vector<std::size_t> newMeasurementsPerTrack;
-    std::size_t measurment = 0;
+    std::size_t measurement = 0;
     std::size_t cntIns = 0;
 
     for (std::size_t i = 0; i < tsosTypes.size(); i++) {
       auto measurement_tuples = measurementsPerTrack[iTrack][i];
-      measurment = std::get<0>(measurement_tuples);
+      measurement = std::get<0>(measurement_tuples);
 
       // std::cout << "Tsos type " << i << " is " << tsosTypes[i] << std::endl;
       if (tsosTypes[i] == RejectedHit) {
         // std::cout << "Droping rejected hit" << std::endl;
       } else if (tsosTypes[i] != SharedHit) {
         // std::cout << "Good TSOS, copy hit" << std::endl;
-        newMeasurementsPerTrack.push_back(measurment);
+        newMeasurementsPerTrack.push_back(measurement);
       } else if (cntIns >= m_cfg.maxShared) {
         // std::cout << "Too many shared hit, drop it" << std::endl;
       } else {
         // std::cout << "Try to recover shared hit " << std::endl;
-        if (tracksPerMeasurement[measurment].size() <
+        if (tracksPerMeasurement[measurement].size() <
                 m_cfg.maxSharedTracksPerMeasurement &&
             track_score > m_cfg.minScoreSharedTracks) {
           std::cout << "Accepted hit shared with "
-                    << tracksPerMeasurement[measurment].size() << " tracks"
+                    << tracksPerMeasurement[measurement].size() << " tracks"
                     << std::endl;
-          newMeasurementsPerTrack.push_back(measurment);
+          newMeasurementsPerTrack.push_back(measurement);
           cntIns++;
         } else {
           std::cout << "Rejected hit shared with "
-                    << tracksPerMeasurement[measurment].size() << " tracks"
+                    << tracksPerMeasurement[measurement].size() << " tracks"
                     << std::endl;
         }
       }
