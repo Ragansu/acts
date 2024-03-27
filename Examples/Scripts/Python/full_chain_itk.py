@@ -33,17 +33,27 @@ from acts.examples.reconstruction import (
     SeedFilterMLDBScanConfig,
 )
 
-parser = argparse.ArgumentParser(
-    description="Full chain with the ITk detector")
+parser = argparse.ArgumentParser(description="Full chain with the ITk detector")
 
+parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
 parser.add_argument(
-    "--events", "-n", help="Number of events", type=int, default=100)
-parser.add_argument("--geo_dir", help="Path to the ITk geometry",
-                    type=str, default="/homeijclab/chakkappai/Acts/acts-itk")
-parser.add_argument("--ambi_config", help="Path to the ambiguity resolution config",
-                    type=str, default="/ACTS_itk/ambiguity_resolution_config.json")
-parser.add_argument("--out_dir", help="Path to the output directory",
-                    type=str, default=pathlib.Path.cwd()/"itk_output")
+    "--geo_dir",
+    help="Path to the ITk geometry",
+    type=str,
+    default="/homeijclab/chakkappai/Acts/acts-itk",
+)
+parser.add_argument(
+    "--ambi_config",
+    help="Path to the ambiguity resolution config",
+    type=str,
+    default="/ACTS_itk/ambiguity_resolution_config.json",
+)
+parser.add_argument(
+    "--out_dir",
+    help="Path to the output directory",
+    type=str,
+    default=pathlib.Path.cwd() / "itk_output",
+)
 
 parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
@@ -90,10 +100,8 @@ u = acts.UnitConstants
 outputDir = pathlib.Path.cwd() / "itk_output"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 
-detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(
-    geo_dir)
-field = acts.examples.MagneticFieldMapXyz(
-    str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
+detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
+field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
 s = acts.examples.Sequencer(
@@ -116,8 +124,7 @@ else:
         hardProcess=["Top:qqbar2ttbar=on"],
         npileup=200,
         vtxGen=acts.examples.GaussianVertexGenerator(
-            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 *
-                                u.mm, 55.5 * u.mm, 5.0 * u.ns),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
             mean=acts.Vector4(0, 0, 0, 0),
         ),
         rnd=rnd,
@@ -129,15 +136,17 @@ addFatras(
     trackingGeometry,
     field,
     rnd=rnd,
-    preSelectParticles=ParticleSelectorConfig(
-        rho=(0.0 * u.mm, 28.0 * u.mm),
-        absZ=(0.0 * u.mm, 1.0 * u.m),
-        eta=(-4.0, 4.0),
-        pt=(150 * u.MeV, None),
-        removeNeutral=True,
-    )
-    if ttbar_pu200
-    else ParticleSelectorConfig(),
+    preSelectParticles=(
+        ParticleSelectorConfig(
+            rho=(0.0 * u.mm, 28.0 * u.mm),
+            absZ=(0.0 * u.mm, 1.0 * u.m),
+            eta=(-4.0, 4.0),
+            pt=(150 * u.MeV, None),
+            removeNeutral=True,
+        )
+        if ttbar_pu200
+        else ParticleSelectorConfig()
+    ),
     outputDirRoot=outputDir,
 )
 
@@ -154,9 +163,11 @@ addSeeding(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
-    if ttbar_pu200
-    else TruthSeedRanges(),
+    (
+        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
+        if ttbar_pu200
+        else TruthSeedRanges()
+    ),
     seedingAlgorithm=SeedingAlgorithm.Default,
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
@@ -236,7 +247,7 @@ elif greedy_ambiguity_resolution:
             phiMax=3.14,
             phiMin=-3.14,
             etaMax=2.7,
-            etaMin=-2.7
+            etaMin=-2.7,
         ),
         outputDirRoot=outputDir,
         AmbiVolumeFile=ambi_config,
@@ -257,7 +268,7 @@ else:
             phiMax=3.14,
             phiMin=-3.14,
             etaMax=4,
-            etaMin=-4
+            etaMin=-4,
         ),
         outputDirRoot=outputDir,
         AmbiVolumeFile=ambi_config,

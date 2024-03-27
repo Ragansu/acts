@@ -157,7 +157,7 @@ AthenaAmbiguityResolutionConfig = namedtuple(
         "phiMax",
         "phiMin",
         "etaMax",
-        "etaMin"
+        "etaMin",
     ],
     defaults=[None] * 10,
 )
@@ -313,8 +313,7 @@ def addSeeding(
         )
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
-            logger.info(
-                "Using truth track finding from space points for seeding")
+            logger.info("Using truth track finding from space points for seeding")
             seeds = addTruthEstimatedSeeding(
                 s,
                 spacePoints,
@@ -613,12 +612,16 @@ def addStandardSeeding(
             zMin=seedFinderConfigArg.z[0],
             zMax=seedFinderConfigArg.z[1],
             zOutermostLayers=(
-                seedFinderConfigArg.zOutermostLayers[0]
-                if seedFinderConfigArg.zOutermostLayers[0] is not None
-                else seedFinderConfigArg.z[0],
-                seedFinderConfigArg.zOutermostLayers[1]
-                if seedFinderConfigArg.zOutermostLayers[1] is not None
-                else seedFinderConfigArg.z[1],
+                (
+                    seedFinderConfigArg.zOutermostLayers[0]
+                    if seedFinderConfigArg.zOutermostLayers[0] is not None
+                    else seedFinderConfigArg.z[0]
+                ),
+                (
+                    seedFinderConfigArg.zOutermostLayers[1]
+                    if seedFinderConfigArg.zOutermostLayers[1] is not None
+                    else seedFinderConfigArg.z[1]
+                ),
             ),
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             cotThetaMax=seedFinderConfigArg.cotThetaMax,
@@ -641,10 +644,12 @@ def addStandardSeeding(
     )
     seedFinderOptions = acts.SeedFinderOptions(
         **acts.examples.defaultKWArgs(
-            beamPos=acts.Vector2(0.0, 0.0)
-            if seedFinderOptionsArg.beamPos == (None, None)
-            else acts.Vector2(
-                seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+            beamPos=(
+                acts.Vector2(0.0, 0.0)
+                if seedFinderOptionsArg.beamPos == (None, None)
+                else acts.Vector2(
+                    seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+                )
             ),
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
         )
@@ -765,12 +770,16 @@ def addOrthogonalSeeding(
             zMin=seedFinderConfigArg.z[0],
             zMax=seedFinderConfigArg.z[1],
             zOutermostLayers=(
-                seedFinderConfigArg.zOutermostLayers[0]
-                if seedFinderConfigArg.zOutermostLayers[0] is not None
-                else seedFinderConfigArg.z[0],
-                seedFinderConfigArg.zOutermostLayers[1]
-                if seedFinderConfigArg.zOutermostLayers[1] is not None
-                else seedFinderConfigArg.z[1],
+                (
+                    seedFinderConfigArg.zOutermostLayers[0]
+                    if seedFinderConfigArg.zOutermostLayers[0] is not None
+                    else seedFinderConfigArg.z[0]
+                ),
+                (
+                    seedFinderConfigArg.zOutermostLayers[1]
+                    if seedFinderConfigArg.zOutermostLayers[1] is not None
+                    else seedFinderConfigArg.z[1]
+                ),
             ),
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             cotThetaMax=seedFinderConfigArg.cotThetaMax,
@@ -791,10 +800,12 @@ def addOrthogonalSeeding(
     )
     seedFinderOptions = acts.SeedFinderOptions(
         **acts.examples.defaultKWArgs(
-            beamPos=acts.Vector2(0.0, 0.0)
-            if seedFinderOptionsArg.beamPos == (None, None)
-            else acts.Vector2(
-                seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+            beamPos=(
+                acts.Vector2(0.0, 0.0)
+                if seedFinderOptionsArg.beamPos == (None, None)
+                else acts.Vector2(
+                    seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+                )
             ),
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
         )
@@ -877,10 +888,12 @@ def addGbtsSeeding(
     )
     seedFinderOptions = acts.SeedFinderOptions(
         **acts.examples.defaultKWArgs(
-            beamPos=acts.Vector2(0.0, 0.0)
-            if seedFinderOptionsArg.beamPos == (None, None)
-            else acts.Vector2(
-                seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+            beamPos=(
+                acts.Vector2(0.0, 0.0)
+                if seedFinderOptionsArg.beamPos == (None, None)
+                else acts.Vector2(
+                    seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+                )
             ),
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
         )
@@ -1145,8 +1158,7 @@ def addTruthTrackingGsf(
         inputInitialTrackParameters="estimatedparameters",
         outputTracks="gsf_tracks",
         pickTrack=-1,
-        fit=acts.examples.makeGsfFitterFunction(
-            trackingGeometry, field, **gsfOptions),
+        fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
         calibrator=acts.examples.makePassThroughCalibrator(),
     )
     s.addAlgorithm(gsfAlg)
@@ -1580,8 +1592,7 @@ def addExaTrkX(
         gnnConfig["undirected"] = True
         gnnConfig["numFeatures"] = 3
 
-        graphConstructor = acts.examples.TorchMetricLearning(
-            **metricLearningConfig)
+        graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
             acts.examples.TorchEdgeClassifier(**filterConfig),
             acts.examples.TorchEdgeClassifier(**gnnConfig),
@@ -1593,8 +1604,7 @@ def addExaTrkX(
         filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
         gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
 
-        graphConstructor = acts.examples.OnnxMetricLearning(
-            **metricLearningConfig)
+        graphConstructor = acts.examples.OnnxMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
             acts.examples.OnnxEdgeClassifier(**filterConfig),
             acts.examples.OnnxEdgeClassifier(**gnnConfig),
@@ -1638,8 +1648,7 @@ def addExaTrkX(
                 inputParticles="particles_initial",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputProtoTrackParticleMatching=matchAlg.config.outputProtoTrackParticleMatching,
-                filePath=str(Path(outputDirRoot) / \
-                             "performance_track_finding.root"),
+                filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
             )
         )
 
