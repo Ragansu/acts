@@ -121,7 +121,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
 
 
 
-    for (auto ts : track.trackStatesReversed()) {
+    for (const auto& ts : track.trackStatesReversed()) {
       auto iVolume = ts.referenceSurface().geometryId().volume();
       auto iTypeFlags = ts.typeFlags();  
 
@@ -246,7 +246,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
     
   std::vector<int> trackScoreAmbig;
   iTrack = 0;
-  for (auto track : tracks) {
+  for (const auto& track : tracks) {
     double score = trackScore[iTrack];
     if (score >= 0) {
       trackScoreAmbig.push_back(score);
@@ -318,7 +318,7 @@ Acts::AthenaAmbiguityResolution::solveAmbiguity(
   std::vector<std::map<std::size_t, Counter>> counterMaps;
   std::vector<int> trackScore = simpleScore(tracks, counterMaps);
 
-  for (auto track : tracks) {
+  for (const auto& track : tracks) {
     ACTS_INFO ("Track: " << track.index() << " pT: " << Acts::VectorHelpers::perp(track.momentum()) << " eta: " << Acts::VectorHelpers::eta(track.momentum()) << " phi: " << Acts::VectorHelpers::phi(track.momentum()));
   }
 
@@ -330,7 +330,7 @@ Acts::AthenaAmbiguityResolution::solveAmbiguity(
 
   std::vector<int> goodTracks;
   std::size_t iTrack = 0;
-  for (auto track : tracks) {
+  for (const auto& track : tracks) {
     if(std::find(cleanTracks.begin(), cleanTracks.end(), iTrack) != cleanTracks.end()) {
       if (trackScore[iTrack] >= m_cfg.minScore) {
         goodTracks.push_back(track.index());

@@ -65,7 +65,7 @@ greedy_ambiguity_resolution = args["GreedySolver"]
 geo_dir = pathlib.Path(args["geo_dir"])
 ambi_config = pathlib.Path(args["ambi_config"])
 ambi_config = str(ambi_config)
-ttbar_pu200 = True
+ttbar_pu200 = False
 u = acts.UnitConstants
 outputDir = pathlib.Path.cwd() / "itk_output"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
@@ -223,8 +223,8 @@ else:
             pTMin = 0.5,
             phiMax = 3.14,
             phiMin = -3.14,
-            etaMax = 2.7,
-            etaMin = -2.7
+            etaMax = 4,
+            etaMin = -4
             ),
         outputDirRoot=outputDir,
         AmbiVolumeFile=ambi_config,
