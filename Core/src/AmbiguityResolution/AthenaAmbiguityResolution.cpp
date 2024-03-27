@@ -158,7 +158,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
 
       // std::cout << "Tsos type " << i << " is " << tsosTypes[i] << std::endl;
       if (tsosTypes[i] == RejectedHit) {
-        // std::cout << "Droping rejected hit" << std::endl;
+        // std::cout << "Dropping rejected hit" << std::endl;
       } else if (tsosTypes[i] != SharedHit) {
         // std::cout << "Good TSOS, copy hit" << std::endl;
         newMeasurementsPerTrack.push_back(measurement);
@@ -185,7 +185,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     if (newMeasurementsPerTrack.size() < 3) {
       TrkCouldBeAccepted = false;
       std::cout << "Track " << iTrack
-                << " could not be accepted - not enought hits" << std::endl;
+                << " could not be accepted - not enough hits" << std::endl;
       std::cout << "Number of hits: " << measurementsPerTrack[iTrack].size()
                 << std::endl;
       std::cout << "Number of good hits: " << newMeasurementsPerTrack.size()
