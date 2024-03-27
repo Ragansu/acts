@@ -148,15 +148,15 @@ AmbiguityResolutionConfig = namedtuple(
 AthenaAmbiguityResolutionConfig = namedtuple(
     "AthenaAmbiguityResolutionConfig",
     [
-        "minScore", 
-        "minScoreSharedTracks", 
-        "maxShared", 
-        "maxSharedTracksPerMeasurement", 
+        "minScore",
+        "minScoreSharedTracks",
+        "maxShared",
+        "maxSharedTracksPerMeasurement",
         "pTMax",
         "pTMin",
-        "phiMax", 
-        "phiMin", 
-        "etaMax", 
+        "phiMax",
+        "phiMin",
+        "etaMax",
         "etaMin"
     ],
     defaults=[None] * 10,
@@ -313,7 +313,8 @@ def addSeeding(
         )
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
-            logger.info("Using truth track finding from space points for seeding")
+            logger.info(
+                "Using truth track finding from space points for seeding")
             seeds = addTruthEstimatedSeeding(
                 s,
                 spacePoints,
@@ -1144,7 +1145,8 @@ def addTruthTrackingGsf(
         inputInitialTrackParameters="estimatedparameters",
         outputTracks="gsf_tracks",
         pickTrack=-1,
-        fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
+        fit=acts.examples.makeGsfFitterFunction(
+            trackingGeometry, field, **gsfOptions),
         calibrator=acts.examples.makePassThroughCalibrator(),
     )
     s.addAlgorithm(gsfAlg)
@@ -1578,7 +1580,8 @@ def addExaTrkX(
         gnnConfig["undirected"] = True
         gnnConfig["numFeatures"] = 3
 
-        graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
+        graphConstructor = acts.examples.TorchMetricLearning(
+            **metricLearningConfig)
         edgeClassifiers = [
             acts.examples.TorchEdgeClassifier(**filterConfig),
             acts.examples.TorchEdgeClassifier(**gnnConfig),
@@ -1590,7 +1593,8 @@ def addExaTrkX(
         filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
         gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
 
-        graphConstructor = acts.examples.OnnxMetricLearning(**metricLearningConfig)
+        graphConstructor = acts.examples.OnnxMetricLearning(
+            **metricLearningConfig)
         edgeClassifiers = [
             acts.examples.OnnxEdgeClassifier(**filterConfig),
             acts.examples.OnnxEdgeClassifier(**gnnConfig),
@@ -1630,10 +1634,12 @@ def addExaTrkX(
             acts.examples.TrackFinderPerformanceWriter(
                 level=customLogLevel(),
                 inputProtoTracks=findingAlg.config.outputProtoTracks,
-                inputParticles="particles_initial",  # the original selected particles after digitization
+                # the original selected particles after digitization
+                inputParticles="particles_initial",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputProtoTrackParticleMatching=matchAlg.config.outputProtoTrackParticleMatching,
-                filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
+                filePath=str(Path(outputDirRoot) / \
+                             "performance_track_finding.root"),
             )
         )
 
@@ -1726,14 +1732,14 @@ def addAthenaAmbiguityResolution(
         configFile=AmbiVolumeFile,
         outputTracks="ambiTracksAthena",
         **acts.examples.defaultKWArgs(
-            minScore = config.minScore,
-            minScoreSharedTracks = config.minScoreSharedTracks,
-            maxShared = config.maxShared,
-            maxSharedTracksPerMeasurement = config.maxSharedTracksPerMeasurement,
-            phiMax = config.phiMax,
-            phiMin = config.phiMin,
-            etaMax = config.etaMax,
-            etaMin = config.etaMin,
+            minScore=config.minScore,
+            minScoreSharedTracks=config.minScoreSharedTracks,
+            maxShared=config.maxShared,
+            maxSharedTracksPerMeasurement=config.maxSharedTracksPerMeasurement,
+            phiMax=config.phiMax,
+            phiMin=config.phiMin,
+            etaMax=config.etaMax,
+            etaMin=config.etaMin,
         ),
     )
     s.addAlgorithm(algAthena)
