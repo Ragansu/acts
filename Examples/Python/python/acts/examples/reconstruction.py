@@ -1748,8 +1748,6 @@ def addAthenaAmbiguityResolution(
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
         writeCKFperformance=True,
-        writeFinderPerformance=False,
-        writeFitterPerformance=False,
         logLevel=logLevel,
         writeCovMat=writeCovMat,
     )

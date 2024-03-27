@@ -25,6 +25,8 @@ from acts.examples.reconstruction import (
     AmbiguityResolutionMLConfig,
     addVertexFitting,
     VertexFinder,
+    addSeedFilterML,
+    SeedFilterMLDBScanConfig,
 )
 
 parser = argparse.ArgumentParser(description="Full chain with the ITk detector")
@@ -32,6 +34,7 @@ parser = argparse.ArgumentParser(description="Full chain with the ITk detector")
 parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
 parser.add_argument("--geo_dir", help="Path to the ITk geometry", type=str, default="/homeijclab/chakkappai/Acts/acts-itk")
 parser.add_argument("--ambi_config", help="Path to the ambiguity resolution config", type=str, default="/ACTS_itk/ambiguity_resolution_config.json")
+parser.add_argument("--out_dir", help="Path to the output directory", type=str, default=pathlib.Path.cwd()/"itk_output")
 
 parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
@@ -44,6 +47,12 @@ parser.add_argument(
 parser.add_argument(
     "--MLSolver",
     help="Use the Ml Ambiguity Solver instead of the classical one",
+    action="store_true",
+)
+
+parser.add_argument(
+    "--seedFilter_ML",
+    help="Use the Ml Seed Filter instead of the classical one",
     action="store_true",
 )
 parser.add_argument(
@@ -62,10 +71,12 @@ args = vars(parser.parse_args())
 ambiguity_MLSolver = args["MLSolver"]
 athena_ambiguity_resolution = args["AthenaSolver"]
 greedy_ambiguity_resolution = args["GreedySolver"]
+seedFilter_ML = args["seedFilter_ML"]
 geo_dir = pathlib.Path(args["geo_dir"])
 ambi_config = pathlib.Path(args["ambi_config"])
 ambi_config = str(ambi_config)
-ttbar_pu200 = False
+ttbar_pu200 = args["ttbar"]
+
 u = acts.UnitConstants
 outputDir = pathlib.Path.cwd() / "itk_output"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
@@ -150,7 +161,17 @@ addSeeding(
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     outputDirRoot=outputDir,
 )
-
+if seedFilter_ML:
+    addSeedFilterML(
+        s,
+        SeedFilterMLDBScanConfig(
+            epsilonDBScan=0.03, minPointsDBScan=2, minSeedScore=0.1
+        ),
+        onnxModelFile=os.path.dirname(__file__)
+        + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
+        outputDirRoot=outputDir,
+        # outputDirCsv=outputDir,
+    )
 addCKFTracks(
     s,
     trackingGeometry,
@@ -196,7 +217,7 @@ elif greedy_ambiguity_resolution:
         AthenaAmbiguityResolutionConfig(
             minScore = 100,
             minScoreSharedTracks = 400,
-            maxShared = 5,
+            maxShared = 2,
             maxSharedTracksPerMeasurement = 15,
             pTMax = 1400,
             pTMin = 0.5,
@@ -217,7 +238,7 @@ else:
         AthenaAmbiguityResolutionConfig(
             minScore = 100,
             minScoreSharedTracks = 300,
-            maxShared = 5,
+            maxShared = 2,
             maxSharedTracksPerMeasurement = 2,
             pTMax = 1400,
             pTMin = 0.5,

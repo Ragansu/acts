@@ -49,11 +49,14 @@ class AthenaAmbiguityResolution {
     std::vector<double> factorHits;
     std::vector<double> factorHoles;
 
-    DetectorConfig(int hitsScoreWeight_, int holesScoreWeight_, int outliersScoreWeight_,
-           int otherScoreWeight_, std::size_t minHits_, std::size_t maxHits_,
-           std::size_t maxHoles_, std::size_t maxOutliers_, std::size_t maxUnused_,
-           std::size_t maxSharedHits_, bool sharedHitsFlag_, std::size_t detectorId_,
-           const std::vector<double>& factorHits_, const std::vector<double>& factorHoles_)
+    DetectorConfig(int hitsScoreWeight_, int holesScoreWeight_,
+                   int outliersScoreWeight_, int otherScoreWeight_,
+                   std::size_t minHits_, std::size_t maxHits_,
+                   std::size_t maxHoles_, std::size_t maxOutliers_,
+                   std::size_t maxUnused_, std::size_t maxSharedHits_,
+                   bool sharedHitsFlag_, std::size_t detectorId_,
+                   const std::vector<double>& factorHits_,
+                   const std::vector<double>& factorHoles_)
         : hitsScoreWeight(hitsScoreWeight_),
           holesScoreWeight(holesScoreWeight_),
           outliersScoreWeight(outliersScoreWeight_),
@@ -67,18 +70,15 @@ class AthenaAmbiguityResolution {
           sharedHitsFlag(sharedHitsFlag_),
           detectorId(detectorId_),
           factorHits(factorHits_),
-          factorHoles(factorHoles_){}
+          factorHoles(factorHoles_) {}
 
     DetectorConfig() = default;
     DetectorConfig(const DetectorConfig&) = default;
-
   };
 
-  
-
   struct Config {
-    std::map<std::size_t,std::size_t> volumeMap = {{0,0}};
-    std::map<std::size_t,DetectorConfig> detectorMap;
+    std::map<std::size_t, std::size_t> volumeMap = {{0, 0}};
+    std::map<std::size_t, DetectorConfig> detectorMap;
 
     std::string configFile = "configFile.json";
 
@@ -117,38 +117,37 @@ class AthenaAmbiguityResolution {
                                                  Logging::INFO))
       : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
-// muons TODO etahits and phihits
-  
-template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t, typename source_link_hash_t,
-          typename source_link_equality_t>
-std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>> computeInitialState(
-    const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    source_link_hash_t&& sourceLinkHash,
-    source_link_equality_t&& sourceLinkEquality) const;
+  // muons TODO etahits and phihits
 
-
+  template <typename track_container_t, typename traj_t,
+            template <typename> class holder_t, typename source_link_hash_t,
+            typename source_link_equality_t>
+  std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
+  computeInitialState(
+      const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
+      source_link_hash_t&& sourceLinkHash,
+      source_link_equality_t&& sourceLinkEquality) const;
 
   /// Prepare the output track container to be written
   ///
   /// @param tracks is the input track container
   /// @param goodTracks is list of the IDs of all the tracks we want to keep
-template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t>
-const TrackContainer<track_container_t, traj_t, holder_t> prepareOutputTrack(
-    const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    std::vector<std::size_t>& goodTracks) const;
+  template <typename track_container_t, typename traj_t,
+            template <typename> class holder_t>
+  const TrackContainer<track_container_t, traj_t, holder_t> prepareOutputTrack(
+      const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
+      std::vector<std::size_t>& goodTracks) const;
 
   /// Compute the score of each track
   ///
   /// @param tracks is the input track container
   /// @return a vector of scores for each track
-template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t>
-std::vector<int> simpleScore(
- const TrackContainer<track_container_t, traj_t, holder_t>& tracks, 
- std::vector<std::map<std::size_t, Counter>>& counterMaps) const;
- 
+  template <typename track_container_t, typename traj_t,
+            template <typename> class holder_t>
+  std::vector<int> simpleScore(
+      const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
+      std::vector<std::map<std::size_t, Counter>>& counterMaps) const;
+
   /// Remove tracks that are not good enough based on cuts
   ///
   /// @param trackScore is the score of each track
@@ -156,8 +155,10 @@ std::vector<int> simpleScore(
   /// @param measurementsPerTrack is the list of measurements for each track
   /// @return a vector of IDs of the tracks we want to keep
   std::vector<std::size_t> getCleanedOutTracks(
-    std::vector<int> trackScore, std::vector<std::map<std::size_t, Counter>>& counterMaps,
-    std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>> measurementsPerTrack) const;
+      std::vector<int> trackScore,
+      std::vector<std::map<std::size_t, Counter>>& counterMaps,
+      std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
+          measurementsPerTrack) const;
 
   /// Remove tracks that are not good enough
   ///
@@ -168,13 +169,14 @@ std::vector<int> simpleScore(
             template <typename> class holder_t>
   std::vector<int> solveAmbiguity(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>> measurementsPerTrack) const;
+      std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
+          measurementsPerTrack) const;
 
-private:
+ private:
   Config m_cfg;
 
   bool m_useAmbigFcn = false;
-  
+
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
 
@@ -182,6 +184,6 @@ private:
   const Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace ActsExamples
+}  // namespace Acts
 
 #include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.ipp"

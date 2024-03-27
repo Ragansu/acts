@@ -15,6 +15,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+
 #include <string>
 
 namespace ActsExamples {
@@ -25,7 +26,7 @@ namespace ActsExamples {
 ///  1) Cluster together nearby tracks using shared hits
 ///  2) For each track use a neural network to compute a score
 ///  3) In each cluster keep the track with the highest score
-class AthenaAmbiguityResolutionAlgorithm final :  public IAlgorithm {
+class AthenaAmbiguityResolutionAlgorithm final : public IAlgorithm {
  public:
   /// Configuration for the ambiguity resolution algorithm.
 
@@ -35,9 +36,10 @@ class AthenaAmbiguityResolutionAlgorithm final :  public IAlgorithm {
     /// Output track collection.
     std::string outputTracks;
 
-    std::map<std::size_t,Acts::AthenaAmbiguityResolution::DetectorConfig> detectorMap;
-    std::map<std::size_t,std::size_t> volumeMap;
-        
+    std::map<std::size_t, Acts::AthenaAmbiguityResolution::DetectorConfig>
+        detectorMap;
+    std::map<std::size_t, std::size_t> volumeMap;
+
     int minScore = 0;
     int minScoreSharedTracks = 0;
 
@@ -54,9 +56,7 @@ class AthenaAmbiguityResolutionAlgorithm final :  public IAlgorithm {
 
     double etaMin = -5;
     double etaMax = 5;
-
   };
-
 
   /// Construct the ambiguity resolution algorithm.
   ///
