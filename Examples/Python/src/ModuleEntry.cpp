@@ -117,7 +117,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addVertexing(ctx);
   addAmbiguityResolution(ctx);
   addAthenaAmbiguityResolution(ctx);
-  
 
   addDigitization(ctx);
   addPythia8(ctx);

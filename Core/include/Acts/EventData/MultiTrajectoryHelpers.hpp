@@ -81,7 +81,6 @@ TrajectoryState trajectoryState(const traj_t& multiTraj,
       trajState.nHoles++;
       trajState.holeVolume.push_back(volume);
       trajState.holeLayer.push_back(layer);
-
     }
   });
   return trajState;

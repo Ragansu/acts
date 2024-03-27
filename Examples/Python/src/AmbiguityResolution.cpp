@@ -7,9 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "ActsExamples/AmbiguityResolution/GreedyAmbiguityResolutionAlgorithm.hpp"
 #include "ActsExamples/AmbiguityResolution/AthenaAmbiguityResolutionAlgorithm.hpp"
-
+#include "ActsExamples/AmbiguityResolution/GreedyAmbiguityResolutionAlgorithm.hpp"
 
 #include <memory>
 
@@ -36,10 +35,10 @@ void addAthenaAmbiguityResolution(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AthenaAmbiguityResolutionAlgorithm, mex,
-      "AthenaAmbiguityResolutionAlgorithm", inputTracks, configFile, outputTracks,
-      minScore, minScoreSharedTracks, maxShared,
-      maxSharedTracksPerMeasurement, pTMin, pTMax,
-      phiMin, phiMax, etaMin, etaMax);
+      "AthenaAmbiguityResolutionAlgorithm", inputTracks, configFile,
+      outputTracks, minScore, minScoreSharedTracks, maxShared,
+      maxSharedTracksPerMeasurement, pTMin, pTMax, phiMin, phiMax, etaMin,
+      etaMax);
 }
 
 }  // namespace Acts::Python
