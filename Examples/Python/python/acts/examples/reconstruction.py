@@ -113,7 +113,6 @@ TruthEstimatedSeedingAlgorithmConfigArg = namedtuple(
     defaults=[(None, None)],
 )
 
-
 TrackSelectorConfig = namedtuple(
     "TrackSelectorConfig",
     [
@@ -412,7 +411,7 @@ def addSeeding(
             if not outputDirCsv.exists():
                 outputDirCsv.mkdir()
 
-            CsvSeedWriter = acts.examples.CsvSeedWriter(
+            csvSeedWriter = acts.examples.CsvSeedWriter(
                 level=logLevel,
                 inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
                 inputSimSeeds=seeds,
@@ -422,7 +421,7 @@ def addSeeding(
                 outputDir=str(outputDirCsv),
                 fileName=str(f"seed.csv"),
             )
-            s.addWriter(CsvSeedWriter)
+            s.addWriter(csvSeedWriter)
 
     return s
 
@@ -463,7 +462,7 @@ def addSeedingTruthSelection(
 
 
 def addTruthSmearedSeeding(
-    sequence: acts.examples.Sequencer,
+    s: acts.examples.Sequencer,
     rnd: Optional[acts.examples.RandomNumbers],
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
@@ -500,7 +499,7 @@ def addTruthSmearedSeeding(
             particleHypothesis=particleHypothesis,
         ),
     )
-    sequence.addAlgorithm(ptclSmear)
+    s.addAlgorithm(ptclSmear)
 
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=logLevel,
@@ -508,7 +507,7 @@ def addTruthSmearedSeeding(
         inputMeasurementParticlesMap="measurement_particles_map",
         outputProtoTracks="truth_particle_tracks",
     )
-    sequence.addAlgorithm(truthTrkFndAlg)
+    s.addAlgorithm(truthTrkFndAlg)
 
 
 def addTruthEstimatedSeeding(
@@ -1034,7 +1033,7 @@ def addSeedFilterML(
         if not outputDirCsv.exists():
             outputDirCsv.mkdir()
 
-        CsvSeedWriter = acts.examples.CsvSeedWriter(
+        csvSeedWriter = acts.examples.CsvSeedWriter(
             level=customLogLevel,
             inputTrackParameters=estParams,
             inputSimSeeds=seeds,
@@ -1044,7 +1043,7 @@ def addSeedFilterML(
             outputDir=str(outputDirCsv),
             fileName=str(f"seed.csv"),
         )
-        s.addWriter(CsvSeedWriter)
+        s.addWriter(csvSeedWriter)
 
     return s
 
@@ -1090,7 +1089,7 @@ def addKalmanTracks(
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
         inputClusters=clusters if clusters is not None else "",
-        outputTracks="kfTracks",
+        outputTracks="kf_tracks",
         pickTrack=-1,
         fit=acts.examples.makeKalmanFitterFunction(
             trackingGeometry, field, **kalmanOptions
@@ -1099,6 +1098,22 @@ def addKalmanTracks(
     )
     s.addAlgorithm(fitAlg)
     s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
+
+    matchAlg = acts.examples.TrackTruthMatcher(
+        level=customLogLevel(),
+        inputTracks=fitAlg.config.outputTracks,
+        inputParticles="particles",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputTrackParticleMatching="kf_track_particle_matching",
+        outputParticleTrackMatching="kf_particle_track_matching",
+    )
+    s.addAlgorithm(matchAlg)
+    s.addWhiteboardAlias(
+        "track_particle_matching", matchAlg.config.outputTrackParticleMatching
+    )
+    s.addWhiteboardAlias(
+        "particle_track_matching", matchAlg.config.outputParticleTrackMatching
+    )
 
     return s
 
@@ -1134,6 +1149,22 @@ def addTruthTrackingGsf(
     )
     s.addAlgorithm(gsfAlg)
     s.addWhiteboardAlias("tracks", gsfAlg.config.outputTracks)
+
+    matchAlg = acts.examples.TrackTruthMatcher(
+        level=customLogLevel(),
+        inputTracks=gsfAlg.config.outputTracks,
+        inputParticles="particles",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputTrackParticleMatching="gsf_track_particle_matching",
+        outputParticleTrackMatching="gsf_particle_track_matching",
+    )
+    s.addAlgorithm(matchAlg)
+    s.addWhiteboardAlias(
+        "track_particle_matching", matchAlg.config.outputTrackParticleMatching
+    )
+    s.addWhiteboardAlias(
+        "particle_track_matching", matchAlg.config.outputParticleTrackMatching
+    )
 
     return s
 
@@ -1244,7 +1275,7 @@ def addCKFTracks(
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
-        outputTracks="ckfTracks",
+        outputTracks="ckf_tracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field, customLogLevel()
         ),
@@ -1256,6 +1287,22 @@ def addCKFTracks(
     s.addAlgorithm(trackFinder)
     s.addWhiteboardAlias("tracks", trackFinder.config.outputTracks)
 
+    matcher = acts.examples.TrackTruthMatcher(
+        level=customLogLevel(),
+        inputTracks=trackFinder.config.outputTracks,
+        inputParticles="particles_selected",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputTrackParticleMatching="ckf_track_particle_matching",
+        outputParticleTrackMatching="ckf_particle_track_matching",
+    )
+    s.addAlgorithm(matcher)
+    s.addWhiteboardAlias(
+        "track_particle_matching", matcher.config.outputTrackParticleMatching
+    )
+    s.addWhiteboardAlias(
+        "particle_track_matching", matcher.config.outputParticleTrackMatching
+    )
+
     addTrackWriters(
         s,
         name="ckf",
@@ -1265,8 +1312,6 @@ def addCKFTracks(
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
         writeCKFperformance=True,
-        writeFinderPerformance=False,
-        writeFitterPerformance=False,
         logLevel=logLevel,
         writeCovMat=writeCovMat,
     )
@@ -1307,7 +1352,7 @@ def addGx2fTracks(
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
         inputClusters=clusters if clusters is not None else "",
-        outputTracks="gx2fTracks",
+        outputTracks="gx2f_tracks",
         pickTrack=-1,
         fit=acts.examples.makeGlobalChiSquareFitterFunction(
             trackingGeometry, field, **gx2fOptions
@@ -1316,6 +1361,22 @@ def addGx2fTracks(
     )
     s.addAlgorithm(fitAlg)
     s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
+
+    matchAlg = acts.examples.TrackTruthMatcher(
+        level=customLogLevel(),
+        inputTracks=fitAlg.config.outputTracks,
+        inputParticles="particles",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputTrackParticleMatching="gx2f_track_particle_matching",
+        outputParticleTrackMatching="gx2f_particle_track_matching",
+    )
+    s.addAlgorithm(matchAlg)
+    s.addWhiteboardAlias(
+        "track_particle_matching", matchAlg.config.outputTrackParticleMatching
+    )
+    s.addWhiteboardAlias(
+        "particle_track_matching", matchAlg.config.outputParticleTrackMatching
+    )
 
     return s
 
@@ -1329,8 +1390,6 @@ def addTrackWriters(
     writeStates: bool = True,
     writeSummary: bool = True,
     writeCKFperformance: bool = True,
-    writeFinderPerformance: bool = True,
-    writeFitterPerformance: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
 ):
@@ -1351,8 +1410,8 @@ def addTrackWriters(
                 # filtered particle collection. This could be avoided when a separate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
+                inputTrackParticleMatching="track_particle_matching",
                 inputSimHits="simhits",
-                inputMeasurementParticlesMap="measurement_particles_map",
                 inputMeasurementSimHitsMap="measurement_simhits_map",
                 filePath=str(outputDirRoot / f"trackstates_{name}.root"),
                 treeName="trackstates",
@@ -1369,7 +1428,7 @@ def addTrackWriters(
                 # filtered particle collection. This could be avoided when a separate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
-                inputMeasurementParticlesMap="measurement_particles_map",
+                inputTrackParticleMatching="track_particle_matching",
                 filePath=str(outputDirRoot / f"tracksummary_{name}.root"),
                 treeName="tracksummary",
                 writeCovMat=writeCovMat,
@@ -1380,38 +1439,13 @@ def addTrackWriters(
             # Write CKF performance data
             ckfPerfWriter = acts.examples.CKFPerformanceWriter(
                 level=customLogLevel(),
-                inputParticles="truth_seeds_selected",
                 inputTracks=tracks,
-                inputMeasurementParticlesMap="measurement_particles_map",
+                inputParticles="truth_seeds_selected",
+                inputTrackParticleMatching="track_particle_matching",
+                inputParticleTrackMatching="particle_track_matching",
                 filePath=str(outputDirRoot / f"performance_{name}.root"),
             )
             s.addWriter(ckfPerfWriter)
-
-        if writeFinderPerformance:
-            s.addWriter(
-                acts.examples.TrackFinderPerformanceWriter(
-                    level=acts.logging.INFO,
-                    inputProtoTracks="prototracks",
-                    inputParticles="truth_seeds_selected",
-                    inputMeasurementParticlesMap="measurement_particles_map",
-                    filePath=str(
-                        outputDirRoot / f"performance_track_finder_{name}.root"
-                    ),
-                )
-            )
-
-        if writeFitterPerformance:
-            s.addWriter(
-                acts.examples.TrackFitterPerformanceWriter(
-                    level=acts.logging.INFO,
-                    inputParticles="truth_seeds_selected",
-                    inputTracks=tracks,
-                    inputMeasurementParticlesMap="measurement_particles_map",
-                    filePath=str(
-                        outputDirRoot / f"performance_track_fitter_{name}.root"
-                    ),
-                )
-            )
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
@@ -1563,15 +1597,31 @@ def addExaTrkX(
         ]
         trackBuilder = acts.examples.CugraphTrackBuilding(customLogLevel())
 
-    s.addAlgorithm(
-        acts.examples.TrackFindingAlgorithmExaTrkX(
-            level=customLogLevel(),
-            inputSpacePoints="spacepoints",
-            outputProtoTracks="protoTracks",
-            graphConstructor=graphConstructor,
-            edgeClassifiers=edgeClassifiers,
-            trackBuilder=trackBuilder,
-        )
+    findingAlg = acts.examples.TrackFindingAlgorithmExaTrkX(
+        level=customLogLevel(),
+        inputSpacePoints="spacepoints",
+        outputProtoTracks="exatrkx_prototracks",
+        graphConstructor=graphConstructor,
+        edgeClassifiers=edgeClassifiers,
+        trackBuilder=trackBuilder,
+    )
+    s.addAlgorithm(findingAlg)
+    s.addWhiteboardAlias("prototracks", findingAlg.config.outputProtoTracks)
+
+    matchAlg = acts.examples.ProtoTrackTruthMatcher(
+        level=customLogLevel(),
+        inputProtoTracks=findingAlg.config.outputProtoTracks,
+        inputParticles="particles",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputProtoTrackParticleMatching="exatrkx_prototrack_particle_matching",
+        outputParticleProtoTrackMatching="exatrkx_particle_prototrack_matching",
+    )
+    s.addAlgorithm(matchAlg)
+    s.addWhiteboardAlias(
+        "prototrack_particle_matching", matchAlg.config.outputProtoTrackParticleMatching
+    )
+    s.addWhiteboardAlias(
+        "particle_prototrack_matching", matchAlg.config.outputParticleProtoTrackMatching
     )
 
     # Write truth track finding / seeding performance
@@ -1579,9 +1629,10 @@ def addExaTrkX(
         s.addWriter(
             acts.examples.TrackFinderPerformanceWriter(
                 level=customLogLevel(),
-                inputProtoTracks="protoTracks",
+                inputProtoTracks=findingAlg.config.outputProtoTracks,
                 inputParticles="particles_initial",  # the original selected particles after digitization
                 inputMeasurementParticlesMap="measurement_particles_map",
+                inputProtoTrackParticleMatching=matchAlg.config.outputProtoTrackParticleMatching,
                 filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
             )
         )
@@ -1609,7 +1660,7 @@ def addAmbiguityResolution(
     alg = GreedyAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=tracks,
-        outputTracks="ambiTracks",
+        outputTracks="ambi_tracks",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
             nMeasurementsMin=config.nMeasurementsMin,
@@ -1618,6 +1669,22 @@ def addAmbiguityResolution(
     )
     s.addAlgorithm(alg)
     s.addWhiteboardAlias("tracks", alg.config.outputTracks)
+
+    matchAlg = acts.examples.TrackTruthMatcher(
+        level=customLogLevel(),
+        inputTracks=alg.config.outputTracks,
+        inputParticles="particles",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputTrackParticleMatching="ambi_track_particle_matching",
+        outputParticleTrackMatching="ambi_particle_track_matching",
+    )
+    s.addAlgorithm(matchAlg)
+    s.addWhiteboardAlias(
+        "track_particle_matching", matchAlg.config.outputTrackParticleMatching
+    )
+    s.addWhiteboardAlias(
+        "particle_track_matching", matchAlg.config.outputParticleTrackMatching
+    )
 
     addTrackWriters(
         s,
@@ -1628,8 +1695,6 @@ def addAmbiguityResolution(
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
         writeCKFperformance=True,
-        writeFinderPerformance=False,
-        writeFitterPerformance=False,
         logLevel=logLevel,
         writeCovMat=writeCovMat,
     )
@@ -1742,8 +1807,6 @@ def addAmbiguityResolutionML(
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
         writeCKFperformance=True,
-        writeFinderPerformance=False,
-        writeFitterPerformance=False,
         logLevel=logLevel,
     )
 
@@ -1788,8 +1851,6 @@ def addAmbiguityResolutionMLDBScan(
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
         writeCKFperformance=True,
-        writeFinderPerformance=False,
-        writeFitterPerformance=False,
         logLevel=logLevel,
     )
 
@@ -1804,7 +1865,6 @@ def addVertexFitting(
     field,
     tracks: Optional[str] = "tracks",
     trackParameters: Optional[str] = None,
-    associatedParticles: Optional[str] = None,
     outputProtoVertices: str = "protovertices",
     outputVertices: str = "fittedVertices",
     seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
@@ -1824,8 +1884,6 @@ def addVertexFitting(
     field : magnetic field
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    associatedParticles : str, "associatedTruthParticles"
-        VertexPerformanceWriter.inputAssociatedTruthParticles
     seeder : enum member
         determines vertex seeder for AMVF, can be acts.seeder.GaussianSeeder or
         acts.seeder.AdaptiveGridSeeder
@@ -1868,9 +1926,9 @@ def addVertexFitting(
         trackParameters = converter.config.outputTrackParameters
 
     tracks = tracks if tracks is not None else ""
-    associatedParticles = associatedParticles if associatedParticles is not None else ""
     inputParticles = "particles_input"
     selectedParticles = "particles_selected"
+    inputVertices = "vertices_input"
 
     if vertexFinder == VertexFinder.Truth:
         findVertices = TruthVertexFinder(
@@ -1917,22 +1975,17 @@ def addVertexFitting(
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
-        if associatedParticles == selectedParticles:
-            warnings.warn(
-                "Using VertexPerformanceWriter with smeared particles is not necessarily supported. "
-                "Please get in touch with us"
-            )
         s.addWriter(
             VertexPerformanceWriter(
                 level=customLogLevel(),
-                inputAllTruthParticles=inputParticles,
-                inputSelectedTruthParticles=selectedParticles,
-                inputMeasurementParticlesMap="measurement_particles_map",
-                inputTracks=tracks,
-                inputAssociatedTruthParticles=associatedParticles,
                 inputVertices=outputVertices,
+                inputTracks=tracks,
+                inputTruthVertices=inputVertices,
+                inputParticles=inputParticles,
+                inputSelectedParticles=selectedParticles,
+                inputTrackParticleMatching="track_particle_matching",
                 bField=field,
-                minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
+                vertexMatchThreshold=0.0,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
             )
