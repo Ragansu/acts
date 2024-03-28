@@ -197,7 +197,12 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
         ACTS_DEBUG("---> Min hits: " << detector.minHits);
         ACTS_DEBUG("---> Max holes: " << detector.maxHoles);
         ACTS_DEBUG("---> Max outliers: " << detector.maxOutliers);
-        ACTS_DEBUG("---> Max unused: " << detector.maxUnused);
+
+        std::cout <<  detectorId << " " << counterMap[detectorId].nHits << " hits " 
+                                        << counterMap[detectorId].nHoles << " holes "
+                                        << counterMap[detectorId].nOutliers << " Outliers "
+                                        << counterMap[detectorId].nSharedHits << " SharedHits " << std::endl;
+                                        
 
         if ((counterMap[detectorId].nHits < detector.minHits) ||
             (counterMap[detectorId].nHits > detector.maxHits) ||

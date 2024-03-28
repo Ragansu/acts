@@ -39,7 +39,6 @@ class AthenaAmbiguityResolution {
     std::size_t maxHits;
     std::size_t maxHoles;
     std::size_t maxOutliers;
-    std::size_t maxUnused;
     std::size_t maxSharedHits;
 
     bool sharedHitsFlag;
@@ -53,7 +52,7 @@ class AthenaAmbiguityResolution {
                    int outliersScoreWeight_, int otherScoreWeight_,
                    std::size_t minHits_, std::size_t maxHits_,
                    std::size_t maxHoles_, std::size_t maxOutliers_,
-                   std::size_t maxUnused_, std::size_t maxSharedHits_,
+                   std::size_t maxSharedHits_,
                    bool sharedHitsFlag_, std::size_t detectorId_,
                    const std::vector<double>& factorHits_,
                    const std::vector<double>& factorHoles_)
@@ -65,7 +64,6 @@ class AthenaAmbiguityResolution {
           maxHits(maxHits_),
           maxHoles(maxHoles_),
           maxOutliers(maxOutliers_),
-          maxUnused(maxUnused_),
           maxSharedHits(maxSharedHits_),
           sharedHitsFlag(sharedHitsFlag_),
           detectorId(detectorId_),
@@ -102,7 +100,6 @@ class AthenaAmbiguityResolution {
     std::size_t nHits;
     std::size_t nHoles;
     std::size_t nOutliers;
-    std::size_t nUnused;
 
     std::size_t nSharedHits;
   };

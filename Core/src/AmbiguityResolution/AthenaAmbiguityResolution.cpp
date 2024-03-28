@@ -121,7 +121,6 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
         ACTS_VERBOSE("Measurement is not shared, copy it over");
 
         tsosTypes[index] = UnusedHit;
-        (counterMap[detectorId].nUnused)++;
         numUnused++;
 
         index++;

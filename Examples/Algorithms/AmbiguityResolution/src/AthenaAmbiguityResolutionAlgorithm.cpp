@@ -54,7 +54,6 @@ setConfig(std::string configFile) {
     std::size_t maxHits = value["maxHits"];
     std::size_t maxHoles = value["maxHoles"];
     std::size_t maxOutliers = value["maxOutliers"];
-    std::size_t maxUnused = value["maxUnused"];
     std::size_t maxSharedHits = value["maxSharedHits"];
 
     bool sharedHitsFlag = value["sharedHitsFlag"];
@@ -64,7 +63,7 @@ setConfig(std::string configFile) {
 
     auto detectorConfig = Acts::AthenaAmbiguityResolution::DetectorConfig(
         hitsScoreWeight, holesScoreWeight, outliersScoreWeight,
-        otherScoreWeight, minHits, maxHits, maxHoles, maxOutliers, maxUnused,
+        otherScoreWeight, minHits, maxHits, maxHoles, maxOutliers,
         maxSharedHits, sharedHitsFlag, detectorId, factorHits, factorHoles);
 
     detectorMap[detectorId] = detectorConfig;
