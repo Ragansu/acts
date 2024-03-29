@@ -114,8 +114,12 @@ class AthenaAmbiguityResolution {
                                                  Logging::INFO))
       : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
-  // muons TODO etahits and phihits
-
+  /// Compute the initial state of the tracks
+  ///
+  /// @param tracks is the input track container
+  /// @param sourceLinkHash is the hash function for the source links
+  /// @param sourceLinkEquality is the equality function for the source links
+  /// @return a vector of the initial state of the tracks
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t, typename source_link_hash_t,
             typename source_link_equality_t>
@@ -129,6 +133,7 @@ class AthenaAmbiguityResolution {
   ///
   /// @param tracks is the input track container
   /// @param goodTracks is list of the IDs of all the tracks we want to keep
+  /// @return the output track container
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
   const TrackContainer<track_container_t, traj_t, holder_t> prepareOutputTrack(
@@ -138,6 +143,7 @@ class AthenaAmbiguityResolution {
   /// Compute the score of each track
   ///
   /// @param tracks is the input track container
+  /// @param counterMaps is the counter map for each track
   /// @return a vector of scores for each track
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
@@ -160,7 +166,7 @@ class AthenaAmbiguityResolution {
   /// Remove tracks that are not good enough
   ///
   /// @param tracks is the input track container
-  /// @param trackScore is the score of each track
+  /// @param measurementsPerTrack is the list of measurements for each track
   /// @return a vector of IDs of the tracks we want to keep
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
