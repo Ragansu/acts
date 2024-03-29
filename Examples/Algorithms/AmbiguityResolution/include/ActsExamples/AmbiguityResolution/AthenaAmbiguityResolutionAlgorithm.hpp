@@ -15,73 +15,73 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-macos
+
 #include <string>
 
-    namespace ActsExamples {
+namespace ActsExamples {
 
-  /// Evicts tracks that seem to be duplicated and fake.
-  ///
-  /// The implementation works as follows:
-  ///  1) Cluster together nearby tracks using shared hits
-  ///  2) For each track use a neural network to compute a score
-  ///  3) In each cluster keep the track with the highest score
-  class AthenaAmbiguityResolutionAlgorithm final : public IAlgorithm {
-   public:
-    /// Configuration for the ambiguity resolution algorithm.
+/// Evicts tracks that seem to be duplicated and fake.
+///
+/// The implementation works as follows:
+///  1) Cluster together nearby tracks using shared hits
+///  2) For each track use a neural network to compute a score
+///  3) In each cluster keep the track with the highest score
+class AthenaAmbiguityResolutionAlgorithm final : public IAlgorithm {
+ public:
+  /// Configuration for the ambiguity resolution algorithm.
 
-    struct Config {
-      /// Input track collection.
-      std::string inputTracks;
-      /// Output track collection.
-      std::string outputTracks;
+  struct Config {
+    /// Input track collection.
+    std::string inputTracks;
+    /// Output track collection.
+    std::string outputTracks;
 
-      std::map<std::size_t, Acts::AthenaAmbiguityResolution::DetectorConfig>
-          detectorMap;
-      std::map<std::size_t, std::size_t> volumeMap;
+    std::map<std::size_t, Acts::AthenaAmbiguityResolution::DetectorConfig>
+        detectorMap;
+    std::map<std::size_t, std::size_t> volumeMap;
 
-      int minScore = 0;
-      int minScoreSharedTracks = 0;
+    int minScore = 0;
+    int minScoreSharedTracks = 0;
 
-      std::string configFile = "volumeMap.json";
+    std::string configFile = "volumeMap.json";
 
-      std::size_t maxSharedTracksPerMeasurement = 10;
-      std::size_t maxShared = 5;
+    std::size_t maxSharedTracksPerMeasurement = 10;
+    std::size_t maxShared = 5;
 
-      double pTMin = 0;
-      double pTMax = 1e9;
+    double pTMin = 0;
+    double pTMax = 1e9;
 
-      double phiMin = -M_PI;
-      double phiMax = M_PI;
+    double phiMin = -M_PI;
+    double phiMax = M_PI;
 
-      double etaMin = -5;
-      double etaMax = 5;
-    };
-
-    /// Construct the ambiguity resolution algorithm.
-    ///
-    /// @param cfg is the algorithm configuration
-    /// @param lvl is the logging level
-    AthenaAmbiguityResolutionAlgorithm(Config cfg, Acts::Logging::Level lvl);
-
-    /// Run the ambiguity resolution algorithm.
-    ///
-    /// @param cxt is the algorithm context with event information
-    /// @return a process code indication success or failure
-    ProcessCode execute(const AlgorithmContext& ctx) const final;
-
-    // std::map<unsigned int,Acts::AthenaAmbiguityResolution::DetectorConfig>
-    // readVolumeMap(std::string configFile) ;
-
-    /// Const access to the config
-    const Config& config() const { return m_cfg; }
-
-   private:
-    Config m_cfg;
-    Acts::AthenaAmbiguityResolution m_core;
-
-    ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
-    WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
+    double etaMin = -5;
+    double etaMax = 5;
   };
+
+  /// Construct the ambiguity resolution algorithm.
+  ///
+  /// @param cfg is the algorithm configuration
+  /// @param lvl is the logging level
+  AthenaAmbiguityResolutionAlgorithm(Config cfg, Acts::Logging::Level lvl);
+
+  /// Run the ambiguity resolution algorithm.
+  ///
+  /// @param cxt is the algorithm context with event information
+  /// @return a process code indication success or failure
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  // std::map<unsigned int,Acts::AthenaAmbiguityResolution::DetectorConfig>
+  // readVolumeMap(std::string configFile) ;
+
+  /// Const access to the config
+  const Config& config() const { return m_cfg; }
+
+ private:
+  Config m_cfg;
+  Acts::AthenaAmbiguityResolution m_core;
+
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
+};
 
 }  // namespace ActsExamples
