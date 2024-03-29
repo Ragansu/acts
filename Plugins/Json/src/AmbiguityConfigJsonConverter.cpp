@@ -18,7 +18,6 @@ namespace Acts {
 std::pair<std::map<std::size_t, std::size_t>,
           std::map<std::size_t, AthenaAmbiguityResolution::DetectorConfig>>
 AmbiguityConfigJsonConverter::fromJson(const std::string& configFile) const {
-
   std::ifstream file(configFile);
   if (!file.is_open()) {
     std::cerr << "Error opening file: " << configFile << std::endl;
