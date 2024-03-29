@@ -128,10 +128,10 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
       tester.getCleanedOutTracks(TrackSore, CounterMaps, measurementsPerTrack);
 
   // Assert the expected results
-  BOOST_CHECK_EQUAL(cleanTracks.size(), 3);
-  // BOOST_CHECK_EQUAL(cleanTracks[0], 0);
-  // BOOST_CHECK_EQUAL(cleanTracks[1], 1);
-  // BOOST_CHECK_EQUAL(cleanTracks[2], 2);
+  BOOST_CHECK_EQUAL(cleanTracks.size(), 5);
+  BOOST_CHECK_EQUAL(cleanTracks[0], 0);
+  BOOST_CHECK_EQUAL(cleanTracks[1], 1);
+  BOOST_CHECK_EQUAL(cleanTracks[2], 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

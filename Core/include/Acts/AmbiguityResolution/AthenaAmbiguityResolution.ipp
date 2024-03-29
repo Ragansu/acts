@@ -146,7 +146,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
       score = 0;
       iTrack++;
       trackScore.push_back(score);
-      ACTS_WARNING("Track: " << iTrack << " score: " << score << " pT: "
+      ACTS_DEBUG("Track: " << iTrack << " score: " << score << " pT: "
                              << Acts::VectorHelpers::perp(track.momentum()));
       continue;
     }
@@ -156,7 +156,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
       score = 0;
       iTrack++;
       trackScore.push_back(score);
-      ACTS_WARNING("Track: " << iTrack << " score: " << score << " phi: "
+      ACTS_DEBUG("Track: " << iTrack << " score: " << score << " phi: "
                              << Acts::VectorHelpers::phi(track.momentum()));
       continue;
     }
@@ -166,7 +166,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
       score = 0;
       iTrack++;
       trackScore.push_back(score);
-      ACTS_WARNING("Track: " << iTrack << " score: " << score << " eta: "
+      ACTS_DEBUG("Track: " << iTrack << " score: " << score << " eta: "
                              << Acts::VectorHelpers::eta(track.momentum()));
       continue;
     }
@@ -198,12 +198,6 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
         ACTS_DEBUG("---> Max holes: " << detector.maxHoles);
         ACTS_DEBUG("---> Max outliers: " << detector.maxOutliers);
 
-        std::cout << detectorId << " " << counterMap[detectorId].nHits
-                  << " hits " << counterMap[detectorId].nHoles << " holes "
-                  << counterMap[detectorId].nOutliers << " Outliers "
-                  << counterMap[detectorId].nSharedHits << " SharedHits "
-                  << std::endl;
-
         if ((counterMap[detectorId].nHits < detector.minHits) ||
             (counterMap[detectorId].nHits > detector.maxHits) ||
             (counterMap[detectorId].nHoles > detector.maxHoles) ||
@@ -230,16 +224,16 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
 
     iTrack++;
     trackScore.push_back(score);
-    ACTS_WARNING("Track: " << iTrack << " score: " << score);
+    ACTS_VERBOSE("Track: " << iTrack << " score: " << score);
 
   }  // end of loop over tracks
 
   if (!m_useAmbigFcn) {
-    ACTS_WARNING("Not using ambiguity function");
+    ACTS_INFO("Not using ambiguity function");
     return trackScore;
   }
 
-  ACTS_WARNING("Using ambiguity function");
+  ACTS_INFO("Using ambiguity function");
 
   std::vector<int> trackScoreAmbig;
   iTrack = 0;
