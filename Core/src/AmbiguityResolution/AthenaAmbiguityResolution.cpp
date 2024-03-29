@@ -158,20 +158,21 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
                 m_cfg.maxSharedTracksPerMeasurement &&
             track_score > m_cfg.minScoreSharedTracks) {
           ACTS_DEBUG("Accepted hit shared with "
-                    << tracksPerMeasurement[measurement].size() << " tracks");
+                     << tracksPerMeasurement[measurement].size() << " tracks");
           newMeasurementsPerTrack.push_back(measurement);
           cntIns++;
         } else {
           ACTS_DEBUG("Rejected hit shared with "
-                    << tracksPerMeasurement[measurement].size() << " tracks");
+                     << tracksPerMeasurement[measurement].size() << " tracks");
         }
       }
     }
 
     if (newMeasurementsPerTrack.size() < 3) {
       TrkCouldBeAccepted = false;
-      ACTS_DEBUG(<< std::endl <<"Track " << iTrack
-                <<" could not be accepted - not enough hits");
+      ACTS_DEBUG(<< std::endl
+                 << "Track " << iTrack
+                 << " could not be accepted - not enough hits");
       ACTS_DEBUG("Number of hits: " << measurementsPerTrack[iTrack].size());
       ACTS_DEBUG("Number of good hits: " << newMeasurementsPerTrack.size());
       continue;
@@ -215,7 +216,8 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       }
     }
     ACTS_VERBOSE(std::endl << "Track ID: " << cleanTracks[track_id]);
-    ACTS_VERBOSE("Number of shared measurements: " << sharedMeasurementsPerTrack);
+    ACTS_VERBOSE(
+        "Number of shared measurements: " << sharedMeasurementsPerTrack);
     ACTS_VERBOSE("Number of measurements: " << newMeasurements[track_id].size())
     ACTS_VERBOSE("Score of the track: " << trackScore[cleanTracks[track_id]]);
   }

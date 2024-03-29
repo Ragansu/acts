@@ -147,7 +147,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
       iTrack++;
       trackScore.push_back(score);
       ACTS_DEBUG("Track: " << iTrack << " score: " << score << " pT: "
-                             << Acts::VectorHelpers::perp(track.momentum()));
+                           << Acts::VectorHelpers::perp(track.momentum()));
       continue;
     }
 
@@ -157,7 +157,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
       iTrack++;
       trackScore.push_back(score);
       ACTS_DEBUG("Track: " << iTrack << " score: " << score << " phi: "
-                             << Acts::VectorHelpers::phi(track.momentum()));
+                           << Acts::VectorHelpers::phi(track.momentum()));
       continue;
     }
 
@@ -167,7 +167,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
       iTrack++;
       trackScore.push_back(score);
       ACTS_DEBUG("Track: " << iTrack << " score: " << score << " eta: "
-                             << Acts::VectorHelpers::eta(track.momentum()));
+                           << Acts::VectorHelpers::eta(track.momentum()));
       continue;
     }
 
