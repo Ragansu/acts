@@ -216,7 +216,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
       if (track.chi2() > 0 && track.nDoF() > 0) {
         double p = 1. / log10(10. + 10. * track.chi2() / track.nDoF());
         if (p > 0) {
-          score += p;
+          score += static_cast<int>(p);
         } else
           score -= 50;
       }
@@ -239,7 +239,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
   iTrack = 0;
   for (const auto& track : tracks) {
     double score = trackScore[iTrack];
-    if (score >= 0) {
+    if (score == 0) {
       trackScoreAmbig.push_back(score);
       iTrack++;
       continue;
