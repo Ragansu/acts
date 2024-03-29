@@ -170,7 +170,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
 
     if (newMeasurementsPerTrack.size() < 3) {
       TrkCouldBeAccepted = false;
-      ACTS_DEBUG(<< std::endl
+      ACTS_DEBUG(std::endl
                  << "Track " << iTrack
                  << " could not be accepted - not enough hits");
       ACTS_DEBUG("Number of hits: " << measurementsPerTrack[iTrack].size());

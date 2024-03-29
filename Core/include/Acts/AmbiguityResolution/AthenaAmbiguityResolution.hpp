@@ -23,12 +23,16 @@
 
 namespace Acts {
 
-/// Generic implementation of the machine learning ambiguity resolution
-/// Contains method for data preparations
+/// Generic implementation of the athena ambiguity resolution
+/// The alhorithm is based on the following steps:
+/// 1) Compute the initial state of the tracks
+/// 2) Compute the score of each track
+/// 3) Removes hits that are not good enough for each track
+/// 4) Remove tracks that have a score below a certain threshold or not have
+/// enough hits 5) Remove tracks that are not good enough based on cuts Contains
+/// method for data preparations
 class AthenaAmbiguityResolution {
  public:
-  /// Framework execute method of the algorithm
-
   struct DetectorConfig {
     int hitsScoreWeight;
     int holesScoreWeight;
@@ -104,10 +108,6 @@ class AthenaAmbiguityResolution {
     std::size_t nSharedHits;
   };
 
-  /// Construct the ambiguity resolution algorithm.
-  ///
-  /// @param name name of the algorithm
-  /// @param lvl is the logging level
   AthenaAmbiguityResolution(const Config& cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("AthenaAmbiguityResolution",
