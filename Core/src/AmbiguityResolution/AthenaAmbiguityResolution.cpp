@@ -34,7 +34,6 @@ Acts::AthenaAmbiguityResolution::DetectorConfig::operator=(
   return *this;
 }
 
-
 std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     std::vector<int> trackScore,
     std::vector<std::map<std::size_t, Counter>>& counterMaps,
