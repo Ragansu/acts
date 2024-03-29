@@ -113,7 +113,7 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
 
   std::vector<int> TrackSore;
   for (std::size_t i = 0; i < measurementsPerTrack.size(); i++) {
-    TrackSore.push_back(100 + 30 * i);
+    TrackSore.push_back(60 + 40 * i);
   }
 
   std::vector<std::map<std::size_t, Counter>> CounterMaps = {

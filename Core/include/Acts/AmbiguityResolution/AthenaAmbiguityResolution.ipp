@@ -301,8 +301,8 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
                                         << " is : " << fac
                                         << "  New score now: " << prob)
     }
-
-    trackScoreAmbig.push_back(prob);
+    int iProb = static_cast<int>(prob);
+    trackScoreAmbig.push_back(iProb);
   }  // work in progress
   return trackScoreAmbig;
 }
