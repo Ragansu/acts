@@ -22,14 +22,13 @@ struct Fixture {
 
   Fixture() {
     // Set up any resources used by the tests
-    config.volumeMap = {{8,0},{9,0},{10,0},{13,0},{14,0},{15,0},{16,0},{17,0},{18,0},{19,0},{20,0},
-                        {22,1},{23,1},{24,1}};
+    config.volumeMap = {{8, 0},  {9, 0},  {10, 0}, {13, 0}, {14, 0},
+                        {15, 0}, {16, 0}, {17, 0}, {18, 0}, {19, 0},
+                        {20, 0}, {22, 1}, {23, 1}, {24, 1}};
 
     auto tempDetector = DetectorConfig();
-    std::map<std::size_t, DetectorConfig> detectorMap = {
-      {0, tempDetector},
-      {1, tempDetector}
-    }; 
+    std::map<std::size_t, DetectorConfig> detectorMap = {{0, tempDetector},
+                                                         {1, tempDetector}};
     config.detectorMap = detectorMap;
 
     config.minScore = 0;
@@ -49,14 +48,12 @@ struct Fixture {
   // Helper function to create a sample input for getCleanedOutTracks
   std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
   createSampleInput() {
-
-    std::vector<std::pair<std::size_t,std::vector<std::size_t>>> trackVolumes = {
-      {0, {19,18,18,18,10,10,10,10,10,10,10,10,10}},
-      {1, {19,18,18,18,10,10,10,10,10,10,10,10,10,10}},
-      {2, {13,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8}},
-      {3, {13,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8}},
-      {4, {19,18,18,18,10,10,10,10,10,10,10,10,10}}
-    };
+    std::vector<std::pair<std::size_t, std::vector<std::size_t>>> trackVolumes =
+        {{0, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10}},
+         {1, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}},
+         {2, {13, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8}},
+         {3, {13, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8}},
+         {4, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10}}};
 
     std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
         measurementsPerTrack;
@@ -78,7 +75,8 @@ struct Fixture {
 // BOOST_FIXTURE_TEST_CASE(simpleScoreTest, Fixture) {
 //   Fixture fixture;
 //   // Create an instance of AthenaAmbiguityResolution
-//   AthenaAmbiguityResolution tester = AthenaAmbiguityResolution(fixture.config);
+//   AthenaAmbiguityResolution tester =
+//   AthenaAmbiguityResolution(fixture.config);
 
 //   // Create sample input
 //   TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
@@ -106,17 +104,16 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
       measurementsPerTrack = createSampleInput();
 
   std::vector<int> TrackSore;
-  for(std::size_t i = 0; i < measurementsPerTrack.size(); i++){
-    TrackSore.push_back(100 + 30*i);
+  for (std::size_t i = 0; i < measurementsPerTrack.size(); i++) {
+    TrackSore.push_back(100 + 30 * i);
   }
 
   std::vector<std::map<std::size_t, Counter>> CounterMaps = {
-    { {0, {0,14,0,0}}, {1, {0,0,0,0}} },
-    { {0, {0,15,0,0}}, {1, {0,0,0,0}} },
-    { {0, {0,17,0,0}}, {1, {0,0,0,0}} },
-    { {0, {0,18,0,0}}, {1, {0,0,0,0}} },
-    { {0, {0,14,0,0}}, {1, {0,0,0,0}} }
-  };
+      {{0, {0, 14, 0, 0}}, {1, {0, 0, 0, 0}}},
+      {{0, {0, 15, 0, 0}}, {1, {0, 0, 0, 0}}},
+      {{0, {0, 17, 0, 0}}, {1, {0, 0, 0, 0}}},
+      {{0, {0, 18, 0, 0}}, {1, {0, 0, 0, 0}}},
+      {{0, {0, 14, 0, 0}}, {1, {0, 0, 0, 0}}}};
 
   // Call the function under testBOOST_FIXTURE_TEST_CASE
   std::vector<std::size_t> cleanTracks =
