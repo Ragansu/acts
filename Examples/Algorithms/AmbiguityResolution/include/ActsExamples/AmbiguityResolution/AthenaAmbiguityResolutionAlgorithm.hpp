@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
-// #include "ActsExamples/Io/Json/JsonAmbiguityConfig.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
