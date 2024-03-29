@@ -13,6 +13,28 @@
 
 #include <stdexcept>
 
+Acts::AthenaAmbiguityResolution::DetectorConfig&
+Acts::AthenaAmbiguityResolution::DetectorConfig::operator=(
+    const Acts::AthenaAmbiguityResolution::DetectorConfig& other) {
+  if (this != &other) {
+    hitsScoreWeight = other.hitsScoreWeight;
+    holesScoreWeight = other.holesScoreWeight;
+    outliersScoreWeight = other.outliersScoreWeight;
+    otherScoreWeight = other.otherScoreWeight;
+    minHits = other.minHits;
+    maxHits = other.maxHits;
+    maxHoles = other.maxHoles;
+    maxOutliers = other.maxOutliers;
+    maxSharedHits = other.maxSharedHits;
+    sharedHitsFlag = other.sharedHitsFlag;
+    detectorId = other.detectorId;
+    factorHits = other.factorHits;
+    factorHoles = other.factorHoles;
+  }
+  return *this;
+}
+
+
 std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     std::vector<int> trackScore,
     std::vector<std::map<std::size_t, Counter>>& counterMaps,
@@ -69,9 +91,6 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       continue;
     }
 
-    int numUnused = 0;
-    int numShared = 0;
-
     // int numWeightedShared = 0;
 
     auto counterMap = counterMaps[iTrack];
@@ -111,7 +130,6 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
         ACTS_VERBOSE("Measurement is not shared, copy it over");
 
         tsosTypes[index] = UnusedHit;
-        numUnused++;
 
         index++;
         continue;
@@ -127,7 +145,6 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
         }
 
         tsosTypes[index] = SharedHit;
-        numShared++;
 
         // Yet to be implemented
         // numWeightedShared += (isPixel ? 2 : 1);

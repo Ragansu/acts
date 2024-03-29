@@ -64,7 +64,6 @@ AthenaAmbiguityResolution::computeInitialState(
 
   ACTS_INFO("Starting to compute initial state");
 
-  int numberOfTracks = 0;
   for (const auto& track : tracks) {
     std::vector<std::tuple<std::size_t, std::size_t, bool>> measurements_tuples;
 
@@ -87,8 +86,6 @@ AthenaAmbiguityResolution::computeInitialState(
     }
 
     measurementsPerTrack.push_back(std::move(measurements_tuples));
-
-    ++numberOfTracks;
   }
 
   return measurementsPerTrack;

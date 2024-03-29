@@ -76,6 +76,8 @@ class AthenaAmbiguityResolution {
 
     DetectorConfig() = default;
     DetectorConfig(const DetectorConfig&) = default;
+
+    DetectorConfig& operator=(const DetectorConfig&);
   };
 
   struct Config {
