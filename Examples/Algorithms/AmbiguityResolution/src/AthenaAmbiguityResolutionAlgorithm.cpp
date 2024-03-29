@@ -15,67 +15,12 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "Acts/Plugins/Json/AmbiguityConfigJsonConverter.hpp"
 
 #include <iterator>
 #include <map>
 
-#include <nlohmann/json.hpp>
-
 namespace {
-std::pair<
-    std::map<std::size_t, std::size_t>,
-    std::map<std::size_t, Acts::AthenaAmbiguityResolution::DetectorConfig>>
-setConfig(std::string configFile) {
-  std::ifstream file(configFile);
-  if (!file.is_open()) {
-    std::cerr << "Error opening file: " << configFile << std::endl;
-    return {};
-  }
-
-  std::cout << "Reading configuration file: " << configFile << std::endl;
-
-  std::map<std::size_t, Acts::AthenaAmbiguityResolution::DetectorConfig>
-      detectorMap;
-  std::map<std::size_t, std::size_t> volumeMap;
-
-  nlohmann::json j;
-
-  file >> j;
-
-  for (auto& [key, value] : j.items()) {
-    std::size_t detectorId = std::stoi(key);
-
-    int hitsScoreWeight = value["hitsScoreWeight"];
-    int holesScoreWeight = value["holesScoreWeight"];
-    int outliersScoreWeight = value["outliersScoreWeight"];
-    int otherScoreWeight = value["otherScoreWeight"];
-
-    std::size_t minHits = value["minHits"];
-    std::size_t maxHits = value["maxHits"];
-    std::size_t maxHoles = value["maxHoles"];
-    std::size_t maxOutliers = value["maxOutliers"];
-    std::size_t maxSharedHits = value["maxSharedHits"];
-
-    bool sharedHitsFlag = value["sharedHitsFlag"];
-
-    std::vector<double> factorHits = value["factorHits"];
-    std::vector<double> factorHoles = value["factorHoles"];
-
-    auto detectorConfig = Acts::AthenaAmbiguityResolution::DetectorConfig(
-        hitsScoreWeight, holesScoreWeight, outliersScoreWeight,
-        otherScoreWeight, minHits, maxHits, maxHoles, maxOutliers,
-        maxSharedHits, sharedHitsFlag, detectorId, factorHits, factorHoles);
-
-    detectorMap[detectorId] = detectorConfig;
-
-    std::vector<std::size_t> volumesIds = value["volumesIds"];
-    for (auto volumeId : volumesIds) {
-      volumeMap[volumeId] = detectorId;
-    }
-  }
-
-  return std::make_pair(volumeMap, detectorMap);
-}
 
 Acts::AthenaAmbiguityResolution::Config transformConfig(
     const ActsExamples::AthenaAmbiguityResolutionAlgorithm::Config& cfg,
@@ -85,7 +30,7 @@ Acts::AthenaAmbiguityResolution::Config transformConfig(
   std::cout << "Volume File is " << configFile << std::endl;
 
   result.configFile = configFile;
-  auto configPair = setConfig(configFile);
+  auto configPair = Acts::AmbiguityConfigJsonConverter().fromJson(configFile);
   result.volumeMap = configPair.first;
   result.detectorMap = configPair.second;
   result.minScore = cfg.minScore;

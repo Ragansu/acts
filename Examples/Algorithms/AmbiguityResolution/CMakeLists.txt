@@ -14,6 +14,7 @@ target_link_libraries(
   PUBLIC
     ActsCore
     ActsExamplesFramework
+    ActsPluginJson
 )
 
 install(
