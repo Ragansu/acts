@@ -240,7 +240,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
   for (const auto& track : tracks) {
     double score = trackScore[iTrack];
     if (score == 0) {
-      trackScoreAmbig.push_back(score);
+      trackScoreAmbig.push_back(0.0f);
       iTrack++;
       continue;
     }
