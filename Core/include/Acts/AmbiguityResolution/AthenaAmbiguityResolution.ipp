@@ -213,7 +213,8 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
         } else {
           score += counterMap[detectorId].nHits * detector.hitsScoreWeight;
           score += counterMap[detectorId].nHoles * detector.holesScoreWeight;
-          score += counterMap[detectorId].nDoubleHoles * detector.holesScoreWeight;
+          score +=
+              counterMap[detectorId].nDoubleHoles * detector.holesScoreWeight;
           score +=
               counterMap[detectorId].nOutliers * detector.outliersScoreWeight;
           score +=
