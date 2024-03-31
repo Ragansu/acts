@@ -44,6 +44,7 @@ AmbiguityConfigJsonConverter::fromJson(const std::string& configFile) const {
     std::size_t minHits = value["minHits"];
     std::size_t maxHits = value["maxHits"];
     std::size_t maxHoles = value["maxHoles"];
+    std::size_t maxDoubleHoles = value["maxDoubleHoles"];
     std::size_t maxOutliers = value["maxOutliers"];
     std::size_t maxSharedHits = value["maxSharedHits"];
 

@@ -111,6 +111,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
     // hit/hole/outlier score here so instead of calculating
     // nHits/nHoles/nOutliers per volume, we just loop over all volumes and add
     // the score.
+    bool doubleFlag = false;
 
     for (const auto& ts : track.trackStatesReversed()) {
       auto iVolume = ts.referenceSurface().geometryId().volume();
@@ -119,16 +120,24 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
       auto volume_it = m_cfg.volumeMap.find(iVolume);
       if (volume_it != m_cfg.volumeMap.end()) {
         auto detectorId = volume_it->second;
+        if (!iTypeFlags.test(Acts::TrackStateFlag::HoleFlag))
+          doubleFlag = false;
 
-        if (iTypeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+        if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+          if (doubleFlag) {
+            counterMap[detectorId].nDoubleHoles++;
+            doubleFlag = false;
+          } else {
+            doubleFlag = true;
+          };
+          counterMap[detectorId].nHoles++;
+        } else if (iTypeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
           if (iTypeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
             counterMap[detectorId].nSharedHits++;
           }
           counterMap[detectorId].nHits++;
         } else if (iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
           counterMap[detectorId].nOutliers++;
-        } else if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-          counterMap[detectorId].nHoles++;
         }
       } else {
         ACTS_DEBUG("Detector not found at Volume: " << iVolume);

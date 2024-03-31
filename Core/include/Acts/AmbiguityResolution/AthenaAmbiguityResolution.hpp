@@ -42,6 +42,7 @@ class AthenaAmbiguityResolution {
     std::size_t minHits;
     std::size_t maxHits;
     std::size_t maxHoles;
+    std::size_t maxDoubleHoles;
     std::size_t maxOutliers;
     std::size_t maxSharedHits;
 
@@ -105,6 +106,7 @@ class AthenaAmbiguityResolution {
   struct Counter {
     std::size_t nHits;
     std::size_t nHoles;
+    std::size_t nDoubleHoles;
     std::size_t nOutliers;
 
     std::size_t nSharedHits;
