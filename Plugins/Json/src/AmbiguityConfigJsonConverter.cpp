@@ -55,8 +55,9 @@ AmbiguityConfigJsonConverter::fromJson(const std::string& configFile) const {
 
     auto detectorConfig = AthenaAmbiguityResolution::DetectorConfig(
         hitsScoreWeight, holesScoreWeight, outliersScoreWeight,
-        otherScoreWeight, minHits, maxHits, maxHoles, maxOutliers,
-        maxSharedHits, sharedHitsFlag, detectorId, factorHits, factorHoles);
+        otherScoreWeight, minHits, maxHits, maxDoubleHoles, maxHoles,
+        maxOutliers, maxSharedHits, sharedHitsFlag, detectorId, factorHits,
+        factorHoles);
 
     detectorMap[detectorId] = detectorConfig;
 

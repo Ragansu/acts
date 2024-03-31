@@ -68,6 +68,7 @@ class AthenaAmbiguityResolution {
           minHits(minHits_),
           maxHits(maxHits_),
           maxHoles(maxHoles_),
+          maxDoubleHoles(maxDoubleHoles_),
           maxOutliers(maxOutliers_),
           maxSharedHits(maxSharedHits_),
           sharedHitsFlag(sharedHitsFlag_),
