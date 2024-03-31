@@ -207,11 +207,13 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
         if ((counterMap[detectorId].nHits < detector.minHits) ||
             (counterMap[detectorId].nHits > detector.maxHits) ||
             (counterMap[detectorId].nHoles > detector.maxHoles) ||
+            (counterMap[detectorId].nDoubleHoles > detector.maxDoubleHoles) ||
             (counterMap[detectorId].nOutliers > detector.maxOutliers)) {
           continue;
         } else {
           score += counterMap[detectorId].nHits * detector.hitsScoreWeight;
           score += counterMap[detectorId].nHoles * detector.holesScoreWeight;
+          score += counterMap[detectorId].nDoubleHoles * detector.holesScoreWeight;
           score +=
               counterMap[detectorId].nOutliers * detector.outliersScoreWeight;
           score +=
