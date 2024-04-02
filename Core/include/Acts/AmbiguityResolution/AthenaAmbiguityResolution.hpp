@@ -105,6 +105,8 @@ class AthenaAmbiguityResolution {
 
     double etaMin = -5;
     double etaMax = 5;
+
+    bool useAmbigFcn = false;
   };
 
   struct Counter {
@@ -185,8 +187,6 @@ class AthenaAmbiguityResolution {
 
  private:
   Config m_cfg;
-
-  bool m_useAmbigFcn = false;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

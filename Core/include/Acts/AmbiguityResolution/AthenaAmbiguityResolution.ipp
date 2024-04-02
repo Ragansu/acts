@@ -177,49 +177,54 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
       continue;
     }
 
+    for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
+         detectorId++) {
+      auto detector_it = m_cfg.detectorMap.find(detectorId);
+      auto detector = detector_it->second;
+
+      ACTS_DEBUG("---> Found summary information");
+      ACTS_DEBUG("---> Detector ID: " << detectorId);
+      ACTS_DEBUG("---> Number of hits: " << counterMap[detectorId].nHits);
+      ACTS_DEBUG("---> Number of holes: " << counterMap[detectorId].nHoles);
+      ACTS_DEBUG("---> Number of double holes: "
+                 << counterMap[detectorId].nDoubleHoles);
+      ACTS_DEBUG(
+          "---> Number of outliers: " << counterMap[detectorId].nOutliers);
+
+      if ((counterMap[detectorId].nHits < detector.minHits) ||
+          (counterMap[detectorId].nHits > detector.maxHits) ||
+          (counterMap[detectorId].nHoles > detector.maxHoles) ||
+          (counterMap[detectorId].nDoubleHoles > detector.maxDoubleHoles) ||
+          (counterMap[detectorId].nOutliers > detector.maxOutliers)) {
+        score = 0;
+        break;
+      }
+    }
+
+    if (score <= 0) {
+      iTrack++;
+      trackScore.push_back(score);
+      ACTS_DEBUG("Track: " << iTrack << " score: " << score);
+      continue;
+    }
+
     // real scoring starts here
-    if (m_useAmbigFcn) {
+
+    if (m_cfg.useAmbigFcn) {
       score = 0;
     } else {
       score = 100;
-
       for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
            detectorId++) {
         auto detector_it = m_cfg.detectorMap.find(detectorId);
         auto detector = detector_it->second;
-
-        ACTS_DEBUG("---> Found summary information");
-        ACTS_DEBUG("---> Detector ID: " << detectorId);
-        ACTS_DEBUG("---> Number of hits: " << counterMap[detectorId].nHits);
-        ACTS_DEBUG("---> hitsScoreWeight: " << detector.hitsScoreWeight);
-        ACTS_DEBUG("---> Number of holes: " << counterMap[detectorId].nHoles);
-        ACTS_DEBUG("---> holesScoreWeight: " << detector.holesScoreWeight);
-        ACTS_DEBUG(
-            "---> Number of outliers: " << counterMap[detectorId].nOutliers);
-        ACTS_DEBUG(
-            "---> outliersScoreWeight: " << detector.outliersScoreWeight);
-        ACTS_DEBUG("---> otherScoreWeight: " << detector.otherScoreWeight);
-
-        ACTS_DEBUG("---> Min hits: " << detector.minHits);
-        ACTS_DEBUG("---> Max holes: " << detector.maxHoles);
-        ACTS_DEBUG("---> Max outliers: " << detector.maxOutliers);
-
-        if ((counterMap[detectorId].nHits < detector.minHits) ||
-            (counterMap[detectorId].nHits > detector.maxHits) ||
-            (counterMap[detectorId].nHoles > detector.maxHoles) ||
-            (counterMap[detectorId].nDoubleHoles > detector.maxDoubleHoles) ||
-            (counterMap[detectorId].nOutliers > detector.maxOutliers)) {
-          continue;
-        } else {
-          score += counterMap[detectorId].nHits * detector.hitsScoreWeight;
-          score += counterMap[detectorId].nHoles * detector.holesScoreWeight;
-          score += counterMap[detectorId].nDoubleHoles *
-                   detector.doubleHolesScoreWeight;
-          score +=
-              counterMap[detectorId].nOutliers * detector.outliersScoreWeight;
-          score +=
-              counterMap[detectorId].nSharedHits * detector.otherScoreWeight;
-        }
+        score += counterMap[detectorId].nHits * detector.hitsScoreWeight;
+        score += counterMap[detectorId].nHoles * detector.holesScoreWeight;
+        score += counterMap[detectorId].nDoubleHoles *
+                 detector.doubleHolesScoreWeight;
+        score +=
+            counterMap[detectorId].nOutliers * detector.outliersScoreWeight;
+        score += counterMap[detectorId].nSharedHits * detector.otherScoreWeight;
       }
 
       if (track.chi2() > 0 && track.nDoF() > 0) {
@@ -237,7 +242,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
 
   }  // end of loop over tracks
 
-  if (!m_useAmbigFcn) {
+  if (!m_cfg.useAmbigFcn) {
     ACTS_INFO("Not using ambiguity function");
     return trackScore;
   }
@@ -256,8 +261,9 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
     auto counterMap = counterMaps[iTrack];
     double pT = Acts::VectorHelpers::perp(track.momentum());
 
-    double prob = log10(pT) - 1.;
-    ACTS_DEBUG("Modifier for pT = " << pT << " TeV is : " << prob
+    double prob = log10(pT * 1000) - 1.;
+    // pT in GeV, hence 100 MeV is minimum and gets score = 1
+    ACTS_DEBUG("Modifier for pT = " << pT << " GeV is : " << prob
                                     << "  New score now: " << prob);
 
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
