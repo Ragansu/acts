@@ -248,6 +248,7 @@ elif greedy_ambiguity_resolution:
             phiMin=-3.14,
             etaMax=2.7,
             etaMin=-2.7,
+            useAmbigFcn=False,
         ),
         outputDirRoot=outputDir,
         AmbiVolumeFile=ambi_config,
@@ -259,8 +260,8 @@ else:
     addAthenaAmbiguityResolution(
         s,
         AthenaAmbiguityResolutionConfig(
-            minScore=100,
-            minScoreSharedTracks=300,
+            minScore=0,
+            minScoreSharedTracks=1,
             maxShared=2,
             maxSharedTracksPerMeasurement=2,
             pTMax=1400,
@@ -269,6 +270,7 @@ else:
             phiMin=-3.14,
             etaMax=4,
             etaMin=-4,
+            useAmbigFcn=True,
         ),
         outputDirRoot=outputDir,
         AmbiVolumeFile=ambi_config,

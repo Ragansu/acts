@@ -212,7 +212,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
     // real scoring starts here
 
     if (m_cfg.useAmbigFcn) {
-      score = 0;
+      score = 1;
     } else {
       score = 100;
       for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();

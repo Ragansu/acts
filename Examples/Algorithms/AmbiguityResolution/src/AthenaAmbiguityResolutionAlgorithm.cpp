@@ -43,7 +43,7 @@ Acts::AthenaAmbiguityResolution::Config transformConfig(
   result.phiMax = cfg.phiMax;
   result.etaMin = cfg.etaMin;
   result.etaMax = cfg.etaMax;
-  result.useAmbigFcn = false;
+  result.useAmbigFcn = cfg.useAmbigFcn;
   return result;
 }
 

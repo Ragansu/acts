@@ -158,8 +158,9 @@ AthenaAmbiguityResolutionConfig = namedtuple(
         "phiMin",
         "etaMax",
         "etaMin",
+        "useAmbigFcn",
     ],
-    defaults=[None] * 10,
+    defaults=[None] * 11,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(
@@ -1751,6 +1752,7 @@ def addAthenaAmbiguityResolution(
             phiMin=config.phiMin,
             etaMax=config.etaMax,
             etaMin=config.etaMin,
+            useAmbigFcn=config.useAmbigFcn,
         ),
     )
     s.addAlgorithm(algAthena)
