@@ -53,36 +53,6 @@ class AthenaAmbiguityResolution {
 
     std::vector<double> factorHits;
     std::vector<double> factorHoles;
-
-    DetectorConfig(int hitsScoreWeight_, int holesScoreWeight_,
-                   int doubleHolesScoreWeight_, int outliersScoreWeight_,
-                   int otherScoreWeight_, std::size_t minHits_,
-                   std::size_t maxHits_, std::size_t maxHoles_,
-                   std::size_t maxDoubleHoles_, std::size_t maxOutliers_,
-                   std::size_t maxSharedHits_, bool sharedHitsFlag_,
-                   std::size_t detectorId_,
-                   const std::vector<double>& factorHits_,
-                   const std::vector<double>& factorHoles_)
-        : hitsScoreWeight(hitsScoreWeight_),
-          holesScoreWeight(holesScoreWeight_),
-          doubleHolesScoreWeight(doubleHolesScoreWeight_),
-          outliersScoreWeight(outliersScoreWeight_),
-          otherScoreWeight(otherScoreWeight_),
-          minHits(minHits_),
-          maxHits(maxHits_),
-          maxHoles(maxHoles_),
-          maxDoubleHoles(maxDoubleHoles_),
-          maxOutliers(maxOutliers_),
-          maxSharedHits(maxSharedHits_),
-          sharedHitsFlag(sharedHitsFlag_),
-          detectorId(detectorId_),
-          factorHits(factorHits_),
-          factorHoles(factorHoles_) {}
-
-    DetectorConfig() = default;
-    DetectorConfig(const DetectorConfig&) = default;
-
-    DetectorConfig& operator=(const DetectorConfig&);
   };
 
   struct Config {

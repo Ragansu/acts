@@ -145,7 +145,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
     }
     counterMaps.push_back(counterMap);
 
-    int score = 0;
+    int score = 1;
 
     if (Acts::VectorHelpers::perp(track.momentum()) > m_cfg.pTMax ||
         Acts::VectorHelpers::perp(track.momentum()) < m_cfg.pTMin) {
@@ -197,6 +197,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
           (counterMap[detectorId].nDoubleHoles > detector.maxDoubleHoles) ||
           (counterMap[detectorId].nOutliers > detector.maxOutliers)) {
         score = 0;
+        ACTS_DEBUG("Track: " << iTrack << " score from cuts: " << score);
         break;
       }
     }
@@ -204,7 +205,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
     if (score <= 0) {
       iTrack++;
       trackScore.push_back(score);
-      ACTS_DEBUG("Track: " << iTrack << " score: " << score);
+      ACTS_DEBUG("Track: " << iTrack << " score : " << score);
       continue;
     }
 

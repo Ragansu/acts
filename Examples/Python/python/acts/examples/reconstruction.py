@@ -1735,7 +1735,7 @@ def addAthenaAmbiguityResolution(
 ) -> None:
     from acts.examples import AthenaAmbiguityResolutionAlgorithm
 
-    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+    customLogLevel = acts.examples.defaultLogging(s, acts.logging.VERBOSE)
 
     algAthena = AthenaAmbiguityResolutionAlgorithm(
         level=customLogLevel(),

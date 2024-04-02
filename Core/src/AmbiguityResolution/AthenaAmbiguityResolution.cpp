@@ -13,27 +13,6 @@
 
 #include <stdexcept>
 
-Acts::AthenaAmbiguityResolution::DetectorConfig&
-Acts::AthenaAmbiguityResolution::DetectorConfig::operator=(
-    const Acts::AthenaAmbiguityResolution::DetectorConfig& other) {
-  if (this != &other) {
-    hitsScoreWeight = other.hitsScoreWeight;
-    holesScoreWeight = other.holesScoreWeight;
-    outliersScoreWeight = other.outliersScoreWeight;
-    otherScoreWeight = other.otherScoreWeight;
-    minHits = other.minHits;
-    maxHits = other.maxHits;
-    maxHoles = other.maxHoles;
-    maxOutliers = other.maxOutliers;
-    maxSharedHits = other.maxSharedHits;
-    sharedHitsFlag = other.sharedHitsFlag;
-    detectorId = other.detectorId;
-    factorHits = other.factorHits;
-    factorHoles = other.factorHoles;
-  }
-  return *this;
-}
-
 std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     std::vector<int> trackScore,
     std::vector<std::map<std::size_t, Counter>>& counterMaps,
