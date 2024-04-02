@@ -34,31 +34,35 @@ AmbiguityConfigJsonConverter::fromJson(const std::string& configFile) const {
   std::map<std::size_t, std::size_t> volumeMap;
 
   for (auto& [key, value] : j.items()) {
+    AthenaAmbiguityResolution::DetectorConfig detectorConfig;
+
     std::size_t detectorId = std::stoi(key);
 
-    int hitsScoreWeight = value["hitsScoreWeight"];
-    int holesScoreWeight = value["holesScoreWeight"];
-    int outliersScoreWeight = value["outliersScoreWeight"];
-    int doubleHolesScoreWeight = value["doubleHolesScoreWeight"];
-    int otherScoreWeight = value["otherScoreWeight"];
+    detectorConfig.hitsScoreWeight = value["hitsScoreWeight"];
+    detectorConfig.holesScoreWeight = value["holesScoreWeight"];
+    detectorConfig.outliersScoreWeight = value["outliersScoreWeight"];
+    detectorConfig.doubleHolesScoreWeight = value["doubleHolesScoreWeight"];
+    detectorConfig.otherScoreWeight = value["otherScoreWeight"];
 
-    std::size_t minHits = value["minHits"];
-    std::size_t maxHits = value["maxHits"];
-    std::size_t maxHoles = value["maxHoles"];
-    std::size_t maxDoubleHoles = value["maxDoubleHoles"];
-    std::size_t maxOutliers = value["maxOutliers"];
-    std::size_t maxSharedHits = value["maxSharedHits"];
+    detectorConfig.minHits = value["minHits"];
+    detectorConfig.maxHits = value["maxHits"];
+    detectorConfig.maxHoles = value["maxHoles"];
+    detectorConfig.maxDoubleHoles = value["maxDoubleHoles"];
+    detectorConfig.maxOutliers = value["maxOutliers"];
+    detectorConfig.maxSharedHits = value["maxSharedHits"];
 
-    bool sharedHitsFlag = value["sharedHitsFlag"];
+    detectorConfig.sharedHitsFlag = value["sharedHitsFlag"];
 
     std::vector<double> factorHits = value["factorHits"];
     std::vector<double> factorHoles = value["factorHoles"];
 
-    auto detectorConfig = AthenaAmbiguityResolution::DetectorConfig(
-        hitsScoreWeight, holesScoreWeight, doubleHolesScoreWeight,
-        outliersScoreWeight, otherScoreWeight, minHits, maxHits, maxDoubleHoles,
-        maxHoles, maxOutliers, maxSharedHits, sharedHitsFlag, detectorId,
-        factorHits, factorHoles);
+    for (auto factor : factorHits) {
+      detectorConfig.factorHits.push_back(factor);
+    }
+
+    for (auto factor : factorHoles) {
+      detectorConfig.factorHoles.push_back(factor);
+    }
 
     detectorMap[detectorId] = detectorConfig;
 

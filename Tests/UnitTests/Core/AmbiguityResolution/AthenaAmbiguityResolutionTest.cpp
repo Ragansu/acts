@@ -83,27 +83,6 @@ struct Fixture {
   }
 };
 
-// BOOST_FIXTURE_TEST_CASE(simpleScoreTest, Fixture) {
-//   Fixture fixture;
-//   // Create an instance of AthenaAmbiguityResolution
-//   AthenaAmbiguityResolution tester =
-//   AthenaAmbiguityResolution(fixture.config);
-
-//   // Create sample input
-//   TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
-//   // Call the function under test
-//   std::vector<std::map<std::size_t, AthenaAmbiguityResolution::Counter>>
-//       counterMaps;
-
-//   std::vector<int> score = tester.simpleScore(tracks, counterMaps);
-
-//   // Assert the expected results
-//   BOOST_CHECK_EQUAL(score.size(), 3);
-//   BOOST_CHECK_EQUAL(score[0], 0);
-//   BOOST_CHECK_EQUAL(score[1], 0);
-//   BOOST_CHECK_EQUAL(score[2], 0);
-// }
-
 BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
   Fixture fixture;
   // Create an instance of AthenaAmbiguityResolution
