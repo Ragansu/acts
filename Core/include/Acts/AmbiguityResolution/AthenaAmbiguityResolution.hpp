@@ -36,6 +36,7 @@ class AthenaAmbiguityResolution {
   struct DetectorConfig {
     int hitsScoreWeight;
     int holesScoreWeight;
+    int doubleHolesScoreWeight;
     int outliersScoreWeight;
     int otherScoreWeight;
 
@@ -54,15 +55,17 @@ class AthenaAmbiguityResolution {
     std::vector<double> factorHoles;
 
     DetectorConfig(int hitsScoreWeight_, int holesScoreWeight_,
-                   int outliersScoreWeight_, int otherScoreWeight_,
-                   std::size_t minHits_, std::size_t maxHits_,
-                   std::size_t maxHoles_, std::size_t maxDoubleHoles_,
-                   std::size_t maxOutliers_, std::size_t maxSharedHits_,
-                   bool sharedHitsFlag_, std::size_t detectorId_,
+                   int doubleHolesScoreWeight_, int outliersScoreWeight_,
+                   int otherScoreWeight_, std::size_t minHits_,
+                   std::size_t maxHits_, std::size_t maxHoles_,
+                   std::size_t maxDoubleHoles_, std::size_t maxOutliers_,
+                   std::size_t maxSharedHits_, bool sharedHitsFlag_,
+                   std::size_t detectorId_,
                    const std::vector<double>& factorHits_,
                    const std::vector<double>& factorHoles_)
         : hitsScoreWeight(hitsScoreWeight_),
           holesScoreWeight(holesScoreWeight_),
+          doubleHolesScoreWeight(doubleHolesScoreWeight_),
           outliersScoreWeight(outliersScoreWeight_),
           otherScoreWeight(otherScoreWeight_),
           minHits(minHits_),
