@@ -354,8 +354,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::solveAmbiguity(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
         measurementsPerTrack,
-    Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts)
-    const {
+    Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts) const {
   ACTS_INFO("Solving ambiguity");
   ACTS_INFO("Number of tracks: " << tracks.size());
   ACTS_INFO("Config file location: " << m_cfg.configFile);
