@@ -14,6 +14,20 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <unordered_map>
+namespace {
+template <typename cut_type>
+void applyCuts(cut_type upperbound, cut_type lowerbound, cut_type value,
+               double& score) {
+  if (value > upperbound || value < lowerbound) {
+    score = 0;
+  }
+}
+template <typename weight_type>
+void applyWeight(weight_type value, weight_type weight, double& score) {
+  score += value * weight;
+}
+
+}  // namespace
 
 namespace Acts {
 
@@ -95,8 +109,10 @@ template <typename track_container_t, typename traj_t,
           template <typename> class holder_t>
 std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    std::vector<std::map<std::size_t, Counter>>& counterMaps) const {
+    std::vector<std::map<std::size_t, Counter>>& counterMaps,
+    Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts) const {
   std::vector<int> trackScore;
+
   int iTrack = 0;
 
   ACTS_INFO("Number of detectors: " << m_cfg.detectorMap.size());
@@ -145,35 +161,26 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
     }
     counterMaps.push_back(counterMap);
 
-    int score = 1;
+    double score = 1;
 
-    if (Acts::VectorHelpers::perp(track.momentum()) > m_cfg.pTMax ||
-        Acts::VectorHelpers::perp(track.momentum()) < m_cfg.pTMin) {
-      score = 0;
-      iTrack++;
-      trackScore.push_back(score);
-      ACTS_DEBUG("Track: " << iTrack << " score: " << score << " pT: "
-                           << Acts::VectorHelpers::perp(track.momentum()));
-      continue;
+    applyCuts<std::size_t>(m_cfg.phiMax, m_cfg.phiMin,
+                           VectorHelpers::phi(track.momentum()), score);
+    applyCuts<std::size_t>(m_cfg.etaMax, m_cfg.etaMin,
+                           VectorHelpers::eta(track.momentum()), score);
+    applyCuts<std::size_t>(m_cfg.pTMax, m_cfg.pTMin,
+                           VectorHelpers::perp(track.momentum()), score);
+
+    for (const auto& ambicut : optionalCuts.cuts) {
+      if (!ambicut(track)) {
+        score = 0;
+        break;
+      }
     }
 
-    if (Acts::VectorHelpers::phi(track.momentum()) > m_cfg.phiMax ||
-        Acts::VectorHelpers::phi(track.momentum()) < m_cfg.phiMin) {
-      score = 0;
+    if (score == 0) {
       iTrack++;
       trackScore.push_back(score);
-      ACTS_DEBUG("Track: " << iTrack << " score: " << score << " phi: "
-                           << Acts::VectorHelpers::phi(track.momentum()));
-      continue;
-    }
-
-    if (Acts::VectorHelpers::eta(track.momentum()) > m_cfg.etaMax ||
-        Acts::VectorHelpers::eta(track.momentum()) < m_cfg.etaMin) {
-      score = 0;
-      iTrack++;
-      trackScore.push_back(score);
-      ACTS_DEBUG("Track: " << iTrack << " score: " << score << " eta: "
-                           << Acts::VectorHelpers::eta(track.momentum()));
+      ACTS_DEBUG("Track: " << iTrack << " score : " << score);
       continue;
     }
 
@@ -191,13 +198,18 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
       ACTS_DEBUG(
           "---> Number of outliers: " << counterMap[detectorId].nOutliers);
 
-      if ((counterMap[detectorId].nHits < detector.minHits) ||
-          (counterMap[detectorId].nHits > detector.maxHits) ||
-          (counterMap[detectorId].nHoles > detector.maxHoles) ||
-          (counterMap[detectorId].nDoubleHoles > detector.maxDoubleHoles) ||
-          (counterMap[detectorId].nOutliers > detector.maxOutliers)) {
-        score = 0;
-        ACTS_DEBUG("Track: " << iTrack << " score from cuts: " << score);
+      applyCuts<std::size_t>(detector.maxHits, detector.minHits,
+                             counterMap[detectorId].nHits, score);
+      applyCuts<std::size_t>(detector.maxHoles, 0,
+                             counterMap[detectorId].nHoles, score);
+      applyCuts<std::size_t>(detector.maxDoubleHoles, 0,
+                             counterMap[detectorId].nDoubleHoles, score);
+      applyCuts<std::size_t>(detector.maxOutliers, 0,
+                             counterMap[detectorId].nOutliers, score);
+      applyCuts<std::size_t>(detector.maxSharedHits, 0,
+                             counterMap[detectorId].nSharedHits, score);
+
+      if (score == 0) {
         break;
       }
     }
@@ -219,13 +231,27 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
            detectorId++) {
         auto detector_it = m_cfg.detectorMap.find(detectorId);
         auto detector = detector_it->second;
-        score += counterMap[detectorId].nHits * detector.hitsScoreWeight;
-        score += counterMap[detectorId].nHoles * detector.holesScoreWeight;
-        score += counterMap[detectorId].nDoubleHoles *
-                 detector.doubleHolesScoreWeight;
-        score +=
-            counterMap[detectorId].nOutliers * detector.outliersScoreWeight;
-        score += counterMap[detectorId].nSharedHits * detector.otherScoreWeight;
+        // score += counterMap[detectorId].nHits * detector.hitsScoreWeight;
+        // score += counterMap[detectorId].nHoles * detector.holesScoreWeight;
+        // score += counterMap[detectorId].nDoubleHoles *
+        //          detector.doubleHolesScoreWeight;
+        // score +=
+        //     counterMap[detectorId].nOutliers * detector.outliersScoreWeight;
+        // score += counterMap[detectorId].nSharedHits *
+        // detector.otherScoreWeight;
+
+        applyWeight<int>(counterMap[detectorId].nHits, detector.hitsScoreWeight,
+                         score);
+        applyWeight<int>(counterMap[detectorId].nHoles,
+                         detector.holesScoreWeight, score);
+        applyWeight<int>(counterMap[detectorId].nDoubleHoles,
+                         detector.doubleHolesScoreWeight, score);
+        applyWeight<int>(counterMap[detectorId].nOutliers,
+                         detector.outliersScoreWeight, score);
+      }
+
+      for (const auto& ambiweights : optionalCuts.weights) {
+        ambiweights(track, score);
       }
 
       if (track.chi2() > 0 && track.nDoF() > 0) {
@@ -302,6 +328,11 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
                                  << " holes: " << detector.factorHoles[iHoles]
                                  << "  New score now: " << prob);
     }
+
+    for (const auto& ambiscore : optionalCuts.ambiscores) {
+      ambiweights(track, prob);
+    }
+
     if (track.chi2() > 0 && track.nDoF() > 0) {
       double chi2 = track.chi2();
       int indf = track.nDoF();

@@ -20,6 +20,18 @@
 
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
+namespace AthenaAmbiguitySolver {
+template <typename track_container_t, typename trajectory_t,
+          template <typename> class holder_t>
+using OptinalFilter = std::function<bool(
+    const Acts::TrackProxy<track_container_t, trajectory_t, holder_t, true>)>;
+template <typename track_container_t, typename trajectory_t,
+          template <typename> class holder_t>
+using OptinalScoreModifier = std::function<void(
+    const Acts::TrackProxy<track_container_t, trajectory_t, holder_t, true>&,
+    double&)>;
+
+}  // namespace AthenaAmbiguitySolver
 
 namespace Acts {
 
@@ -54,6 +66,14 @@ class AthenaAmbiguityResolution {
     std::vector<double> factorHits;
     std::vector<double> factorHoles;
   };
+  struct Counter {
+    std::size_t nHits;
+    std::size_t nHoles;
+    std::size_t nDoubleHoles;
+    std::size_t nOutliers;
+
+    std::size_t nSharedHits;
+  };
 
   struct Config {
     std::map<std::size_t, std::size_t> volumeMap = {{0, 0}};
@@ -79,15 +99,19 @@ class AthenaAmbiguityResolution {
     bool useAmbigFcn = false;
   };
 
-  struct Counter {
-    std::size_t nHits;
-    std::size_t nHoles;
-    std::size_t nDoubleHoles;
-    std::size_t nOutliers;
-
-    std::size_t nSharedHits;
+  template <typename track_container_t, typename traj_t,
+            template <typename> class holder_t>
+  struct Optional_cuts {
+    std::vector<AthenaAmbiguitySolver::OptinalFilter<track_container_t, traj_t,
+                                                     holder_t>>
+        cuts = {};
+    std::vector<AthenaAmbiguitySolver::OptinalScoreModifier<track_container_t,
+                                                            traj_t, holder_t>>
+        weights = {};
+    std::vector<AthenaAmbiguitySolver::OptinalScoreModifier<track_container_t,
+                                                            traj_t, holder_t>>
+        ambiscores = {};
   };
-
   AthenaAmbiguityResolution(const Config& cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("AthenaAmbiguityResolution",
@@ -129,7 +153,9 @@ class AthenaAmbiguityResolution {
             template <typename> class holder_t>
   std::vector<int> simpleScore(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      std::vector<std::map<std::size_t, Counter>>& counterMaps) const;
+      std::vector<std::map<std::size_t, Counter>>& counterMaps,
+      Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts = {})
+      const;
 
   /// Remove tracks that are not good enough based on cuts
   ///
