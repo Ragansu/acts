@@ -107,11 +107,11 @@ AthenaAmbiguityResolution::computeInitialState(
 
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t>
-std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
+std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     std::vector<std::map<std::size_t, Counter>>& counterMaps,
     Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts) const {
-  std::vector<int> trackScore;
+  std::vector<double> trackScore;
 
   int iTrack = 0;
 
@@ -257,7 +257,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
       if (track.chi2() > 0 && track.nDoF() > 0) {
         double p = 1. / log10(10. + 10. * track.chi2() / track.nDoF());
         if (p > 0) {
-          score += static_cast<int>(p);
+          score += p;
         } else
           score -= 50;
       }
@@ -276,7 +276,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
 
   ACTS_INFO("Using ambiguity function");
 
-  std::vector<int> trackScoreAmbig;
+  std::vector<double> trackScoreAmbig;
   iTrack = 0;
   for (const auto& track : tracks) {
     double score = trackScore[iTrack];
@@ -342,8 +342,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
                                         << " is : " << fac
                                         << "  New score now: " << prob)
     }
-    int iProb = static_cast<int>(prob);
-    trackScoreAmbig.push_back(iProb);
+    trackScoreAmbig.push_back(prob);
   }  // work in progress
   return trackScoreAmbig;
 }
@@ -359,7 +358,8 @@ std::vector<int> Acts::AthenaAmbiguityResolution::solveAmbiguity(
   ACTS_INFO("Number of tracks: " << tracks.size());
   ACTS_INFO("Config file location: " << m_cfg.configFile);
   std::vector<std::map<std::size_t, Counter>> counterMaps;
-  std::vector<int> trackScore = simpleScore(tracks, counterMaps, optionalCuts);
+  std::vector<double> trackScore =
+      simpleScore(tracks, counterMaps, optionalCuts);
 
   for (const auto& track : tracks) {
     ACTS_INFO(

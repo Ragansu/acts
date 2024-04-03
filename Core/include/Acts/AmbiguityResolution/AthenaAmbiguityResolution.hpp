@@ -81,8 +81,8 @@ class AthenaAmbiguityResolution {
 
     std::string configFile = "configFile.json";
 
-    int minScore = 0;
-    int minScoreSharedTracks = 0;
+    double minScore = 0;
+    double minScoreSharedTracks = 0;
 
     std::size_t maxSharedTracksPerMeasurement = 10;
     std::size_t maxShared = 5;
@@ -152,7 +152,7 @@ class AthenaAmbiguityResolution {
   /// @return a vector of scores for each track
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
-  std::vector<int> simpleScore(
+  std::vector<double> simpleScore(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       std::vector<std::map<std::size_t, Counter>>& counterMaps,
       Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts = {})
@@ -165,7 +165,7 @@ class AthenaAmbiguityResolution {
   /// @param measurementsPerTrack is the list of measurements for each track
   /// @return a vector of IDs of the tracks we want to keep
   std::vector<std::size_t> getCleanedOutTracks(
-      std::vector<int> trackScore,
+      std::vector<double> trackScore,
       std::vector<std::map<std::size_t, Counter>>& counterMaps,
       std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
           measurementsPerTrack) const;

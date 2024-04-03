@@ -14,7 +14,7 @@
 #include <stdexcept>
 
 std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
-    std::vector<int> trackScore,
+    std::vector<double> trackScore,
     std::vector<std::map<std::size_t, Counter>>& counterMaps,
     std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
         measurementsPerTrack) const {
@@ -61,7 +61,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
   std::vector<std::vector<std::size_t>> newMeasurements;
 
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
-    int track_score = trackScore[iTrack];
+    double track_score = trackScore[iTrack];
     ACTS_DEBUG("Track score: " << track_score);
 
     if (track_score <= 0) {

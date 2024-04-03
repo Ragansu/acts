@@ -93,7 +93,7 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
   std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
       measurementsPerTrack = createSampleInput();
 
-  std::vector<int> TrackSore;
+  std::vector<double> TrackSore;
   for (std::size_t i = 0; i < measurementsPerTrack.size(); i++) {
     TrackSore.push_back(60 + 40 * i);
   }
