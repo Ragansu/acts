@@ -121,7 +121,7 @@ class AthenaAmbiguityResolution {
   /// Compute the initial state of the tracks
   ///
   /// @param tracks is the input track container
-  /// @param sourceLinkHash is the hash function for the source links
+  /// @param sourceLinkHash is the  source links
   /// @param sourceLinkEquality is the equality function for the source links
   /// @return a vector of the initial state of the tracks
   template <typename track_container_t, typename traj_t,
