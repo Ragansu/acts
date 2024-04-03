@@ -179,7 +179,9 @@ class AthenaAmbiguityResolution {
   std::vector<int> solveAmbiguity(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-          measurementsPerTrack) const;
+          measurementsPerTrack,
+      Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts = {})
+      const;
 
  private:
   Config m_cfg;

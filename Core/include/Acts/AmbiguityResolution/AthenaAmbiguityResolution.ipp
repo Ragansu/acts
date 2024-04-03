@@ -330,7 +330,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::simpleScore(
     }
 
     for (const auto& ambiscore : optionalCuts.ambiscores) {
-      ambiweights(track, prob);
+      ambiscore(track, prob);
     }
 
     if (track.chi2() > 0 && track.nDoF() > 0) {
@@ -353,12 +353,14 @@ template <typename track_container_t, typename traj_t,
 std::vector<int> Acts::AthenaAmbiguityResolution::solveAmbiguity(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-        measurementsPerTrack) const {
+        measurementsPerTrack,
+    Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts)
+    const {
   ACTS_INFO("Solving ambiguity");
   ACTS_INFO("Number of tracks: " << tracks.size());
   ACTS_INFO("Config file location: " << m_cfg.configFile);
   std::vector<std::map<std::size_t, Counter>> counterMaps;
-  std::vector<int> trackScore = simpleScore(tracks, counterMaps);
+  std::vector<int> trackScore = simpleScore(tracks, counterMaps, optionalCuts);
 
   for (const auto& track : tracks) {
     ACTS_INFO(
