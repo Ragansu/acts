@@ -163,12 +163,12 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
 
     double score = 1;
 
-    applyCuts<std::size_t>(m_cfg.phiMax, m_cfg.phiMin,
-                           VectorHelpers::phi(track.momentum()), score);
-    applyCuts<std::size_t>(m_cfg.etaMax, m_cfg.etaMin,
-                           VectorHelpers::eta(track.momentum()), score);
-    applyCuts<std::size_t>(m_cfg.pTMax, m_cfg.pTMin,
-                           VectorHelpers::perp(track.momentum()), score);
+    applyCuts<double>(m_cfg.phiMax, m_cfg.phiMin,
+                      VectorHelpers::phi(track.momentum()), score);
+    applyCuts<double>(m_cfg.etaMax, m_cfg.etaMin,
+                      VectorHelpers::eta(track.momentum()), score);
+    applyCuts<double>(m_cfg.pTMax, m_cfg.pTMin,
+                      VectorHelpers::perp(track.momentum()), score);
 
     for (const auto& ambicut : optionalCuts.cuts) {
       if (!ambicut(track)) {
