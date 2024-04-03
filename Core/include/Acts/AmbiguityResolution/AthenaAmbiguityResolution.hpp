@@ -148,6 +148,7 @@ class AthenaAmbiguityResolution {
   ///
   /// @param tracks is the input track container
   /// @param counterMaps is the counter map for each track
+  /// @param optionalCuts is the optional cuts to be applied
   /// @return a vector of scores for each track
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
@@ -173,6 +174,7 @@ class AthenaAmbiguityResolution {
   ///
   /// @param tracks is the input track container
   /// @param measurementsPerTrack is the list of measurements for each track
+  /// @param optionalCuts is the optional cuts to be applied
   /// @return a vector of IDs of the tracks we want to keep
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
