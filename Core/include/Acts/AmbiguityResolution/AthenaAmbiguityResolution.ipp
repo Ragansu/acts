@@ -235,7 +235,6 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
            detectorId++) {
         auto detector_it = m_cfg.detectorMap.find(detectorId);
         auto detector = detector_it->second;
-
       }
 
       for (const auto& ambiweights : optionalCuts.weights) {
