@@ -29,7 +29,6 @@ Acts::AthenaAmbiguityResolution::prepareOutputTrack(
   // Temporary empty track state container: we don't change the original one,
   // but we need one for filtering
   auto tempTrackStateContainer = std::make_shared<VectorMultiTrajectory>();
-
   TrackContainer solvedTracks{trackContainer, tempTrackStateContainer};
   solvedTracks.ensureDynamicColumns(tracks);
 
