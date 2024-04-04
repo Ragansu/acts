@@ -108,10 +108,6 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
   for (const auto& track : tracks) {
     auto counterMap = std::map<std::size_t, Counter>();
 
-    // detector score is determined by the number of hits/hole/outliers *
-    // hit/hole/outlier score here so instead of calculating
-    // nHits/nHoles/nOutliers per volume, we just loop over all volumes and add
-    // the score.
     bool doubleFlag = false;
 
     for (const auto& ts : track.trackStatesReversed()) {
@@ -191,7 +187,8 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       ACTS_DEBUG("Track: " << iTrack << " score : " << score);
       continue;
     }
-
+    // detector score is determined by the number of hits/hole/outliers *
+    // hit/hole/outlier score
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
          detectorId++) {
       auto detector_it = m_cfg.detectorMap.find(detectorId);
@@ -226,7 +223,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
 
     // real scoring starts here
 
-    if (m_cfg.useAmbigFcn) {
+    if (m_cfg.useAmbiguityFunction) {
       score = 1;
     } else {
       score = 100;
@@ -255,7 +252,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
 
   }  // end of loop over tracks
 
-  if (!m_cfg.useAmbigFcn) {
+  if (!m_cfg.useAmbiguityFunction) {
     ACTS_INFO("Not using ambiguity function");
     return trackScore;
   }
@@ -329,7 +326,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
                                         << "  New score now: " << prob)
     }
     trackScoreAmbig.push_back(prob);
-  }  // work in progress
+  }
   return trackScoreAmbig;
 }
 

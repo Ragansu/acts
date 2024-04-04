@@ -43,7 +43,7 @@ Acts::AthenaAmbiguityResolution::Config transformConfig(
   result.phiMax = cfg.phiMax;
   result.etaMin = cfg.etaMin;
   result.etaMax = cfg.etaMax;
-  result.useAmbigFcn = cfg.useAmbigFcn;
+  result.useAmbiguityFunction = cfg.useAmbiguityFunction;
   return result;
 }
 
@@ -57,6 +57,31 @@ bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
          b.get<ActsExamples::IndexSourceLink>().index();
 }
 
+bool DoubleHolesFilter(const Acts::TrackProxy<Acts::ConstVectorTrackContainer,
+                                              Acts::ConstVectorMultiTrajectory,
+                                              std::shared_ptr, true>& track) {
+  bool doubleFlag = false;
+  int counter = 0;
+  for (const auto& ts : track.trackStatesReversed()) {
+    auto iTypeFlags = ts.typeFlags();
+    if (!iTypeFlags.test(Acts::TrackStateFlag::HoleFlag))
+      doubleFlag = false;
+
+    if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+      if (doubleFlag) {
+        counter++;
+        doubleFlag = false;
+      } else {
+        doubleFlag = true;
+      };
+    }
+  }
+  if (counter > 1) {
+    return true;
+  } else {
+    return false;
+  }
+}
 }  // namespace
 
 ActsExamples::AthenaAmbiguityResolutionAlgorithm::
@@ -87,8 +112,13 @@ ActsExamples::AthenaAmbiguityResolutionAlgorithm::execute(
   measurementsPerTracks =
       m_core.computeInitialState(tracks, &sourceLinkHash, &sourceLinkEquality);
 
+  Acts::AthenaAmbiguityResolution::Optional_cuts<
+      Acts::ConstVectorTrackContainer, Acts::ConstVectorMultiTrajectory,
+      std::shared_ptr>
+      optionalCuts;
+  optionalCuts.cuts.push_back(DoubleHolesFilter);
   std::vector<int> goodTracks =
-      m_core.solveAmbiguity(tracks, measurementsPerTracks);
+      m_core.solveAmbiguity(tracks, measurementsPerTracks, optionalCuts);
   // Prepare the output track collection from the IDs
   TrackContainer solvedTracks{std::make_shared<Acts::VectorTrackContainer>(),
                               std::make_shared<Acts::VectorMultiTrajectory>()};

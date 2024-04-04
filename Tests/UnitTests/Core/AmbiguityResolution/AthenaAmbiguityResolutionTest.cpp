@@ -76,16 +76,9 @@ createfaketracks(std::size_t nTracks) {
     auto t = tc.makeTrack();
     t.tipIndex() = ts10.index();
   }
-  // BOOST_CHECK_EQUAL(tc.size(), nTracks);
+  BOOST_CHECK_EQUAL(tc.size(), nTracks);
 
-  unsigned int i = 0;
-  for (auto track : tc) {
-    // BOOST_CHECK_EQUAL(i, track.tipIndex());
-    track.parameters().setRandom();
-    i++;
-  }
-
-  // BOOST_CHECK_EQUAL(std::distance(tc.begin(), tc.end()), tc.size());
+  BOOST_CHECK_EQUAL(std::distance(tc.begin(), tc.end()), tc.size());
 
   return tc;
 }
@@ -125,7 +118,7 @@ struct Fixture {
     config.etaMin = -2.7;
     config.pTMax = 1400;
     config.pTMin = 0.5;
-    config.useAmbigFcn = false;
+    config.useAmbiguityFunction = false;
   }
 
   ~Fixture() = default;
@@ -167,7 +160,12 @@ BOOST_FIXTURE_TEST_CASE(simpleScoreTest, Fixture) {
 
   // Assert the expected results
   BOOST_CHECK_EQUAL(tracks.size(), 5);
-  // BOOST_CHECK_EQUAL(score[0], 0);
+
+  // Call the function under test
+  std::vector<std::map<std::size_t, Counter>> counterMaps;
+  std::vector<double> score = tester.simpleScore(tracks, counterMaps);
+
+  BOOST_CHECK_EQUAL(score[0], 0);
   // BOOST_CHECK_EQUAL(score[1], 0);
   // BOOST_CHECK_EQUAL(score[2], 0);
 }

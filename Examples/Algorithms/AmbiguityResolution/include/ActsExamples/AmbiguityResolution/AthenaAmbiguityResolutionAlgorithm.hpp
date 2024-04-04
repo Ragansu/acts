@@ -56,7 +56,7 @@ class AthenaAmbiguityResolutionAlgorithm final : public IAlgorithm {
     double etaMin = -5;
     double etaMax = 5;
 
-    bool useAmbigFcn = false;
+    bool useAmbiguityFunction = false;
   };
 
   /// Construct the ambiguity resolution algorithm.

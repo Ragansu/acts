@@ -24,7 +24,7 @@ namespace AthenaAmbiguitySolver {
 template <typename track_container_t, typename trajectory_t,
           template <typename> class holder_t>
 using OptinalFilter = std::function<bool(
-    const Acts::TrackProxy<track_container_t, trajectory_t, holder_t, true>)>;
+    const Acts::TrackProxy<track_container_t, trajectory_t, holder_t, true>&)>;
 template <typename track_container_t, typename trajectory_t,
           template <typename> class holder_t>
 using OptinalScoreModifier = std::function<void(
@@ -96,7 +96,7 @@ class AthenaAmbiguityResolution {
     double etaMin = -5;
     double etaMax = 5;
 
-    bool useAmbigFcn = false;
+    bool useAmbiguityFunction = false;
   };
 
   template <typename track_container_t, typename traj_t,

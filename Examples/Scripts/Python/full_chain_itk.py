@@ -222,41 +222,8 @@ if ambiguity_MLSolver:
         + "/MLAmbiguityResolution/duplicateClassifier.onnx",
     )
 
-elif greedy_ambiguity_resolution:
-    addAmbiguityResolution(
-        s,
-        AmbiguityResolutionConfig(
-            maximumSharedHits=3,
-            maximumIterations=1000000,
-            nMeasurementsMin=7,
-        ),
-        outputDirRoot=outputDir,
-        writeCovMat=True,
-        # outputDirCsv=outputDir,
-    )
 
-    addAthenaAmbiguityResolution(
-        s,
-        AthenaAmbiguityResolutionConfig(
-            minScore=100,
-            minScoreSharedTracks=400,
-            maxShared=2,
-            maxSharedTracksPerMeasurement=15,
-            pTMax=1400,
-            pTMin=0.5,
-            phiMax=3.14,
-            phiMin=-3.14,
-            etaMax=2.7,
-            etaMin=-2.7,
-            useAmbigFcn=False,
-        ),
-        outputDirRoot=outputDir,
-        AmbiVolumeFile=ambi_config,
-        writeCovMat=True,
-        # outputDirCsv=outputDir,
-    )
-
-else:
+elif athena_ambiguity_resolution:
     addAthenaAmbiguityResolution(
         s,
         AthenaAmbiguityResolutionConfig(
@@ -270,20 +237,32 @@ else:
             phiMin=-3.14,
             etaMax=4,
             etaMin=-4,
-            useAmbigFcn=True,
+            useAmbiguityFunction=False,
         ),
         outputDirRoot=outputDir,
         AmbiVolumeFile=ambi_config,
         writeCovMat=True,
         # outputDirCsv=outputDir,
     )
+else:
+    addAmbiguityResolution(
+        s,
+        AmbiguityResolutionConfig(
+            maximumSharedHits=3,
+            maximumIterations=1000000,
+            nMeasurementsMin=7,
+        ),
+        outputDirRoot=outputDir,
+        writeCovMat=True,
+        # outputDirCsv=outputDir,
+    )
 
 
-# addVertexFitting(
-#     s,
-#     field,
-#     vertexFinder=VertexFinder.Iterative,
-#     outputDirRoot=outputDir,
-# )
+addVertexFitting(
+    s,
+    field,
+    vertexFinder=VertexFinder.Iterative,
+    outputDirRoot=outputDir,
+)
 
 s.run()

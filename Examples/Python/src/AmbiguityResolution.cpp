@@ -38,7 +38,7 @@ void addAthenaAmbiguityResolution(Context& ctx) {
       "AthenaAmbiguityResolutionAlgorithm", inputTracks, configFile,
       outputTracks, minScore, minScoreSharedTracks, maxShared,
       maxSharedTracksPerMeasurement, pTMin, pTMax, phiMin, phiMax, etaMin,
-      etaMax, useAmbigFcn);
+      etaMax, useAmbiguityFunction);
 }
 
 }  // namespace Acts::Python

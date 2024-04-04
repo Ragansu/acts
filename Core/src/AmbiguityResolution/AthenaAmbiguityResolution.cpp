@@ -69,8 +69,6 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       continue;
     }
 
-    // int numWeightedShared = 0;
-
     auto counterMap = counterMaps[iTrack];
 
     bool TrkCouldBeAccepted = true;
@@ -123,9 +121,6 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
         }
 
         tsosTypes[index] = SharedHit;
-
-        // Yet to be implemented
-        // numWeightedShared += (isPixel ? 2 : 1);
 
         index++;
         continue;
