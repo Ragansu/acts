@@ -8,8 +8,6 @@
 
 #pragma once
 
-// #include "Acts/EventData/Track.hpp"
-// #include "Acts/Framework/IAlgorithm.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
