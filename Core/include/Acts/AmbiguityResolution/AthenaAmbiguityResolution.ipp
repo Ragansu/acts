@@ -104,19 +104,81 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
 
   ACTS_INFO("Starting to score tracks");
 
+  auto* trackContainerptr = &tracks;
+  if (trackContainerptr == nullptr) {
+    ACTS_ERROR("Trackcontainer is nullptr");
+    return trackScore;
+  }
+
+  ACTS_INFO("Trackcontainer address: " << trackContainerptr);
+
   // Loop over all the trajectories in the events
   for (const auto& track : tracks) {
+    auto* trackptr = &track;
+
+    if (trackptr == nullptr) {
+      ACTS_ERROR("Track is nullptr");
+      return trackScore;
+    }
+
+    ACTS_INFO("Track: " << iTrack << " at address: " << trackptr);
+
     auto counterMap = std::map<std::size_t, Counter>();
 
     bool doubleFlag = false;
+    ACTS_INFO("flag right before trackState");
 
     for (const auto& ts : track.trackStatesReversed()) {
-      auto iVolume = ts.referenceSurface().geometryId().volume();
+      auto* trackStateptr = &ts;
+
+      if (trackStateptr == nullptr) {
+        ACTS_ERROR("TrackState is nullptr");
+        return trackScore;
+      }
+
+      ACTS_INFO("TrackState at address: " << trackStateptr);
+
+      // auto* referenceSurfaceptr = &ts.referenceSurface();
+
+      // if (referenceSurfaceptr == nullptr) {
+      //   ACTS_ERROR("ReferenceSurface is nullptr");
+      //   return trackScore;
+      // }
+
+      // ACTS_INFO("ReferenceSurface at address: " << referenceSurfaceptr);
+      // auto geometryId = ts.referenceSurface().geometryId();
+
+      // auto* geometryIdptr = &geometryId;
+
+      // if (geometryIdptr == nullptr) {
+      //   ACTS_ERROR("GeometryId is nullptr");
+      //   return trackScore;
+      // }
+
+      // ACTS_INFO("GeometryId at address: " << geometryIdptr);
+
+      // auto ivolume_ = geometryId.volume();
+
+      // auto* volumeptr = &ivolume_;
+
+      // if (volumeptr == nullptr) {
+      //   ACTS_ERROR("Volume is nullptr");
+      //   return trackScore;
+      // }
+
+      // ACTS_INFO("Volume at address: " << volumeptr);
+
+      // auto iVolume = ts.referenceSurface().geometryId().volume();
+
+      // ACTS_INFO("Volume: " << iVolume);
+
+      ACTS_INFO("flag right before typeFlags");
       auto iTypeFlags = ts.typeFlags();
 
-      auto volume_it = m_cfg.volumeMap.find(iVolume);
-      if (volume_it != m_cfg.volumeMap.end()) {
-        auto detectorId = volume_it->second;
+      // auto volume_it = m_cfg.volumeMap.find(iVolume);
+      if (true) {
+        // auto detectorId = volume_it->second;
+        auto detectorId = 0;
         if (!iTypeFlags.test(Acts::TrackStateFlag::HoleFlag))
           doubleFlag = false;
 
@@ -137,7 +199,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
           counterMap[detectorId].nOutliers++;
         }
       } else {
-        ACTS_DEBUG("Detector not found at Volume: " << iVolume);
+        // ACTS_DEBUG("Detector not found at Volume: " << iVolume);
       }
     }
     counterMaps.push_back(counterMap);

@@ -237,7 +237,7 @@ elif athena_ambiguity_resolution:
             phiMin=-3.14,
             etaMax=4,
             etaMin=-4,
-            useAmbiguityFunction=False,
+            useAmbigFcn=False,
         ),
         outputDirRoot=outputDir,
         AmbiVolumeFile=ambi_config,
