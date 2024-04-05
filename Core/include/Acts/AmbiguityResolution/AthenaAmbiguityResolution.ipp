@@ -108,9 +108,6 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
   for (const auto& track : tracks) {
     auto counterMap = std::map<std::size_t, Counter>();
 
-    bool doubleFlag = false;
-    ACTS_INFO("flag right before trackState");
-
     for (const auto& ts : track.trackStatesReversed()) {
       auto iVolume = ts.referenceSurface().geometryId().volume();
 
@@ -121,16 +118,8 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       auto volume_it = m_cfg.volumeMap.find(iVolume);
       if (true) {
         auto detectorId = volume_it->second;
-        if (!iTypeFlags.test(Acts::TrackStateFlag::HoleFlag))
-          doubleFlag = false;
 
         if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-          if (doubleFlag) {
-            counterMap[detectorId].nDoubleHoles++;
-            doubleFlag = false;
-          } else {
-            doubleFlag = true;
-          };
           counterMap[detectorId].nHoles++;
         } else if (iTypeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
           if (iTypeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
@@ -179,8 +168,10 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
     }
 
     for (const auto& ambicut : optionalCuts.cuts) {
-      if (!ambicut(track)) {
+      if (ambicut(track)) {
         score = 0;
+        ACTS_DEBUG("Track: " << iTrack
+                             << " score from optional cuts: " << score);
         break;
       }
     }
