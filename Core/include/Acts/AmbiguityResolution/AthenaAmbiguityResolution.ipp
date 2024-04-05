@@ -104,17 +104,14 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
 
   ACTS_INFO("Starting to score tracks");
 
-
   // Loop over all the trajectories in the events
   for (const auto& track : tracks) {
-
     auto counterMap = std::map<std::size_t, Counter>();
 
     bool doubleFlag = false;
     ACTS_INFO("flag right before trackState");
 
     for (const auto& ts : track.trackStatesReversed()) {
-
       auto iVolume = ts.referenceSurface().geometryId().volume();
 
       ACTS_DEBUG("Volume: " << iVolume);

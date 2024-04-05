@@ -52,7 +52,7 @@ struct Fixture {
     config.detectorMap = detectorMap;
 
     config.minScore = 0;
-    config.minScoreSharedTracks = 0;
+    config.minScoreSharedTracks = 100;
     config.maxShared = 5;
     config.maxSharedTracksPerMeasurement = 10;
     config.phiMax = 3.14;
@@ -84,7 +84,7 @@ createSampleInput() {
   for (const auto& trackVolume : trackVolumes) {
     std::vector<std::tuple<std::size_t, std::size_t, bool>> measurements;
     for (std::size_t i = 0; i < trackVolume.second.size(); ++i) {
-      measurements.push_back(std::make_tuple(trackVolume.second[i], i, false));
+      measurements.push_back(std::make_tuple(i+2, trackVolume.second[i], false));
     }
     measurementsPerTrack.push_back(measurements);
   }
@@ -118,7 +118,14 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
       tester.getCleanedOutTracks(TrackSore, CounterMaps, measurementsPerTrack);
 
   // Assert the expected results
-  BOOST_CHECK_EQUAL(cleanTracks.size(), 5);
+  BOOST_CHECK_EQUAL(measurementsPerTrack.size(), 5);
+  BOOST_CHECK_EQUAL(cleanTracks.size(), 3);
+
+
+for (std::size_t i = 0; i < cleanTracks.size(); i++) {
+  auto score = TrackSore[cleanTracks[i]];
+    BOOST_CHECK_GT(score, fixture.config.minScoreSharedTracks);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
