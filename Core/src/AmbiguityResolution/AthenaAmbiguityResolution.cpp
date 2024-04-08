@@ -61,7 +61,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
   };
 
   std::vector<std::vector<std::size_t>> newMeasurements;
-
+  // Loop over all tracks in the track container
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
     double track_score = trackScore[iTrack];
     ACTS_DEBUG("Track score: " << track_score);
@@ -75,12 +75,14 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
 
     bool TrkCouldBeAccepted = true;
 
-    // for tracks with shared hits, we need to check and remove bad hits
+    // For tracks with shared hits, we need to check and remove bad hits
 
     std::vector<int> trackStateTypes(measurementsPerTrack[iTrack].size(),
                                      OtherTrackStateType);
     int index = 0;
 
+    // Loop over all measurements of the track and for each hit a
+    // trackStateTypes is assigned.
     for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
       auto iMeasurement = std::get<0>(measurements_tuples);
       auto iVolume = std::get<1>(measurements_tuples);
@@ -132,6 +134,9 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     std::size_t measurement = 0;
     std::size_t cntIns = 0;
 
+    // Loop over all measurements of the track and process them according to the
+    // trackStateTypes and other conditions.
+    // Good measurements are copied to the newMeasurementsPerTrack vector.
     for (std::size_t i = 0; i < trackStateTypes.size(); i++) {
       auto measurement_tuples = measurementsPerTrack[iTrack][i];
       measurement = std::get<0>(measurement_tuples);
@@ -141,9 +146,15 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       } else if (trackStateTypes[i] != SharedHit) {
         ACTS_DEBUG("Good TSOS, copy hit");
         newMeasurementsPerTrack.push_back(measurement);
+
+        // a counter called cntIns is used to keep track of the number of shared
+        // hits accepted.
       } else if (cntIns >= m_cfg.maxShared) {
         ACTS_DEBUG("Too many shared hit, drop it");
-      } else {
+      }
+      // If the track is shared, the hit is only accepted if the track has score
+      // higher than the minimum score for shared tracks.
+      else {
         ACTS_DEBUG("Try to recover shared hit ");
         if (tracksPerMeasurement[measurement].size() <
                 m_cfg.maxSharedTracksPerMeasurement &&
@@ -159,6 +170,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       }
     }
 
+    // Check if the track has enough hits to be accepted.
     if (newMeasurementsPerTrack.size() < 3) {
       TrkCouldBeAccepted = false;
       ACTS_DEBUG(std::endl
@@ -169,6 +181,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       continue;
     }
 
+    // Check if the track has too many shared hits to be accepted.
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
          detectorId++) {
       auto detector_it = m_cfg.detectorMap.find(detectorId);
@@ -187,6 +200,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     }
   }
 
+  // From here on the code is only for debugging purposes and can be removed.
   numberOfTracks = cleanTracks.size();
 
   boost::container::flat_map<std::size_t,
@@ -206,11 +220,11 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
         ++sharedMeasurementsPerTrack;
       }
     }
-    ACTS_VERBOSE(std::endl << "Track ID: " << cleanTracks[track_id]);
-    ACTS_VERBOSE(
-        "Number of shared measurements: " << sharedMeasurementsPerTrack);
-    ACTS_VERBOSE("Number of measurements: " << newMeasurements[track_id].size())
-    ACTS_VERBOSE("Score of the track: " << trackScore[cleanTracks[track_id]]);
+    ACTS_DEBUG("Track ID: " << cleanTracks[track_id]);
+    ACTS_DEBUG("Number of shared measurements: " << sharedMeasurementsPerTrack);
+    ACTS_DEBUG("Number of measurements: " << newMeasurements[track_id].size())
+    ACTS_DEBUG("Score of the track: " << trackScore[cleanTracks[track_id]]
+                                      << std::endl);
   }
 
   return cleanTracks;
