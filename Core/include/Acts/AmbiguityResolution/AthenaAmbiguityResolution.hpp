@@ -19,6 +19,7 @@
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 namespace AthenaAmbiguitySolver {
+    // std::fuctions defined, to be used in the optional cuts.
 template <typename track_container_t, typename trajectory_t,
           template <typename> class holder_t>
 using OptinalFilter = std::function<bool(
@@ -43,47 +44,62 @@ namespace Acts {
 /// method for data preparations
 class AthenaAmbiguityResolution {
  public:
+  /// @brief Detector configuration struct : contains the configuration for each detector
+  ///
+  /// The configuaration can be saved in a json file and loaded from there.
+  ///
   struct DetectorConfig {
     int hitsScoreWeight;
     int holesScoreWeight;
-    int doubleHolesScoreWeight;
     int outliersScoreWeight;
     int otherScoreWeight;
 
     std::size_t minHits;
     std::size_t maxHits;
     std::size_t maxHoles;
-    std::size_t maxDoubleHoles;
     std::size_t maxOutliers;
     std::size_t maxSharedHits;
 
-    bool sharedHitsFlag;
+    bool sharedHitsFlag;  // if true, the shared hits are considered as bad hits
+                          // for this detector
 
     std::size_t detectorId;
 
-    std::vector<double> factorHits;
-    std::vector<double> factorHoles;
+    std::vector<double>
+        factorHits;  // a list of values from  0 to 1, the higher number of
+                     // hits, higher value in the list is multiplied to
+                     // ambuiguity score
+                     // applied only if useAmbiguityFunction is true
+    std::vector<double>
+        factorHoles;  // a list of values from  0 to 1, the higher number of
+                      // holes, lower value in the list is multiplied to
+                      // ambuiguity score
+                      // applied only if useAmbiguityFunction is true
   };
+
+  /// @brief  Counter struct : contains the features that are counted for each track
+  ///
+  /// The counter is used to compute the score of each track
   struct Counter {
     std::size_t nHits;
     std::size_t nHoles;
-    std::size_t nDoubleHoles;
     std::size_t nOutliers;
-
     std::size_t nSharedHits;
   };
 
+  /// @brief Configuration struct : contains the configuration for the ambiguity resolution
   struct Config {
     std::map<std::size_t, std::size_t> volumeMap = {{0, 0}};
     std::map<std::size_t, DetectorConfig> detectorMap;
 
     std::string configFile = "configFile.json";
 
-    double minScore = 0;
-    double minScoreSharedTracks = 0;
+    double minScore = 0;              // minimum score for any track
+    double minScoreSharedTracks = 0;  // minimum score for shared tracks
 
-    std::size_t maxSharedTracksPerMeasurement = 10;
-    std::size_t maxShared = 5;
+    std::size_t maxSharedTracksPerMeasurement = 10;  // maximum number of shared
+                                                     // tracks per measurement
+    std::size_t maxShared = 5;  // maximum number of shared hit per track
 
     double pTMin = 0;
     double pTMax = 1e9;
@@ -94,9 +110,16 @@ class AthenaAmbiguityResolution {
     double etaMin = -5;
     double etaMax = 5;
 
-    bool useAmbiguityFunction = false;
+    bool useAmbiguityFunction =
+        false;  // if true, the ambiguity score is
+                // computed based on a different function.
   };
 
+  /// @brief Optional_cuts struct : contains the optional cuts to be applied
+  ///
+  /// The optional cuts,weights and score are used to remove tracks that are not
+  /// good enough, based on some criteria. Users are free to add their own cuts
+  /// with the help of this struct.
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
   struct Optional_cuts {
@@ -108,7 +131,7 @@ class AthenaAmbiguityResolution {
         weights = {};
     std::vector<AthenaAmbiguitySolver::OptinalScoreModifier<track_container_t,
                                                             traj_t, holder_t>>
-        ambiscores = {};
+        ambiscores = {};  // applied only if useAmbiguityFunction is true
   };
   AthenaAmbiguityResolution(const Config& cfg,
                             std::unique_ptr<const Logger> logger =
@@ -145,8 +168,8 @@ class AthenaAmbiguityResolution {
   /// Compute the score of each track
   ///
   /// @param tracks is the input track container
-  /// @param counterMaps is the counter map for each track
-  /// @param optionalCuts is the optional cuts to be applied
+  /// @param counterMaps is the counter map from detector ID to counter
+  /// @param optionalCuts is the user defined optional cuts to be applied.
   /// @return a vector of scores for each track
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>

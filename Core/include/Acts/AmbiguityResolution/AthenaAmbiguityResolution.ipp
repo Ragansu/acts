@@ -104,12 +104,12 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
 
   ACTS_INFO("Starting to score tracks");
 
-  // Loop over all the trajectories in the events
+  // Loop over all the tracks in the container
   for (const auto& track : tracks) {
     auto counterMap = std::map<std::size_t, Counter>();
 
-    // Loop over all the track states in the trajectory for counting
-    // hits/hole/outliers.
+    // Loop over all the track states in a track for counting
+    // hits/hole/outliers per detector.
     for (const auto& ts : track.trackStatesReversed()) {
       auto iVolume = ts.referenceSurface().geometryId().volume();
 
@@ -171,6 +171,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       continue;
     }
 
+    // cuts on optional cuts
     for (const auto& ambicut : optionalCuts.cuts) {
       if (ambicut(track)) {
         score = 0;
@@ -182,13 +183,11 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
 
     if (score == 0) {
       iTrack++;
-      // setting the score for unfit tracks to 0
       trackScore.push_back(score);
       ACTS_DEBUG("Track: " << iTrack << " score : " << score);
       continue;
     }
-    // detector score is determined by the number of hits/hole/outliers *
-    // hit/hole/outlier score
+    // Reject tracks which didn't pass the detector cuts.
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
          detectorId++) {
       auto detector_it = m_cfg.detectorMap.find(detectorId);
@@ -224,7 +223,9 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       score = 1;
     } else {
       score = 100;
-      // Adding the score for each detector
+      // Adding the score for each detector.
+      // detector score is determined by the number of hits/hole/outliers *
+      // hit/hole/outlier scoreWeights in a detector.
       for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
            detectorId++) {
         auto detector_it = m_cfg.detectorMap.find(detectorId);
@@ -236,7 +237,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
         score += counterMap[detectorId].nSharedHits * detector.otherScoreWeight;
       }
 
-      // Adding scores based on optinal weights
+      // Adding scores based on optional weights
       for (const auto& ambiweights : optionalCuts.weights) {
         ambiweights(track, score);
       }
@@ -268,16 +269,18 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
 
   std::vector<double> trackScoreAmbig;
   iTrack = 0;
+  // Loop over all the tracks in the container
   for (const auto& track : tracks) {
     double score = trackScore[iTrack];
+    // remove tracks which did not pass the previous cuts.
     if (score == 0) {
       trackScoreAmbig.push_back(0.0f);
       iTrack++;
       continue;
     }
-    auto counterMap = counterMaps[iTrack];
+    auto counterMap = counterMaps[iTrack];  // get the counter map for the track
     double pT = Acts::VectorHelpers::perp(track.momentum());
-
+    // start with larger score for tracks with higher pT.
     double prob = log10(pT * 1000) - 1.;
     // pT in GeV, hence 100 MeV is minimum and gets score = 1
     ACTS_DEBUG("Modifier for pT = " << pT << " GeV is : " << prob
@@ -288,21 +291,25 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       auto detector_it = m_cfg.detectorMap.find(detectorId);
       auto detector = detector_it->second;
 
+      // choosing a scaling factor based on the number of hits in a track per
+      // detector.
       std::size_t iHits = counterMap[detectorId].nHits;
       if (detector.factorHits.size() < iHits) {
         ACTS_WARNING("Detector " << detectorId
                                  << " has not enough factors for hits");
         continue;
       }
-      if (iHits < detector.minHits) {
-        prob /= (detector.minHits - iHits + 1);  // missing hits are bad !
-        iHits = detector.minHits;
+      if (iHits > detector.maxHits) {
+        prob *= (detector.maxHits - iHits + 1);  // hits are good !
+        iHits = detector.maxHits;
       }
       prob *= detector.factorHits[iHits];
       ACTS_DEBUG("Modifier for " << iHits
                                  << " hits: " << detector.factorHits[iHits]
                                  << "  New score now: " << prob);
 
+      // choosing a scaling factor based on the number of holes in a track per
+      // detector.
       std::size_t iHoles = counterMap[detectorId].nHoles;
       if (detector.factorHoles.size() < iHoles) {
         ACTS_WARNING("Detector " << detectorId
@@ -344,27 +351,19 @@ std::vector<int> Acts::AthenaAmbiguityResolution::solveAmbiguity(
     std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
         measurementsPerTrack,
     Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts) const {
-  ACTS_INFO("Solving ambiguity");
-  ACTS_INFO("Number of tracks: " << tracks.size());
-  ACTS_INFO("Config file location: " << m_cfg.configFile);
-  std::vector<std::map<std::size_t, Counter>> counterMaps;
+  ACTS_INFO("Number of tracks before Ambiguty Resolution: " << tracks.size());
+  std::vector<std::map<std::size_t, Counter>>
+      counterMaps;  // vector of counter maps. where each counter map contains
+                    // the number of hits/hole/outliers for each detector in a
+                    // track.
   std::vector<double> trackScore =
       simpleScore(tracks, counterMaps, optionalCuts);
-
-  for (const auto& track : tracks) {
-    ACTS_INFO(
-        "Track: " << track.index()
-                  << " pT: " << Acts::VectorHelpers::perp(track.momentum())
-                  << " eta: " << Acts::VectorHelpers::eta(track.momentum())
-                  << " phi: " << Acts::VectorHelpers::phi(track.momentum()));
-  }
 
   std::vector<std::size_t> cleanTracks =
       getCleanedOutTracks(trackScore, counterMaps, measurementsPerTrack);
 
-  ACTS_INFO("Number of tracks: " << tracks.size());
-  ACTS_INFO("Number of clean tracks: " << cleanTracks.size());
-  ACTS_INFO("Min score: " << m_cfg.minScore);
+  ACTS_VERBOSE("Number of clean tracks: " << cleanTracks.size());
+  ACTS_VERBOSE("Min score: " << m_cfg.minScore);
 
   std::vector<int> goodTracks;
   std::size_t iTrack = 0;
@@ -378,7 +377,7 @@ std::vector<int> Acts::AthenaAmbiguityResolution::solveAmbiguity(
     iTrack++;
   }
 
-  ACTS_INFO("Number of good tracks: " << goodTracks.size());
+  ACTS_INFO("Number of Good tracks: " << goodTracks.size());
   return goodTracks;
 }
 

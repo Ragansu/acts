@@ -34,6 +34,8 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
                              boost::container::flat_set<std::size_t>>
       tracksPerMeasurement;
 
+  // Removes bad tracks and counts computes the vector of tracks per
+  // measurement.
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
     if (trackScore[iTrack] <= 0) {
       measurementsPerTrack[iTrack].clear();
@@ -45,7 +47,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     }
   }
 
-  enum TsosTypes {
+  enum TrackStateTypes {
     // A measurement not yet used in any other track
     UnusedHit = 1,
     // A measurement shared with another track
@@ -54,8 +56,8 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     RejectedHit = 3,
     // an outlier, to be copied in case
     Outlier = 4,
-    // other TSOS types to be copied in case
-    OtherTsos = 5
+    // other trackstate types to be copied in case
+    OtherTrackStateType = 5
   };
 
   std::vector<std::vector<std::size_t>> newMeasurements;
@@ -75,12 +77,11 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
 
     // for tracks with shared hits, we need to check and remove bad hits
 
-    std::vector<int> tsosTypes(measurementsPerTrack[iTrack].size(), OtherTsos);
+    std::vector<int> trackStateTypes(measurementsPerTrack[iTrack].size(),
+                                     OtherTrackStateType);
     int index = 0;
 
     for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
-      tsosTypes[index] = OtherTsos;
-
       auto iMeasurement = std::get<0>(measurements_tuples);
       auto iVolume = std::get<1>(measurements_tuples);
       auto isoutliner = std::get<2>(measurements_tuples);
@@ -98,14 +99,14 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
 
       if (isoutliner) {
         ACTS_INFO("Measurement is outlier on a fitter track, copy it over");
-        tsosTypes[index] = Outlier;
+        trackStateTypes[index] = Outlier;
         index++;
         continue;
       }
       if (tracksPerMeasurement[iMeasurement].size() == 1) {
         ACTS_VERBOSE("Measurement is not shared, copy it over");
 
-        tsosTypes[index] = UnusedHit;
+        trackStateTypes[index] = UnusedHit;
 
         index++;
         continue;
@@ -115,12 +116,12 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
 
         if (detector.sharedHitsFlag == true) {
           ACTS_VERBOSE("Measurement is shared, Reject it");
-          tsosTypes[index] = RejectedHit;
+          trackStateTypes[index] = RejectedHit;
           index++;
           continue;
         }
 
-        tsosTypes[index] = SharedHit;
+        trackStateTypes[index] = SharedHit;
 
         index++;
         continue;
@@ -131,13 +132,13 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     std::size_t measurement = 0;
     std::size_t cntIns = 0;
 
-    for (std::size_t i = 0; i < tsosTypes.size(); i++) {
+    for (std::size_t i = 0; i < trackStateTypes.size(); i++) {
       auto measurement_tuples = measurementsPerTrack[iTrack][i];
       measurement = std::get<0>(measurement_tuples);
 
-      if (tsosTypes[i] == RejectedHit) {
+      if (trackStateTypes[i] == RejectedHit) {
         ACTS_DEBUG("Dropping rejected hit");
-      } else if (tsosTypes[i] != SharedHit) {
+      } else if (trackStateTypes[i] != SharedHit) {
         ACTS_DEBUG("Good TSOS, copy hit");
         newMeasurementsPerTrack.push_back(measurement);
       } else if (cntIns >= m_cfg.maxShared) {

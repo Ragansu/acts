@@ -41,13 +41,11 @@ AmbiguityConfigJsonConverter::fromJson(const std::string& configFile) const {
     detectorConfig.hitsScoreWeight = value["hitsScoreWeight"];
     detectorConfig.holesScoreWeight = value["holesScoreWeight"];
     detectorConfig.outliersScoreWeight = value["outliersScoreWeight"];
-    detectorConfig.doubleHolesScoreWeight = value["doubleHolesScoreWeight"];
     detectorConfig.otherScoreWeight = value["otherScoreWeight"];
 
     detectorConfig.minHits = value["minHits"];
     detectorConfig.maxHits = value["maxHits"];
     detectorConfig.maxHoles = value["maxHoles"];
-    detectorConfig.maxDoubleHoles = value["maxDoubleHoles"];
     detectorConfig.maxOutliers = value["maxOutliers"];
     detectorConfig.maxSharedHits = value["maxSharedHits"];
 
