@@ -19,7 +19,7 @@
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 namespace AthenaAmbiguitySolver {
-    // std::fuctions defined, to be used in the optional cuts.
+// std::functions defined, to be used in the optional cuts.
 template <typename track_container_t, typename trajectory_t,
           template <typename> class holder_t>
 using OptinalFilter = std::function<bool(
@@ -46,7 +46,7 @@ class AthenaAmbiguityResolution {
  public:
   /// @brief Detector configuration struct : contains the configuration for each detector
   ///
-  /// The configuaration can be saved in a json file and loaded from there.
+  /// The configuration can be saved in a json file and loaded from there.
   ///
   struct DetectorConfig {
     int hitsScoreWeight;
