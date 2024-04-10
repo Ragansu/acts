@@ -225,7 +225,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
 
     if (m_cfg.useAmbiguityFunction) {
       // if the ambiguity function is used, the score is processed with a
-      // different algorythm than the simple score.
+      // different algorithm than the simple score.
       score = 1;
     } else {
       score = 100;
