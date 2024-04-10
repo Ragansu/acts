@@ -91,15 +91,14 @@ class AthenaAmbiguityResolution {
   struct Config {
     std::map<std::size_t, std::size_t> volumeMap = {{0, 0}};
     std::map<std::size_t, DetectorConfig> detectorMap;
-
-    std::string configFile = "configFile.json";
-
-    double minScore = 0;              // minimum score for any track
-    double minScoreSharedTracks = 0;  // minimum score for shared tracks
-
-    std::size_t maxSharedTracksPerMeasurement = 10;  // maximum number of shared
-                                                     // tracks per measurement
-    std::size_t maxShared = 5;  // maximum number of shared hit per track
+    // minimum score for any track
+    double minScore = 0;
+    // minimum score for shared tracks
+    double minScoreSharedTracks = 0;
+    // maximum number of shared tracks per measurement
+    std::size_t maxSharedTracksPerMeasurement = 10;
+    // maximum number of shared hit per track
+    std::size_t maxShared = 5;
 
     double pTMin = 0;
     double pTMax = 1e9;

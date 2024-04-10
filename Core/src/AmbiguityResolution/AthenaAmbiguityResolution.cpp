@@ -20,7 +20,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
         measurementsPerTrack) const {
   std::vector<std::size_t> cleanTracks;
 
-  ACTS_INFO("Cleaning tracks");
+  ACTS_VERBOSE("Cleaning tracks");
 
   if (trackScore.size() != measurementsPerTrack.size()) {
     throw std::invalid_argument(
@@ -100,7 +100,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       auto detector = detector_it->second;
 
       if (isoutliner) {
-        ACTS_INFO("Measurement is outlier on a fitter track, copy it over");
+        ACTS_VERBOSE("Measurement is outlier on a fitter track, copy it over");
         trackStateTypes[index] = Outlier;
         index++;
         continue;

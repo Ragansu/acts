@@ -61,7 +61,7 @@ AthenaAmbiguityResolution::computeInitialState(
   std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
       measurementsPerTrack;
 
-  ACTS_INFO("Starting to compute initial state");
+  ACTS_VERBOSE("Starting to compute initial state");
 
   for (const auto& track : tracks) {
     std::vector<std::tuple<std::size_t, std::size_t, bool>> measurements_tuples;
@@ -100,7 +100,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
 
   int iTrack = 0;
 
-  ACTS_INFO("Number of detectors: " << m_cfg.detectorMap.size());
+  ACTS_VERBOSE("Number of detectors: " << m_cfg.detectorMap.size());
 
   ACTS_INFO("Starting to score tracks");
 
@@ -118,7 +118,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       auto iTypeFlags = ts.typeFlags();
 
       auto volume_it = m_cfg.volumeMap.find(iVolume);
-      if (true) {
+      if (volume_it != m_cfg.volumeMap.end()) {
         auto detectorId = volume_it->second;
 
         if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
@@ -132,7 +132,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
           counterMap[detectorId].nOutliers++;
         }
       } else {
-        // ACTS_DEBUG("Detector not found at Volume: " << iVolume);
+        ACTS_WARNING("Detector not found at Volume: " << iVolume);
       }
     }
     counterMaps.push_back(counterMap);
@@ -261,11 +261,11 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
   }  // end of loop over tracks
 
   if (!m_cfg.useAmbiguityFunction) {
-    ACTS_INFO("Not using ambiguity function");
+    ACTS_VERBOSE("Not using ambiguity function");
     return trackScore;
   }
 
-  ACTS_INFO("Using ambiguity function");
+  ACTS_VERBOSE("Using ambiguity function");
 
   std::vector<double> trackScoreAmbig;
   iTrack = 0;

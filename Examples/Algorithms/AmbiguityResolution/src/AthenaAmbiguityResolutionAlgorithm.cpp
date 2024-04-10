@@ -29,7 +29,6 @@ Acts::AthenaAmbiguityResolution::Config transformConfig(
 
   std::cout << "Volume File is " << configFile << std::endl;
 
-  result.configFile = configFile;
   auto configPair = Acts::AmbiguityConfigJsonConverter().fromJson(configFile);
   result.volumeMap = configPair.first;
   result.detectorMap = configPair.second;
