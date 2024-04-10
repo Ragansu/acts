@@ -121,13 +121,13 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       if (volume_it != m_cfg.volumeMap.end()) {
         auto detectorId = volume_it->second;
 
-        if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-          counterMap[detectorId].nHoles++;
-        } else if (iTypeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+        if (iTypeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
           if (iTypeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
             counterMap[detectorId].nSharedHits++;
           }
           counterMap[detectorId].nHits++;
+        } else if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+          counterMap[detectorId].nHoles++;
         } else if (iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
           counterMap[detectorId].nOutliers++;
         }
@@ -224,6 +224,8 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
     // real scoring starts here
 
     if (m_cfg.useAmbiguityFunction) {
+      // if the ambiguity function is used, the score is processed with a
+      // different algorythm than the simple score.
       score = 1;
     } else {
       score = 100;
