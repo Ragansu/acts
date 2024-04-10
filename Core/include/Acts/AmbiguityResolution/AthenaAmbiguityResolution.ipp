@@ -214,7 +214,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       }
     }
 
-    if (score <= 0) {
+    if (score == 0) {
       iTrack++;
       trackScore.push_back(score);
       ACTS_DEBUG("Track: " << iTrack << " score : " << score);
