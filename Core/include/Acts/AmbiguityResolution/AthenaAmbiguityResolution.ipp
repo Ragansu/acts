@@ -144,7 +144,8 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       score = 0;
       iTrack++;
       trackScore.push_back(score);
-      ACTS_DEBUG("Track: " << iTrack << " score: " << score << " pT: "
+      ACTS_DEBUG("Track: " << iTrack
+                           << " has score = 0, due to pT cuts --- pT = "
                            << Acts::VectorHelpers::perp(track.momentum()));
       continue;
     }
@@ -155,7 +156,8 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       score = 0;
       iTrack++;
       trackScore.push_back(score);
-      ACTS_DEBUG("Track: " << iTrack << " score: " << score << " phi: "
+      ACTS_DEBUG("Track: " << iTrack
+                           << " has score = 0, due to phi cuts --- phi =  "
                            << Acts::VectorHelpers::phi(track.momentum()));
       continue;
     }
@@ -166,7 +168,8 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       score = 0;
       iTrack++;
       trackScore.push_back(score);
-      ACTS_DEBUG("Track: " << iTrack << " score: " << score << " eta: "
+      ACTS_DEBUG("Track: " << iTrack
+                           << " has score = 0, due to eta cuts --- eta =  "
                            << Acts::VectorHelpers::eta(track.momentum()));
       continue;
     }
@@ -176,7 +179,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       if (ambicut(track)) {
         score = 0;
         ACTS_DEBUG("Track: " << iTrack
-                             << " score from optional cuts: " << score);
+                             << " has score = 0, due to optional cuts.");
         break;
       }
     }
@@ -205,7 +208,8 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
           (counterMap[detectorId].nHoles > detector.maxHoles) ||
           (counterMap[detectorId].nOutliers > detector.maxOutliers)) {
         score = 0;
-        ACTS_DEBUG("Track: " << iTrack << " score from cuts: " << score);
+        ACTS_DEBUG("Track: " << iTrack
+                             << " has score = 0, due to detector cuts");
         break;
       }
     }
