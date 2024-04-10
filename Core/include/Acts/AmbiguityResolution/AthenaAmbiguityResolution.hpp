@@ -178,8 +178,10 @@ class AthenaAmbiguityResolution {
       Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts = {})
       const;
 
-  /// Remove tracks that are not good enough based on cuts
+  /// Remove hits that are not good enough for each track and removes tracks
+  /// that have a score below a certain threshold or not enough hits
   ///
+  /// @brief Remove tracks that are not good enough based on cuts
   /// @param trackScore is the score of each track
   /// @param counterMaps is the counter map for each track
   /// @param measurementsPerTrack is the list of measurements for each track
@@ -190,8 +192,9 @@ class AthenaAmbiguityResolution {
       std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
           measurementsPerTrack) const;
 
-  /// Remove tracks that are not good enough
+  /// Remove tracks that are not good enough based on cuts and weighted scores
   ///
+  /// @brief Remove tracks that are not good enough
   /// @param tracks is the input track container
   /// @param measurementsPerTrack is the list of measurements for each track
   /// @param optionalCuts is the optional cuts to be applied

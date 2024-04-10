@@ -295,8 +295,8 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       // detector.
       std::size_t iHits = counterMap[detectorId].nHits;
       if (detector.factorHits.size() < iHits) {
-        ACTS_WARNING("Detector " << detectorId
-                                 << " has not enough factors for hits");
+        ACTS_WARNING("For Detector " << detectorId
+                                 << " has not enough factorhits in the detector.factorHits vector");
         continue;
       }
       if (iHits > detector.maxHits) {
@@ -313,7 +313,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       std::size_t iHoles = counterMap[detectorId].nHoles;
       if (detector.factorHoles.size() < iHoles) {
         ACTS_WARNING("Detector " << detectorId
-                                 << " has not enough factors for holes");
+                                 << " has not enough factorholes in the detector.factorHoles vector");
         continue;
       }
       if (iHoles > detector.maxHoles) {
