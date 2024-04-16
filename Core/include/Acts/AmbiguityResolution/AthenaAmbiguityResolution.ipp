@@ -117,7 +117,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
         auto iVolume = ts.referenceSurface().geometryId().volume();
         auto volume_it = m_cfg.volumeMap.find(iVolume);
         if (volume_it == m_cfg.volumeMap.end()) {
-          ACTS_WARNING("Volume " << iVolume << "not found in the volume map");
+          ACTS_ERROR("Volume " << iVolume << "not found in the volume map");
           continue;
         }
         auto detectorId = volume_it->second;
@@ -129,7 +129,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
         auto iVolume = ts.referenceSurface().geometryId().volume();
         auto volume_it = m_cfg.volumeMap.find(iVolume);
         if (volume_it == m_cfg.volumeMap.end()) {
-          ACTS_WARNING("Volume " << iVolume << "not found in the volume map");
+          ACTS_ERROR("Volume " << iVolume << "not found in the volume map");
           continue;
         }
         auto detectorId = volume_it->second;
@@ -138,7 +138,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
         auto iVolume = ts.referenceSurface().geometryId().volume();
         auto volume_it = m_cfg.volumeMap.find(iVolume);
         if (volume_it == m_cfg.volumeMap.end()) {
-          ACTS_WARNING("Volume " << iVolume << "not found in the volume map");
+          ACTS_ERROR("Volume " << iVolume << "not found in the volume map");
           continue;
         }
         auto detectorId = volume_it->second;
