@@ -39,12 +39,17 @@ class AthenaAmbiguityResolutionAlgorithm final : public IAlgorithm {
         detectorMap;
     std::map<std::size_t, std::size_t> volumeMap;
 
-    int minScore = 0;
-    int minScoreSharedTracks = 0;
+    // minimum score for any track
+    double minScore = 0;
+    // minimum score for shared tracks
+    double minScoreSharedTracks = 0;
 
-    std::string configFile = "volumeMap.json";
+    // configuration file for the detector map
+    std::string configFile = "detectorMap.json";
 
+    // maximum number of shared tracks per measurement
     std::size_t maxSharedTracksPerMeasurement = 10;
+    // maximum number of shared hit per track
     std::size_t maxShared = 5;
 
     double pTMin = 0;
@@ -70,9 +75,6 @@ class AthenaAmbiguityResolutionAlgorithm final : public IAlgorithm {
   /// @param cxt is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final;
-
-  // std::map<unsigned int,Acts::AthenaAmbiguityResolution::DetectorConfig>
-  // readVolumeMap(std::string configFile) ;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
