@@ -116,6 +116,10 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       if (iTypeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
         auto iVolume = ts.referenceSurface().geometryId().volume();
         auto volume_it = m_cfg.volumeMap.find(iVolume);
+        if volume_it == m_cfg.volumeMap.end()) {
+            ACTS_WARNING("Volume " << iVolume << "not found in the volume map");
+            continue;
+          }
         auto detectorId = volume_it->second;
         if (iTypeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
           counterMap[detectorId].nSharedHits++;
@@ -124,11 +128,19 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       } else if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
         auto iVolume = ts.referenceSurface().geometryId().volume();
         auto volume_it = m_cfg.volumeMap.find(iVolume);
+        if volume_it == m_cfg.volumeMap.end()) {
+            ACTS_WARNING("Volume " << iVolume << "not found in the volume map");
+            continue;
+          }
         auto detectorId = volume_it->second;
         counterMap[detectorId].nHoles++;
       } else if (iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
         auto iVolume = ts.referenceSurface().geometryId().volume();
         auto volume_it = m_cfg.volumeMap.find(iVolume);
+        if volume_it == m_cfg.volumeMap.end()) {
+            ACTS_WARNING("Volume " << iVolume << "not found in the volume map");
+            continue;
+          }
         auto detectorId = volume_it->second;
         counterMap[detectorId].nOutliers++;
       }
