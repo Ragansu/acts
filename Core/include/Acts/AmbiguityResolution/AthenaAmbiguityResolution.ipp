@@ -111,28 +111,26 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
     // Loop over all the track states in a track for counting
     // hits/hole/outliers per detector.
     for (const auto& ts : track.trackStatesReversed()) {
-      auto iVolume = ts.referenceSurface().geometryId().volume();
-
-      ACTS_DEBUG("Volume: " << iVolume);
-
       auto iTypeFlags = ts.typeFlags();
 
-      auto volume_it = m_cfg.volumeMap.find(iVolume);
-      if (volume_it != m_cfg.volumeMap.end()) {
+      if (iTypeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+        auto iVolume = ts.referenceSurface().geometryId().volume();
+        auto volume_it = m_cfg.volumeMap.find(iVolume);
         auto detectorId = volume_it->second;
-
-        if (iTypeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-          if (iTypeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
-            counterMap[detectorId].nSharedHits++;
-          }
-          counterMap[detectorId].nHits++;
-        } else if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-          counterMap[detectorId].nHoles++;
-        } else if (iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
-          counterMap[detectorId].nOutliers++;
+        if (iTypeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
+          counterMap[detectorId].nSharedHits++;
         }
-      } else {
-        ACTS_WARNING("Detector not found at Volume: " << iVolume);
+        counterMap[detectorId].nHits++;
+      } else if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+        auto iVolume = ts.referenceSurface().geometryId().volume();
+        auto volume_it = m_cfg.volumeMap.find(iVolume);
+        auto detectorId = volume_it->second;
+        counterMap[detectorId].nHoles++;
+      } else if (iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+        auto iVolume = ts.referenceSurface().geometryId().volume();
+        auto volume_it = m_cfg.volumeMap.find(iVolume);
+        auto detectorId = volume_it->second;
+        counterMap[detectorId].nOutliers++;
       }
     }
     counterMaps.push_back(counterMap);
@@ -301,10 +299,9 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       // detector.
       std::size_t iHits = counterMap[detectorId].nHits;
       if (detector.factorHits.size() < iHits) {
-        ACTS_WARNING(
-            "Detector "
-            << detectorId
-            << " has not enough factorhits in the detector.factorHits vector");
+        ACTS_WARNING("Detector " << detectorId
+                                 << " has not enough factorhits in the "
+                                    "detector.factorHits vector");
         continue;
       }
       if (iHits > detector.maxHits) {
