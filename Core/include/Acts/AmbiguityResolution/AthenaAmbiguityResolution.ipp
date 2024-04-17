@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -111,28 +111,38 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
     // Loop over all the track states in a track for counting
     // hits/hole/outliers per detector.
     for (const auto& ts : track.trackStatesReversed()) {
-      auto iVolume = ts.referenceSurface().geometryId().volume();
-
-      ACTS_DEBUG("Volume: " << iVolume);
-
       auto iTypeFlags = ts.typeFlags();
 
-      auto volume_it = m_cfg.volumeMap.find(iVolume);
-      if (volume_it != m_cfg.volumeMap.end()) {
-        auto detectorId = volume_it->second;
-
-        if (iTypeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-          if (iTypeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
-            counterMap[detectorId].nSharedHits++;
-          }
-          counterMap[detectorId].nHits++;
-        } else if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-          counterMap[detectorId].nHoles++;
-        } else if (iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
-          counterMap[detectorId].nOutliers++;
+      if (iTypeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+        auto iVolume = ts.referenceSurface().geometryId().volume();
+        auto volume_it = m_cfg.volumeMap.find(iVolume);
+        if (volume_it == m_cfg.volumeMap.end()) {
+          ACTS_ERROR("Volume " << iVolume << "not found in the volume map");
+          continue;
         }
-      } else {
-        ACTS_WARNING("Detector not found at Volume: " << iVolume);
+        auto detectorId = volume_it->second;
+        if (iTypeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
+          counterMap[detectorId].nSharedHits++;
+        }
+        counterMap[detectorId].nHits++;
+      } else if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+        auto iVolume = ts.referenceSurface().geometryId().volume();
+        auto volume_it = m_cfg.volumeMap.find(iVolume);
+        if (volume_it == m_cfg.volumeMap.end()) {
+          ACTS_ERROR("Volume " << iVolume << "not found in the volume map");
+          continue;
+        }
+        auto detectorId = volume_it->second;
+        counterMap[detectorId].nHoles++;
+      } else if (iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+        auto iVolume = ts.referenceSurface().geometryId().volume();
+        auto volume_it = m_cfg.volumeMap.find(iVolume);
+        if (volume_it == m_cfg.volumeMap.end()) {
+          ACTS_ERROR("Volume " << iVolume << "not found in the volume map");
+          continue;
+        }
+        auto detectorId = volume_it->second;
+        counterMap[detectorId].nOutliers++;
       }
     }
     counterMaps.push_back(counterMap);
@@ -223,11 +233,9 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
 
     // real scoring starts here
 
-    if (m_cfg.useAmbiguityFunction) {
+    if (!m_cfg.useAmbiguityFunction) {
       // if the ambiguity function is used, the score is processed with a
       // different algorithm than the simple score.
-      score = 1;
-    } else {
       score = 100;
       // Adding the score for each detector.
       // detector score is determined by the number of hits/hole/outliers *
@@ -301,17 +309,16 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       // detector.
       std::size_t iHits = counterMap[detectorId].nHits;
       if (detector.factorHits.size() < iHits) {
-        ACTS_WARNING(
-            "Detector "
-            << detectorId
-            << " has not enough factorhits in the detector.factorHits vector");
+        ACTS_WARNING("Detector " << detectorId
+                                 << " has not enough factorhits in the "
+                                    "detector.factorHits vector");
         continue;
       }
       if (iHits > detector.maxHits) {
-        prob *= (detector.maxHits - iHits + 1);  // hits are good !
+        prob = prob * (detector.maxHits - iHits + 1);  // hits are good !
         iHits = detector.maxHits;
       }
-      prob *= detector.factorHits[iHits];
+      prob = prob * detector.factorHits[iHits];
       ACTS_DEBUG("Modifier for " << iHits
                                  << " hits: " << detector.factorHits[iHits]
                                  << "  New score now: " << prob);
@@ -329,7 +336,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
         prob /= (iHoles - detector.maxHoles + 1);  // holes are bad !
         iHoles = detector.maxHoles;
       }
-      prob *= detector.factorHoles[iHoles];
+      prob = prob * detector.factorHoles[iHoles];
       ACTS_DEBUG("Modifier for " << iHoles
                                  << " holes: " << detector.factorHoles[iHoles]
                                  << "  New score now: " << prob);
@@ -343,7 +350,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       double chi2 = track.chi2();
       int indf = track.nDoF();
       double fac = 1. / log10(10. + 10. * chi2 / indf);
-      prob *= fac;
+      prob = prob * fac;
       ACTS_DEBUG("Modifier for chi2 = " << chi2 << " and NDF = " << indf
                                         << " is : " << fac
                                         << "  New score now: " << prob)
