@@ -209,9 +209,10 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       ACTS_DEBUG("---> Found summary information");
       ACTS_DEBUG("---> Detector ID: " << detectorId);
       ACTS_DEBUG("---> Number of hits: " << trackFeaturesMap[detectorId].nHits);
-      ACTS_DEBUG("---> Number of holes: " << trackFeaturesMap[detectorId].nHoles);
       ACTS_DEBUG(
-          "---> Number of outliers: " << trackFeaturesMap[detectorId].nOutliers);
+          "---> Number of holes: " << trackFeaturesMap[detectorId].nHoles);
+      ACTS_DEBUG("---> Number of outliers: "
+                 << trackFeaturesMap[detectorId].nOutliers);
 
       if ((trackFeaturesMap[detectorId].nHits < detector.minHits) ||
           (trackFeaturesMap[detectorId].nHits > detector.maxHits) ||
@@ -245,10 +246,12 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
         auto detector_it = m_cfg.detectorMap.find(detectorId);
         auto detector = detector_it->second;
         score += trackFeaturesMap[detectorId].nHits * detector.hitsScoreWeight;
-        score += trackFeaturesMap[detectorId].nHoles * detector.holesScoreWeight;
         score +=
-            trackFeaturesMap[detectorId].nOutliers * detector.outliersScoreWeight;
-        score += trackFeaturesMap[detectorId].nSharedHits * detector.otherScoreWeight;
+            trackFeaturesMap[detectorId].nHoles * detector.holesScoreWeight;
+        score += trackFeaturesMap[detectorId].nOutliers *
+                 detector.outliersScoreWeight;
+        score += trackFeaturesMap[detectorId].nSharedHits *
+                 detector.otherScoreWeight;
       }
 
       // Adding scores based on optional weights
@@ -292,7 +295,8 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
       iTrack++;
       continue;
     }
-    auto trackFeaturesMap = trackFeaturesMaps[iTrack];  // get the trackFeatures map for the track
+    auto trackFeaturesMap =
+        trackFeaturesMaps[iTrack];  // get the trackFeatures map for the track
     double pT = Acts::VectorHelpers::perp(track.momentum());
     // start with larger score for tracks with higher pT.
     double prob = log10(pT * 1000) - 1.;
@@ -369,9 +373,9 @@ std::vector<int> Acts::AthenaAmbiguityResolution::solveAmbiguity(
     Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts) const {
   ACTS_INFO("Number of tracks before Ambiguty Resolution: " << tracks.size());
   std::vector<std::map<std::size_t, TrackFeatures>>
-      trackFeaturesMaps;  // vector of trackFeaturesMaps. where each trackFeaturesMap contains
-                    // the number of hits/hole/outliers for each detector in a
-                    // track.
+      trackFeaturesMaps;  // vector of trackFeaturesMaps. where each
+                          // trackFeaturesMap contains the number of
+                          // hits/hole/outliers for each detector in a track.
   std::vector<double> trackScore =
       simpleScore(tracks, trackFeaturesMaps, optionalCuts);
 

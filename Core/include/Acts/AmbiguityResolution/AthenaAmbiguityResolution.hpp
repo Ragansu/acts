@@ -79,7 +79,7 @@ class AthenaAmbiguityResolution {
 
   /// @brief  TrackFeatures struct : contains the features that are counted for each track.
   ///
-  /// The counter is used to compute the score of each track
+  /// The trackFeatures is used to compute the score of each track
   struct TrackFeatures {
     std::size_t nHits;
     std::size_t nHoles;
@@ -167,14 +167,14 @@ class AthenaAmbiguityResolution {
   /// Compute the score of each track.
   ///
   /// @param tracks is the input track container
-  /// @param counterMaps is the counter map from detector ID to counter
+  /// @param trackFeaturesMaps is the trackFeatures map from detector ID to trackFeatures
   /// @param optionalCuts is the user defined optional cuts to be applied.
   /// @return a vector of scores for each track
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
   std::vector<double> simpleScore(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      std::vector<std::map<std::size_t, TrackFeatures>>& counterMaps,
+      std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
       Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts = {})
       const;
 
@@ -183,12 +183,12 @@ class AthenaAmbiguityResolution {
   ///
   /// @brief Remove tracks that are not good enough based on cuts
   /// @param trackScore is the score of each track
-  /// @param counterMaps is the counter map for each track
+  /// @param trackFeaturesMaps is the trackFeatures map for each track
   /// @param measurementsPerTrack is the list of measurements for each track
   /// @return a vector of IDs of the tracks we want to keep
   std::vector<std::size_t> getCleanedOutTracks(
       std::vector<double> trackScore,
-      std::vector<std::map<std::size_t, TrackFeatures>>& counterMaps,
+      std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
       std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
           measurementsPerTrack) const;
 
