@@ -210,15 +210,17 @@ else:
             s,
             trackingGeometry,
             field,
-            preSelectParticles=ParticleSelectorConfig(
-                rho=(0.0, 24 * u.mm),
-                absZ=(0.0, 1.0 * u.m),
-                eta=(-3.0, 3.0),
-                pt=(150 * u.MeV, None),
-                removeNeutral=True,
-            )
-            if ttbar
-            else ParticleSelectorConfig(),
+            preSelectParticles=(
+                ParticleSelectorConfig(
+                    rho=(0.0, 24 * u.mm),
+                    absZ=(0.0, 1.0 * u.m),
+                    eta=(-3.0, 3.0),
+                    pt=(150 * u.MeV, None),
+                    removeNeutral=True,
+                )
+                if ttbar
+                else ParticleSelectorConfig()
+            ),
             enableInteractions=True,
             outputDirRoot=outputDir,
             # outputDirCsv=outputDir,
@@ -239,9 +241,11 @@ addSeeding(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
-    if ttbar
-    else TruthSeedRanges(),
+    (
+        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
+        if ttbar
+        else TruthSeedRanges()
+    ),
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
     # outputDirCsv=outputDir,
@@ -284,7 +288,7 @@ if ambiguity_MLSolver:
         onnxModelFile=os.path.dirname(__file__)
         + "/MLAmbiguityResolution/duplicateClassifier.onnx",
     )
-    
+
 elif athena_ambiguity_resolution:
     addAthenaAmbiguityResolution(
         s,
@@ -305,7 +309,7 @@ elif athena_ambiguity_resolution:
         AmbiVolumeFile=ambi_config,
         writeCovMat=True,
         # outputDirCsv=outputDir,
-    )    
+    )
 else:
     addAmbiguityResolution(
         s,
