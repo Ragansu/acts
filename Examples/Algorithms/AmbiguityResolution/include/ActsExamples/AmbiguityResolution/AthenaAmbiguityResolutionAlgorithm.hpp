@@ -81,7 +81,7 @@ class AthenaAmbiguityResolutionAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  Acts::AthenaAmbiguityResolution m_core;
+  Acts::AthenaAmbiguityResolution m_ambi;
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};

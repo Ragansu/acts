@@ -89,7 +89,7 @@ ActsExamples::AthenaAmbiguityResolutionAlgorithm::
         Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("AthenaAmbiguityResolutionAlgorithm", lvl),
       m_cfg(std::move(cfg)),
-      m_core(transformConfig(cfg, m_cfg.configFile), logger().clone()) {
+      m_ambi(transformConfig(cfg, m_cfg.configFile), logger().clone()) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");
   }
@@ -109,7 +109,7 @@ ActsExamples::AthenaAmbiguityResolutionAlgorithm::execute(
   std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
       measurementsPerTracks;
   measurementsPerTracks =
-      m_core.computeInitialState(tracks, &sourceLinkHash, &sourceLinkEquality);
+      m_ambi.computeInitialState(tracks, &sourceLinkHash, &sourceLinkEquality);
 
   Acts::AthenaAmbiguityResolution::Optional_cuts<
       Acts::ConstVectorTrackContainer, Acts::ConstVectorMultiTrajectory,
@@ -117,7 +117,7 @@ ActsExamples::AthenaAmbiguityResolutionAlgorithm::execute(
       optionalCuts;
   optionalCuts.cuts.push_back(DoubleHolesFilter);
   std::vector<int> goodTracks =
-      m_core.solveAmbiguity(tracks, measurementsPerTracks, optionalCuts);
+      m_ambi.solveAmbiguity(tracks, measurementsPerTracks, optionalCuts);
   // Prepare the output track collection from the IDs
   TrackContainer solvedTracks{std::make_shared<Acts::VectorTrackContainer>(),
                               std::make_shared<Acts::VectorMultiTrajectory>()};
