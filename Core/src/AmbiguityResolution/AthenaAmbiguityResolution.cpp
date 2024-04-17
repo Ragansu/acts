@@ -15,7 +15,7 @@
 
 std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     std::vector<double> trackScore,
-    std::vector<std::map<std::size_t, Counter>>& counterMaps,
+    std::vector<std::map<std::size_t, TrackFeatures>>& counterMaps,
     std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
         measurementsPerTrack) const {
   std::vector<std::size_t> cleanTracks;
@@ -198,33 +198,6 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       ACTS_VERBOSE("Track " << iTrack << " is accepted");
       continue;
     }
-  }
-
-  // From here on the code is only for debugging purposes and can be removed.
-  numberOfTracks = cleanTracks.size();
-
-  boost::container::flat_map<std::size_t,
-                             boost::container::flat_set<std::size_t>>
-      newTracksPerMeasurement;
-
-  for (std::size_t track_id = 0; track_id < numberOfTracks; ++track_id) {
-    for (auto iMeasurement : newMeasurements[track_id]) {
-      newTracksPerMeasurement[iMeasurement].insert(track_id);
-    }
-  }
-
-  for (std::size_t track_id = 0; track_id < numberOfTracks; ++track_id) {
-    std::size_t sharedMeasurementsPerTrack = 0;
-    for (auto iMeasurement : newMeasurements[track_id]) {
-      if (newTracksPerMeasurement[iMeasurement].size() > 1) {
-        ++sharedMeasurementsPerTrack;
-      }
-    }
-    ACTS_DEBUG("Track ID: " << cleanTracks[track_id]);
-    ACTS_DEBUG("Number of shared measurements: " << sharedMeasurementsPerTrack);
-    ACTS_DEBUG("Number of measurements: " << newMeasurements[track_id].size())
-    ACTS_DEBUG("Score of the track: " << trackScore[cleanTracks[track_id]]
-                                      << std::endl);
   }
 
   return cleanTracks;

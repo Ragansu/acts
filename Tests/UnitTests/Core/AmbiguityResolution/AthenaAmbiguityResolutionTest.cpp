@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_SUITE(AthenaAmbiguityResolutionTest)
 struct Fixture {
   AthenaAmbiguityResolution::Config config;
 
-  using Counter = AthenaAmbiguityResolution::Counter;
+  using TrackFeatures = AthenaAmbiguityResolution::TrackFeatures;
   using DetectorConfig = AthenaAmbiguityResolution::DetectorConfig;
 
   Fixture() {
@@ -107,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
     TrackSore.push_back(60 + 40 * i);
   }
 
-  std::vector<std::map<std::size_t, Counter>> CounterMaps = {
+  std::vector<std::map<std::size_t, TrackFeatures>> trackFeaturesMaps = {
       {{0, {0, 14, 0, 0}}, {1, {0, 0, 0, 0}}},
       {{0, {0, 15, 0, 0}}, {1, {0, 0, 0, 0}}},
       {{0, {0, 17, 0, 0}}, {1, {0, 0, 0, 0}}},
@@ -116,7 +116,7 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
 
   // Call the function under testBOOST_FIXTURE_TEST_CASE
   std::vector<std::size_t> cleanTracks =
-      tester.getCleanedOutTracks(TrackSore, CounterMaps, measurementsPerTrack);
+      tester.getCleanedOutTracks(TrackSore, trackFeaturesMaps, measurementsPerTrack);
 
   // Assert the expected results
   BOOST_CHECK_EQUAL(measurementsPerTrack.size(), 5);
