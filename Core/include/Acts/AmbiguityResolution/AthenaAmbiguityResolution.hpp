@@ -192,7 +192,7 @@ class AthenaAmbiguityResolution {
       std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
           measurementsPerTrack) const;
 
-  /// Remove tracks that are not good enough based on cuts and weighted scores.
+  /// Remove tracks that are bad based on cuts and weighted scores.
   ///
   /// @brief Remove tracks that are not good enough
   /// @param tracks is the input track container
