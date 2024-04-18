@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -299,7 +300,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
         trackFeaturesMaps[iTrack];  // get the trackFeatures map for the track
     double pT = Acts::VectorHelpers::perp(track.momentum());
     // start with larger score for tracks with higher pT.
-    double prob = log10(pT * 1000) - 1.;
+    double prob = log10(pT / UnitConstants::MeV) - 1.;
     // pT in GeV, hence 100 MeV is minimum and gets score = 1
     ACTS_DEBUG("Modifier for pT = " << pT << " GeV is : " << prob
                                     << "  New score now: " << prob);
