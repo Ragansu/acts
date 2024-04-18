@@ -71,7 +71,7 @@ AthenaAmbiguityResolution::computeInitialState(
       ACTS_DEBUG("Track state type check: ");
       if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
-
+        ACTS_DEBUG("Track state type is MeasurementFlag");
         const auto& geoID = ts.referenceSurface().geometryId();
 
         // assign a new measurement index if the source link was not seen yet
