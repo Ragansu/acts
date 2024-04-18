@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,7 +15,7 @@
 
 std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     std::vector<double> trackScore,
-    std::vector<std::map<std::size_t, Counter>>& counterMaps,
+    std::vector<std::map<std::size_t, TrackFeatures>>& counterMaps,
     std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
         measurementsPerTrack) const {
   std::vector<std::size_t> cleanTracks;
@@ -49,7 +49,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
 
   enum TrackStateTypes {
     // A measurement not yet used in any other track
-    UnusedHit = 1,
+    UnsharedHit = 1,
     // A measurement shared with another track
     SharedHit = 2,
     // A hit that needs to be removed from the track
@@ -108,7 +108,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       if (tracksPerMeasurement[iMeasurement].size() == 1) {
         ACTS_VERBOSE("Measurement is not shared, copy it over");
 
-        trackStateTypes[index] = UnusedHit;
+        trackStateTypes[index] = UnsharedHit;
 
         index++;
         continue;
@@ -132,7 +132,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
 
     std::vector<std::size_t> newMeasurementsPerTrack;
     std::size_t measurement = 0;
-    std::size_t cntIns = 0;
+    std::size_t nshared = 0;
 
     // Loop over all measurements of the track and process them according to the
     // trackStateTypes and other conditions.
@@ -147,9 +147,9 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
         ACTS_DEBUG("Good TSOS, copy hit");
         newMeasurementsPerTrack.push_back(measurement);
 
-        // a counter called cntIns is used to keep track of the number of shared
-        // hits accepted.
-      } else if (cntIns >= m_cfg.maxShared) {
+        // a counter called nshared is used to keep track of the number of
+        // shared hits accepted.
+      } else if (nshared >= m_cfg.maxShared) {
         ACTS_DEBUG("Too many shared hit, drop it");
       }
       // If the track is shared, the hit is only accepted if the track has score
@@ -162,7 +162,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
           ACTS_DEBUG("Accepted hit shared with "
                      << tracksPerMeasurement[measurement].size() << " tracks");
           newMeasurementsPerTrack.push_back(measurement);
-          cntIns++;
+          nshared++;
         } else {
           ACTS_DEBUG("Rejected hit shared with "
                      << tracksPerMeasurement[measurement].size() << " tracks");
@@ -198,33 +198,6 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       ACTS_VERBOSE("Track " << iTrack << " is accepted");
       continue;
     }
-  }
-
-  // From here on the code is only for debugging purposes and can be removed.
-  numberOfTracks = cleanTracks.size();
-
-  boost::container::flat_map<std::size_t,
-                             boost::container::flat_set<std::size_t>>
-      newTracksPerMeasurement;
-
-  for (std::size_t track_id = 0; track_id < numberOfTracks; ++track_id) {
-    for (auto iMeasurement : newMeasurements[track_id]) {
-      newTracksPerMeasurement[iMeasurement].insert(track_id);
-    }
-  }
-
-  for (std::size_t track_id = 0; track_id < numberOfTracks; ++track_id) {
-    std::size_t sharedMeasurementsPerTrack = 0;
-    for (auto iMeasurement : newMeasurements[track_id]) {
-      if (newTracksPerMeasurement[iMeasurement].size() > 1) {
-        ++sharedMeasurementsPerTrack;
-      }
-    }
-    ACTS_DEBUG("Track ID: " << cleanTracks[track_id]);
-    ACTS_DEBUG("Number of shared measurements: " << sharedMeasurementsPerTrack);
-    ACTS_DEBUG("Number of measurements: " << newMeasurements[track_id].size())
-    ACTS_DEBUG("Score of the track: " << trackScore[cleanTracks[track_id]]
-                                      << std::endl);
   }
 
   return cleanTracks;

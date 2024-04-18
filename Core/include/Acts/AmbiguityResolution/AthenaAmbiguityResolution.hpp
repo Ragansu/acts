@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -77,17 +77,17 @@ class AthenaAmbiguityResolution {
                       // applied only if useAmbiguityFunction is true
   };
 
-  /// @brief  Counter struct : contains the features that are counted for each track
+  /// @brief  TrackFeatures struct : contains the features that are counted for each track.
   ///
-  /// The counter is used to compute the score of each track
-  struct Counter {
+  /// The trackFeatures is used to compute the score of each track
+  struct TrackFeatures {
     std::size_t nHits;
     std::size_t nHoles;
     std::size_t nOutliers;
     std::size_t nSharedHits;
   };
 
-  /// @brief Configuration struct : contains the configuration for the ambiguity resolution
+  /// @brief Configuration struct : contains the configuration for the ambiguity resolution.
   struct Config {
     std::map<std::size_t, std::size_t> volumeMap = {{0, 0}};
     std::map<std::size_t, DetectorConfig> detectorMap;
@@ -114,7 +114,7 @@ class AthenaAmbiguityResolution {
                 // computed based on a different function.
   };
 
-  /// @brief Optional_cuts struct : contains the optional cuts to be applied
+  /// @brief Optional_cuts struct : contains the optional cuts to be applied.
   ///
   /// The optional cuts,weights and score are used to remove tracks that are not
   /// good enough, based on some criteria. Users are free to add their own cuts
@@ -138,7 +138,7 @@ class AthenaAmbiguityResolution {
                                                  Logging::INFO))
       : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
-  /// Compute the initial state of the tracks
+  /// Compute the initial state of the tracks.
   ///
   /// @param tracks is the input track container
   /// @param sourceLinkHash is the  source links
@@ -153,7 +153,7 @@ class AthenaAmbiguityResolution {
       source_link_hash_t&& sourceLinkHash,
       source_link_equality_t&& sourceLinkEquality) const;
 
-  /// Prepare the output track container to be written
+  /// Prepare the output track container to be written.
   ///
   /// @param tracks is the input track container
   /// @param goodTracks is list of the IDs of all the tracks we want to keep
@@ -164,35 +164,35 @@ class AthenaAmbiguityResolution {
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       std::vector<std::size_t>& goodTracks) const;
 
-  /// Compute the score of each track
+  /// Compute the score of each track.
   ///
   /// @param tracks is the input track container
-  /// @param counterMaps is the counter map from detector ID to counter
+  /// @param trackFeaturesMaps is the trackFeatures map from detector ID to trackFeatures
   /// @param optionalCuts is the user defined optional cuts to be applied.
   /// @return a vector of scores for each track
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
   std::vector<double> simpleScore(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      std::vector<std::map<std::size_t, Counter>>& counterMaps,
+      std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
       Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts = {})
       const;
 
   /// Remove hits that are not good enough for each track and removes tracks
-  /// that have a score below a certain threshold or not enough hits
+  /// that have a score below a certain threshold or not enough hits.
   ///
   /// @brief Remove tracks that are not good enough based on cuts
   /// @param trackScore is the score of each track
-  /// @param counterMaps is the counter map for each track
+  /// @param trackFeaturesMaps is the trackFeatures map for each track
   /// @param measurementsPerTrack is the list of measurements for each track
   /// @return a vector of IDs of the tracks we want to keep
   std::vector<std::size_t> getCleanedOutTracks(
       std::vector<double> trackScore,
-      std::vector<std::map<std::size_t, Counter>>& counterMaps,
+      std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
       std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
           measurementsPerTrack) const;
 
-  /// Remove tracks that are not good enough based on cuts and weighted scores
+  /// Remove tracks that are bad based on cuts and weighted scores.
   ///
   /// @brief Remove tracks that are not good enough
   /// @param tracks is the input track container
