@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -35,7 +35,7 @@ using OptionalScoreModifier = std::function<void(
 
 namespace Acts {
 
-/// Generic implementation of the athena ambiguity resolution.
+/// Generic implementation of the score based ambiguity resolution.
 /// The alhorithm is based on the following steps:
 /// 1) Compute the initial state of the tracks
 /// 2) Compute the score of each track
@@ -122,20 +122,20 @@ class ScoreBasedAmbiguityResolution {
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
   struct Optional_cuts {
-    std::vector<ScoreBasedAmbiguitySolver::OptionalFilter<track_container_t, traj_t,
-                                                      holder_t>>
+    std::vector<ScoreBasedAmbiguitySolver::OptionalFilter<track_container_t,
+                                                          traj_t, holder_t>>
         cuts = {};
-    std::vector<ScoreBasedAmbiguitySolver::OptionalScoreModifier<track_container_t,
-                                                             traj_t, holder_t>>
+    std::vector<ScoreBasedAmbiguitySolver::OptionalScoreModifier<
+        track_container_t, traj_t, holder_t>>
         weights = {};
-    std::vector<ScoreBasedAmbiguitySolver::OptionalScoreModifier<track_container_t,
-                                                             traj_t, holder_t>>
+    std::vector<ScoreBasedAmbiguitySolver::OptionalScoreModifier<
+        track_container_t, traj_t, holder_t>>
         ambiscores = {};  // applied only if useAmbiguityFunction is true
   };
-  ScoreBasedAmbiguityResolution(const Config& cfg,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("ScoreBasedAmbiguityResolution",
-                                                 Logging::INFO))
+  ScoreBasedAmbiguityResolution(
+      const Config& cfg,
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("ScoreBasedAmbiguityResolution", Logging::INFO))
       : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
   /// Compute the initial state of the tracks.
@@ -152,17 +152,6 @@ class ScoreBasedAmbiguityResolution {
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       source_link_hash_t&& sourceLinkHash,
       source_link_equality_t&& sourceLinkEquality) const;
-
-  /// Prepare the output track container to be written.
-  ///
-  /// @param tracks is the input track container
-  /// @param goodTracks is list of the IDs of all the tracks we want to keep
-  /// @return the output track container
-  template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t>
-  const TrackContainer<track_container_t, traj_t, holder_t> prepareOutputTrack(
-      const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      std::vector<std::size_t>& goodTracks) const;
 
   /// Compute the score of each track.
   ///

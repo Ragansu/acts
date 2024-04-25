@@ -19,34 +19,6 @@
 namespace Acts {
 
 template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t>
-const TrackContainer<track_container_t, traj_t, holder_t>
-Acts::ScoreBasedAmbiguityResolution::prepareOutputTrack(
-    const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    std::vector<std::size_t>& goodTracks) const {
-  auto trackStateContainer = tracks.trackStateContainerHolder();
-  auto trackContainer = std::make_shared<VectorTrackContainer>();
-  trackContainer->reserve(goodTracks.size());
-  // Temporary empty track state container: we don't change the original one,
-  // but we need one for filtering
-  auto tempTrackStateContainer = std::make_shared<VectorMultiTrajectory>();
-  TrackContainer solvedTracks{trackContainer, tempTrackStateContainer};
-  solvedTracks.ensureDynamicColumns(tracks);
-
-  for (auto&& iTrack : goodTracks) {
-    auto destProxy = solvedTracks.getTrack(solvedTracks.addTrack());
-    auto srcProxy = tracks.getTrack(iTrack);
-    destProxy.copyFrom(srcProxy, false);
-    destProxy.tipIndex() = srcProxy.tipIndex();
-  }
-
-  const TrackContainer<track_container_t, traj_t, holder_t> outputTracks{
-      std::make_shared<VectorTrackContainer>(std::move(*trackContainer)),
-      trackStateContainer};
-  return outputTracks;
-}
-
-template <typename track_container_t, typename traj_t,
           template <typename> class holder_t, typename source_link_hash_t,
           typename source_link_equality_t>
 std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>

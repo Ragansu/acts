@@ -1750,13 +1750,13 @@ def addScoreBasedAmbiguityResolution(
 ) -> None:
     from acts.examples import ScoreBasedAmbiguityResolutionAlgorithm
 
-    customLogLevel = acts.examples.defaultLogging(s, acts.logging.VERBOSE)
+    customLogLevel = acts.examples.defaultLogging(s, acts.logging.INFO)
 
-    algAthena = ScoreBasedAmbiguityResolutionAlgorithm(
+    algScoreBased = ScoreBasedAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=tracks,
         configFile=AmbiVolumeFile,
-        outputTracks="ambiTracksAthena",
+        outputTracks="ambiTracksScoreBased",
         **acts.examples.defaultKWArgs(
             minScore=config.minScore,
             minScoreSharedTracks=config.minScoreSharedTracks,
@@ -1769,13 +1769,13 @@ def addScoreBasedAmbiguityResolution(
             useAmbiguityFunction=config.useAmbiguityFunction,
         ),
     )
-    s.addAlgorithm(algAthena)
-    s.addWhiteboardAlias("tracks", algAthena.config.outputTracks)
+    s.addAlgorithm(algScoreBased)
+    s.addWhiteboardAlias("tracks", algScoreBased.config.outputTracks)
 
     addTrackWriters(
         s,
-        name="ambi_athena",
-        tracks=algAthena.config.outputTracks,
+        name="ambi_scorebased",
+        tracks=algScoreBased.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
