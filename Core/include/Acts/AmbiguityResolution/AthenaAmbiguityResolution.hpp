@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -22,11 +23,11 @@ namespace AthenaAmbiguitySolver {
 // std::functions defined, to be used in the optional cuts.
 template <typename track_container_t, typename trajectory_t,
           template <typename> class holder_t>
-using OptinalFilter = std::function<bool(
+using OptionalFilter = std::function<bool(
     const Acts::TrackProxy<track_container_t, trajectory_t, holder_t, true>&)>;
 template <typename track_container_t, typename trajectory_t,
           template <typename> class holder_t>
-using OptinalScoreModifier = std::function<void(
+using OptionalScoreModifier = std::function<void(
     const Acts::TrackProxy<track_container_t, trajectory_t, holder_t, true>&,
     double&)>;
 
@@ -34,14 +35,15 @@ using OptinalScoreModifier = std::function<void(
 
 namespace Acts {
 
-/// Generic implementation of the athena ambiguity resolution
+/// Generic implementation of the athena ambiguity resolution.
 /// The alhorithm is based on the following steps:
 /// 1) Compute the initial state of the tracks
 /// 2) Compute the score of each track
 /// 3) Removes hits that are not good enough for each track
 /// 4) Remove tracks that have a score below a certain threshold or not have
-/// enough hits 5) Remove tracks that are not good enough based on cuts Contains
-/// method for data preparations
+/// enough hits
+/// 5) Remove tracks that are not good enough based on cuts Contains method for
+/// data preparations
 class AthenaAmbiguityResolution {
  public:
   /// @brief Detector configuration struct : contains the configuration for each detector
@@ -49,10 +51,10 @@ class AthenaAmbiguityResolution {
   /// The configuration can be saved in a json file and loaded from there.
   ///
   struct DetectorConfig {
-    int hitsScoreWeight;
-    int holesScoreWeight;
-    int outliersScoreWeight;
-    int otherScoreWeight;
+    int hitsScoreWeight = 0;
+    int holesScoreWeight = 0;
+    int outliersScoreWeight = 0;
+    int otherScoreWeight = 0;
 
     std::size_t minHits;
     std::size_t maxHits;
@@ -60,58 +62,56 @@ class AthenaAmbiguityResolution {
     std::size_t maxOutliers;
     std::size_t maxSharedHits;
 
-    bool sharedHitsFlag;  // if true, the shared hits are considered as bad hits
-                          // for this detector
+    /// if true, the shared hits are considered as bad hits for this detector
+    bool sharedHitsFlag;
 
     std::size_t detectorId;
 
-    std::vector<double>
-        factorHits;  // a list of values from  0 to 1, the higher number of
-                     // hits, higher value in the list is multiplied to
-                     // ambuiguity score
-                     // applied only if useAmbiguityFunction is true
-    std::vector<double>
-        factorHoles;  // a list of values from  0 to 1, the higher number of
-                      // holes, lower value in the list is multiplied to
-                      // ambuiguity score
-                      // applied only if useAmbiguityFunction is true
+    /// a list of values from  0 to 1, the higher number of hits, higher value
+    /// in the list is multiplied to ambuiguity score applied only if
+    /// useAmbiguityFunction is true
+    std::vector<double> factorHits;
+
+    /// a list of values from  0 to 1, the higher number of holes, lower value
+    /// in the list is multiplied to ambuiguity score applied only if
+    /// useAmbiguityFunction is true
+    std::vector<double> factorHoles;
   };
 
   /// @brief  TrackFeatures struct : contains the features that are counted for each track.
   ///
   /// The trackFeatures is used to compute the score of each track
   struct TrackFeatures {
-    std::size_t nHits;
-    std::size_t nHoles;
-    std::size_t nOutliers;
-    std::size_t nSharedHits;
+    std::size_t nHits = 0;
+    std::size_t nHoles = 0;
+    std::size_t nOutliers = 0;
+    std::size_t nSharedHits = 0;
   };
 
   /// @brief Configuration struct : contains the configuration for the ambiguity resolution.
   struct Config {
     std::map<std::size_t, std::size_t> volumeMap = {{0, 0}};
     std::map<std::size_t, DetectorConfig> detectorMap;
-    // minimum score for any track
+    /// minimum score for any track
     double minScore = 0;
-    // minimum score for shared tracks
+    /// minimum score for shared tracks
     double minScoreSharedTracks = 0;
-    // maximum number of shared tracks per measurement
+    /// maximum number of shared tracks per measurement
     std::size_t maxSharedTracksPerMeasurement = 10;
-    // maximum number of shared hit per track
+    /// maximum number of shared hit per track
     std::size_t maxShared = 5;
 
-    double pTMin = 0;
-    double pTMax = 1e9;
+    double pTMin = 0 * UnitConstants::GeV;
+    double pTMax = 1e5 * UnitConstants::GeV;
 
-    double phiMin = -M_PI;
-    double phiMax = M_PI;
+    double phiMin = -M_PI * UnitConstants::rad;
+    double phiMax = M_PI * UnitConstants::rad;
 
     double etaMin = -5;
     double etaMax = 5;
 
-    bool useAmbiguityFunction =
-        false;  // if true, the ambiguity score is
-                // computed based on a different function.
+    // if true, the ambiguity score is computed based on a different function.
+    bool useAmbiguityFunction = false;
   };
 
   /// @brief Optional_cuts struct : contains the optional cuts to be applied.
@@ -122,14 +122,14 @@ class AthenaAmbiguityResolution {
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
   struct Optional_cuts {
-    std::vector<AthenaAmbiguitySolver::OptinalFilter<track_container_t, traj_t,
-                                                     holder_t>>
+    std::vector<AthenaAmbiguitySolver::OptionalFilter<track_container_t, traj_t,
+                                                      holder_t>>
         cuts = {};
-    std::vector<AthenaAmbiguitySolver::OptinalScoreModifier<track_container_t,
-                                                            traj_t, holder_t>>
+    std::vector<AthenaAmbiguitySolver::OptionalScoreModifier<track_container_t,
+                                                             traj_t, holder_t>>
         weights = {};
-    std::vector<AthenaAmbiguitySolver::OptinalScoreModifier<track_container_t,
-                                                            traj_t, holder_t>>
+    std::vector<AthenaAmbiguitySolver::OptionalScoreModifier<track_container_t,
+                                                             traj_t, holder_t>>
         ambiscores = {};  // applied only if useAmbiguityFunction is true
   };
   AthenaAmbiguityResolution(const Config& cfg,
