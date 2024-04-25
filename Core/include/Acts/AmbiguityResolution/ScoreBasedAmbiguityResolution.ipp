@@ -353,7 +353,7 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   std::vector<double> trackScore =
       simpleScore(tracks, trackFeaturesMaps, optionalCuts);
 
-  std::vector<std::size_t> cleanTracks =
+  std::vector<bool> cleanTracks =
       getCleanedOutTracks(trackScore, trackFeaturesMaps, measurementsPerTrack);
 
   ACTS_VERBOSE("Number of clean tracks: " << cleanTracks.size());
@@ -362,8 +362,7 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   std::vector<int> goodTracks;
   std::size_t iTrack = 0;
   for (const auto& track : tracks) {
-    if (std::find(cleanTracks.begin(), cleanTracks.end(), iTrack) !=
-        cleanTracks.end()) {
+    if (cleanTracks[iTrack]) {
       if (trackScore[iTrack] >= m_cfg.minScore) {
         goodTracks.push_back(track.index());
       }

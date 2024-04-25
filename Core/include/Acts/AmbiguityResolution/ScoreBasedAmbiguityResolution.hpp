@@ -175,7 +175,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param trackFeaturesMaps is the trackFeatures map for each track
   /// @param measurementsPerTrack is the list of measurements for each track
   /// @return a vector of IDs of the tracks we want to keep
-  std::vector<std::size_t> getCleanedOutTracks(
+  std::vector<bool> getCleanedOutTracks(
       std::vector<double> trackScore,
       std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
       std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>

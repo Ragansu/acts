@@ -13,12 +13,12 @@
 
 #include <stdexcept>
 
-std::vector<std::size_t> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
+std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     std::vector<double> trackScore,
     std::vector<std::map<std::size_t, TrackFeatures>>& counterMaps,
     std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
         measurementsPerTrack) const {
-  std::vector<std::size_t> cleanTracks;
+  std::vector<bool> cleanTracks(measurementsPerTrack.size(), false);
 
   ACTS_VERBOSE("Cleaning tracks");
 
@@ -193,7 +193,7 @@ std::vector<std::size_t> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTrack
     }
 
     if (TrkCouldBeAccepted) {
-      cleanTracks.push_back(iTrack);
+      cleanTracks[iTrack] = true;
       newMeasurements.push_back(newMeasurementsPerTrack);
       ACTS_VERBOSE("Track " << iTrack << " is accepted");
       continue;
