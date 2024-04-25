@@ -29,8 +29,8 @@ from acts.examples.reconstruction import (
     AmbiguityResolutionConfig,
     addAmbiguityResolutionML,
     AmbiguityResolutionMLConfig,
-    addAthenaAmbiguityResolution,
-    AthenaAmbiguityResolutionConfig,
+    addScoreBasedAmbiguityResolution,
+    ScoreBasedAmbiguityResolutionConfig,
     addVertexFitting,
     VertexFinder,
     addSeedFilterML,
@@ -308,9 +308,9 @@ if ambiguity_MLSolver:
     )
 
 elif athena_ambiguity_resolution:
-    addAthenaAmbiguityResolution(
+    addScoreBasedAmbiguityResolution(
         s,
-        AthenaAmbiguityResolutionConfig(
+        ScoreBasedAmbiguityResolutionConfig(
             minScore=0,
             minScoreSharedTracks=1,
             maxShared=2,

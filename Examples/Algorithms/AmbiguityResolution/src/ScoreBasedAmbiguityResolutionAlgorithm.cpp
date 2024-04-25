@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/AmbiguityResolution/AthenaAmbiguityResolutionAlgorithm.hpp"
+#include "ActsExamples/AmbiguityResolution/ScoreBasedAmbiguityResolutionAlgorithm.hpp"
 
-#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Plugins/Json/AmbiguityConfigJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -22,10 +22,10 @@
 
 namespace {
 
-Acts::AthenaAmbiguityResolution::Config transformConfig(
-    const ActsExamples::AthenaAmbiguityResolutionAlgorithm::Config& cfg,
+Acts::ScoreBasedAmbiguityResolution::Config transformConfig(
+    const ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::Config& cfg,
     std::string configFile) {
-  Acts::AthenaAmbiguityResolution::Config result;
+  Acts::ScoreBasedAmbiguityResolution::Config result;
 
   std::cout << "Volume File is " << configFile << std::endl;
 
@@ -83,11 +83,11 @@ bool DoubleHolesFilter(const Acts::TrackProxy<Acts::ConstVectorTrackContainer,
 }
 }  // namespace
 
-ActsExamples::AthenaAmbiguityResolutionAlgorithm::
-    AthenaAmbiguityResolutionAlgorithm(
-        ActsExamples::AthenaAmbiguityResolutionAlgorithm::Config cfg,
+ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::
+    ScoreBasedAmbiguityResolutionAlgorithm(
+        ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::Config cfg,
         Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("AthenaAmbiguityResolutionAlgorithm", lvl),
+    : ActsExamples::IAlgorithm("ScoreBasedAmbiguityResolutionAlgorithm", lvl),
       m_cfg(std::move(cfg)),
       m_ambi(transformConfig(cfg, m_cfg.configFile), logger().clone()) {
   if (m_cfg.inputTracks.empty()) {
@@ -101,7 +101,7 @@ ActsExamples::AthenaAmbiguityResolutionAlgorithm::
 }
 
 ActsExamples::ProcessCode
-ActsExamples::AthenaAmbiguityResolutionAlgorithm::execute(
+ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   const auto& tracks = m_inputTracks(ctx);  // Read input data
   ACTS_VERBOSE("Number of input tracks: " << tracks.size());
@@ -111,7 +111,7 @@ ActsExamples::AthenaAmbiguityResolutionAlgorithm::execute(
   measurementsPerTracks =
       m_ambi.computeInitialState(tracks, &sourceLinkHash, &sourceLinkEquality);
 
-  Acts::AthenaAmbiguityResolution::Optional_cuts<
+  Acts::ScoreBasedAmbiguityResolution::Optional_cuts<
       Acts::ConstVectorTrackContainer, Acts::ConstVectorMultiTrajectory,
       std::shared_ptr>
       optionalCuts;

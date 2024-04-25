@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -21,7 +21,7 @@ namespace Acts {
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t>
 const TrackContainer<track_container_t, traj_t, holder_t>
-Acts::AthenaAmbiguityResolution::prepareOutputTrack(
+Acts::ScoreBasedAmbiguityResolution::prepareOutputTrack(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     std::vector<std::size_t>& goodTracks) const {
   auto trackStateContainer = tracks.trackStateContainerHolder();
@@ -50,7 +50,7 @@ template <typename track_container_t, typename traj_t,
           template <typename> class holder_t, typename source_link_hash_t,
           typename source_link_equality_t>
 std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-AthenaAmbiguityResolution::computeInitialState(
+ScoreBasedAmbiguityResolution::computeInitialState(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     source_link_hash_t&& sourceLinkHash,
     source_link_equality_t&& sourceLinkEquality) const {
@@ -94,7 +94,7 @@ AthenaAmbiguityResolution::computeInitialState(
 
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t>
-std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
+std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
     Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts) const {
@@ -368,7 +368,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
 
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t>
-std::vector<int> Acts::AthenaAmbiguityResolution::solveAmbiguity(
+std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
         measurementsPerTrack,

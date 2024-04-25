@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
@@ -31,14 +31,14 @@ namespace Acts {
 
 namespace Test {
 
-BOOST_AUTO_TEST_SUITE(AthenaAmbiguityResolutionTest)
+BOOST_AUTO_TEST_SUITE(ScoreBasedAmbiguityResolutionTest)
 
-// Test fixture for AthenaAmbiguityResolution
+// Test fixture for ScoreBasedAmbiguityResolution
 struct Fixture {
-  AthenaAmbiguityResolution::Config config;
+  ScoreBasedAmbiguityResolution::Config config;
 
-  using TrackFeatures = AthenaAmbiguityResolution::TrackFeatures;
-  using DetectorConfig = AthenaAmbiguityResolution::DetectorConfig;
+  using TrackFeatures = ScoreBasedAmbiguityResolution::TrackFeatures;
+  using DetectorConfig = ScoreBasedAmbiguityResolution::DetectorConfig;
 
   Fixture() {
     // Set up any resources used by the tests
@@ -95,8 +95,8 @@ createSampleInput() {
 
 BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
   Fixture fixture;
-  // Create an instance of AthenaAmbiguityResolution
-  AthenaAmbiguityResolution tester(fixture.config);
+  // Create an instance of ScoreBasedAmbiguityResolution
+  ScoreBasedAmbiguityResolution tester(fixture.config);
 
   // Create sample input
   std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>

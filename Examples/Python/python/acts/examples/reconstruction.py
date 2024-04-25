@@ -151,8 +151,8 @@ AmbiguityResolutionConfig = namedtuple(
     defaults=[None] * 3,
 )
 
-AthenaAmbiguityResolutionConfig = namedtuple(
-    "AthenaAmbiguityResolutionConfig",
+ScoreBasedAmbiguityResolutionConfig = namedtuple(
+    "ScoreBasedAmbiguityResolutionConfig",
     [
         "minScore",
         "minScoreSharedTracks",
@@ -1735,11 +1735,11 @@ def addAmbiguityResolution(
 
 
 @acts.examples.NamedTypeArgs(
-    config=AthenaAmbiguityResolutionConfig,
+    config=ScoreBasedAmbiguityResolutionConfig,
 )
-def addAthenaAmbiguityResolution(
+def addScoreBasedAmbiguityResolution(
     s,
-    config: AthenaAmbiguityResolutionConfig = AthenaAmbiguityResolutionConfig(),
+    config: ScoreBasedAmbiguityResolutionConfig = ScoreBasedAmbiguityResolutionConfig(),
     tracks: str = "tracks",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -1748,11 +1748,11 @@ def addAthenaAmbiguityResolution(
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
 ) -> None:
-    from acts.examples import AthenaAmbiguityResolutionAlgorithm
+    from acts.examples import ScoreBasedAmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, acts.logging.VERBOSE)
 
-    algAthena = AthenaAmbiguityResolutionAlgorithm(
+    algAthena = ScoreBasedAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=tracks,
         configFile=AmbiVolumeFile,

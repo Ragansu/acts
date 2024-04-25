@@ -19,7 +19,7 @@
 
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
-namespace AthenaAmbiguitySolver {
+namespace ScoreBasedAmbiguitySolver {
 // std::functions defined, to be used in the optional cuts.
 template <typename track_container_t, typename trajectory_t,
           template <typename> class holder_t>
@@ -31,7 +31,7 @@ using OptionalScoreModifier = std::function<void(
     const Acts::TrackProxy<track_container_t, trajectory_t, holder_t, true>&,
     double&)>;
 
-}  // namespace AthenaAmbiguitySolver
+}  // namespace ScoreBasedAmbiguitySolver
 
 namespace Acts {
 
@@ -44,7 +44,7 @@ namespace Acts {
 /// enough hits
 /// 5) Remove tracks that are not good enough based on cuts Contains method for
 /// data preparations
-class AthenaAmbiguityResolution {
+class ScoreBasedAmbiguityResolution {
  public:
   /// @brief Detector configuration struct : contains the configuration for each detector
   ///
@@ -122,19 +122,19 @@ class AthenaAmbiguityResolution {
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
   struct Optional_cuts {
-    std::vector<AthenaAmbiguitySolver::OptionalFilter<track_container_t, traj_t,
+    std::vector<ScoreBasedAmbiguitySolver::OptionalFilter<track_container_t, traj_t,
                                                       holder_t>>
         cuts = {};
-    std::vector<AthenaAmbiguitySolver::OptionalScoreModifier<track_container_t,
+    std::vector<ScoreBasedAmbiguitySolver::OptionalScoreModifier<track_container_t,
                                                              traj_t, holder_t>>
         weights = {};
-    std::vector<AthenaAmbiguitySolver::OptionalScoreModifier<track_container_t,
+    std::vector<ScoreBasedAmbiguitySolver::OptionalScoreModifier<track_container_t,
                                                              traj_t, holder_t>>
         ambiscores = {};  // applied only if useAmbiguityFunction is true
   };
-  AthenaAmbiguityResolution(const Config& cfg,
+  ScoreBasedAmbiguityResolution(const Config& cfg,
                             std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("AthenaAmbiguityResolution",
+                                getDefaultLogger("ScoreBasedAmbiguityResolution",
                                                  Logging::INFO))
       : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
@@ -220,4 +220,4 @@ class AthenaAmbiguityResolution {
 
 }  // namespace Acts
 
-#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.ipp"
+#include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.ipp"

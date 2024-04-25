@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 
 #include <stdexcept>
 
-std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
+std::vector<std::size_t> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     std::vector<double> trackScore,
     std::vector<std::map<std::size_t, TrackFeatures>>& counterMaps,
     std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
