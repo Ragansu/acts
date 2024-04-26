@@ -123,15 +123,18 @@ class ScoreBasedAmbiguityResolution {
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
   struct Optional_cuts {
-    std::vector<ScoreBasedAmbiguitySolver::OptionalFilter<track_container_t,
-                                                          traj_t, holder_t>>
-        cuts = {};
-    std::vector<ScoreBasedAmbiguitySolver::OptionalScoreModifier<
-        track_container_t, traj_t, holder_t>>
-        weights = {};
-    std::vector<ScoreBasedAmbiguitySolver::OptionalScoreModifier<
-        track_container_t, traj_t, holder_t>>
-        ambiscores = {};  // applied only if useAmbiguityFunction is true
+    using OptionalFilter =
+        std::function<bool(const Acts::TrackProxy<
+                           track_container_t, traj_t, holder_t, true>&)>;
+
+    using OptionalScoreModifier = std::function<void(
+        const Acts::TrackProxy<track_container_t, traj_t, holder_t,
+                               true>&,
+        double&)>;
+    std::vector<OptionalFilter> cuts = {};
+    std::vector<OptionalScoreModifier> weights = {};
+    std::vector<OptionalScoreModifier> ambiscores = {};
+    // applied only if useAmbiguityFunction is true
   };
   ScoreBasedAmbiguityResolution(
       const Config& cfg,
