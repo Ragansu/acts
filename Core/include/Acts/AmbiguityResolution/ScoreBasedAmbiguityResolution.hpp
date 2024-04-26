@@ -87,6 +87,8 @@ class ScoreBasedAmbiguityResolution {
     std::size_t nHoles = 0;
     std::size_t nOutliers = 0;
     std::size_t nSharedHits = 0;
+
+    std::vector<measurementTuple> measurementsPerTrack;
   };
 
   /// @brief Configuration struct : contains the configuration for the ambiguity resolution.

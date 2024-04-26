@@ -41,8 +41,8 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
       measurementsPerTrack[iTrack].clear();
       continue;
     }
-    for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
-      auto iMeasurement = std::get<0>(measurements_tuples);
+    for (auto measurementTuples : measurementsPerTrack[iTrack]) {
+      auto iMeasurement = std::get<0>(measurementTuples);
       tracksPerMeasurement[iMeasurement].insert(iTrack);
     }
   }
@@ -83,10 +83,10 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
 
     // Loop over all measurements of the track and for each hit a
     // trackStateTypes is assigned.
-    for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
-      auto iMeasurement = std::get<0>(measurements_tuples);
-      auto iVolume = std::get<1>(measurements_tuples);
-      auto isoutliner = std::get<2>(measurements_tuples);
+    for (auto measurementTuples : measurementsPerTrack[iTrack]) {
+      auto iMeasurement = std::get<0>(measurementTuples);
+      auto iVolume = std::get<1>(measurementTuples);
+      auto isoutliner = std::get<2>(measurementTuples);
 
       auto volume_it = m_cfg.volumeMap.find(iVolume);
 
@@ -138,8 +138,8 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     // trackStateTypes and other conditions.
     // Good measurements are copied to the newMeasurementsPerTrack vector.
     for (std::size_t i = 0; i < trackStateTypes.size(); i++) {
-      auto measurement_tuples = measurementsPerTrack[iTrack][i];
-      measurement = std::get<0>(measurement_tuples);
+      auto measurementTuples = measurementsPerTrack[iTrack][i];
+      measurement = std::get<0>(measurementTuples);
 
       if (trackStateTypes[i] == RejectedHit) {
         ACTS_DEBUG("Dropping rejected hit");

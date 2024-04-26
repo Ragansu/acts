@@ -32,32 +32,65 @@ ScoreBasedAmbiguityResolution::computeInitialState(
                                                  sourceLinkEquality);
 
   std::vector<std::vector<measurementTuple>> measurementsPerTrack;
+  std::vector<std::map<std::size_t, TrackFeatures>> trackFeaturesMaps;
 
   ACTS_VERBOSE("Starting to compute initial state");
 
   for (const auto& track : tracks) {
-    std::vector<measurementTuple> measurements_tuples;
+    std::vector<measurementTuple> measurementTuples;
+    std::map<std::size_t, TrackFeatures> trackFeaturesMap;
 
     for (auto ts : track.trackStatesReversed()) {
-      ACTS_DEBUG("Track state type check: ");
+      auto* referenceSurfacePtr = &ts.referenceSurface();
+      if (referenceSurfacePtr == nullptr) {
+        ACTS_ERROR("Track state has no reference surface");
+        continue;
+      }
+      auto iVolume = ts.referenceSurface().geometryId().volume();
+      auto volume_it = m_cfg.volumeMap.find(iVolume);
+      if (volume_it == m_cfg.volumeMap.end()) {
+        ACTS_ERROR("Volume " << iVolume << "not found in the volume map");
+        continue;
+      }
+      auto detectorId = volume_it->second;
+
       if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
         ACTS_DEBUG("Track state type is MeasurementFlag");
-        const auto& geoID = ts.referenceSurface().geometryId();
+
+        if (ts.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
+          trackFeaturesMap[detectorId].nSharedHits++;
+        }
+        trackFeaturesMap[detectorId].nHits++;
 
         // assign a new measurement index if the source link was not seen yet
         auto emplace = measurementIndexMap.try_emplace(
             sourceLink, measurementIndexMap.size());
 
-        bool isoutliner =
-            ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
+        bool isoutliner = false;
 
-        measurements_tuples.push_back(
-            std::make_tuple(emplace.first->second, geoID.volume(), isoutliner));
+        measurementTuples.push_back(
+            std::make_tuple(emplace.first->second, iVolume, isoutliner));
+      } else if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+        Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
+        ACTS_DEBUG("Track state type is OutlierFlag");
+        trackFeaturesMap[detectorId].nOutliers++;
+
+        // assign a new measurement index if the source link was not seen yet
+        auto emplace = measurementIndexMap.try_emplace(
+            sourceLink, measurementIndexMap.size());
+
+        bool isoutliner = true;
+
+        measurementTuples.push_back(
+            std::make_tuple(emplace.first->second, iVolume, isoutliner));
+      } else if (ts.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
+        ACTS_DEBUG("Track state type is HoleFlag");
+        trackFeaturesMap[detectorId].nHoles++;
       }
     }
-
-    measurementsPerTrack.push_back(std::move(measurements_tuples));
+    measurementsPerTrack.push_back(std::move(measurementTuples));
+    trackFeaturesMaps.push_back(std::move(trackFeaturesMap));
   }
 
   return measurementsPerTrack;
