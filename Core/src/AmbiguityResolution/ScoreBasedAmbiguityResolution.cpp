@@ -16,7 +16,7 @@
 std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     std::vector<double> trackScore,
     std::vector<std::map<std::size_t, TrackFeatures>>& counterMaps,
-    std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
+    std::vector<std::vector<measurementTuple>>
         measurementsPerTrack) const {
   std::vector<bool> cleanTracks(measurementsPerTrack.size(), false);
 

@@ -46,6 +46,7 @@ namespace Acts {
 /// data preparations
 class ScoreBasedAmbiguityResolution {
  public:
+  using measurementTuple = std::tuple<std::size_t, std::size_t, bool>;
   /// @brief Detector configuration struct : contains the configuration for each detector
   ///
   /// The configuration can be saved in a json file and loaded from there.
@@ -147,8 +148,7 @@ class ScoreBasedAmbiguityResolution {
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t, typename source_link_hash_t,
             typename source_link_equality_t>
-  std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-  computeInitialState(
+  std::vector<std::vector<measurementTuple>> computeInitialState(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       source_link_hash_t&& sourceLinkHash,
       source_link_equality_t&& sourceLinkEquality) const;
@@ -178,8 +178,7 @@ class ScoreBasedAmbiguityResolution {
   std::vector<bool> getCleanedOutTracks(
       std::vector<double> trackScore,
       std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
-      std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-          measurementsPerTrack) const;
+      std::vector<std::vector<measurementTuple>> measurementsPerTrack) const;
 
   /// Remove tracks that are bad based on cuts and weighted scores.
   ///
@@ -192,8 +191,7 @@ class ScoreBasedAmbiguityResolution {
             template <typename> class holder_t>
   std::vector<int> solveAmbiguity(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-          measurementsPerTrack,
+      std::vector<std::vector<measurementTuple>> measurementsPerTrack,
       Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts = {})
       const;
 

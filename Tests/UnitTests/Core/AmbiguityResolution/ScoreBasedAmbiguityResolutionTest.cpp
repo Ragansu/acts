@@ -32,6 +32,7 @@ namespace Acts {
 namespace Test {
 
 BOOST_AUTO_TEST_SUITE(ScoreBasedAmbiguityResolutionTest)
+using measurementTuple = ScoreBasedAmbiguityResolution::measurementTuple;
 
 // Test fixture for ScoreBasedAmbiguityResolution
 struct Fixture {
@@ -68,8 +69,7 @@ struct Fixture {
 };
 
 // Helper function to create a sample input for getCleanedOutTracks
-std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-createSampleInput() {
+std::vector<std::vector<measurementTuple>> createSampleInput() {
   std::vector<std::pair<std::size_t, std::vector<std::size_t>>> trackVolumes = {
       {0, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10}},
       {1, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}},
@@ -77,12 +77,11 @@ createSampleInput() {
       {3, {13, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8}},
       {4, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10}}};
 
-  std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-      measurementsPerTrack;
+  std::vector<std::vector<measurementTuple>> measurementsPerTrack;
   // Add sample measurements for each track
 
   for (const auto& trackVolume : trackVolumes) {
-    std::vector<std::tuple<std::size_t, std::size_t, bool>> measurements;
+    std::vector<measurementTuple> measurements;
     for (std::size_t i = 0; i < trackVolume.second.size(); ++i) {
       measurements.push_back(
           std::make_tuple(i + 2, trackVolume.second[i], false));
@@ -99,8 +98,8 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
   ScoreBasedAmbiguityResolution tester(fixture.config);
 
   // Create sample input
-  std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-      measurementsPerTrack = createSampleInput();
+  std::vector<std::vector<measurementTuple>> measurementsPerTrack =
+      createSampleInput();
 
   std::vector<double> TrackSore;
   for (std::size_t i = 0; i < measurementsPerTrack.size(); i++) {

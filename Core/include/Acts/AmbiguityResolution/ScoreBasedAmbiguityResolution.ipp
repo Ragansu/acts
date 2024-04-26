@@ -21,7 +21,7 @@ namespace Acts {
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t, typename source_link_hash_t,
           typename source_link_equality_t>
-std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
+std::vector<std::vector<ScoreBasedAmbiguityResolution::measurementTuple>>
 ScoreBasedAmbiguityResolution::computeInitialState(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     source_link_hash_t&& sourceLinkHash,
@@ -31,13 +31,12 @@ ScoreBasedAmbiguityResolution::computeInitialState(
                          source_link_equality_t>(0, sourceLinkHash,
                                                  sourceLinkEquality);
 
-  std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-      measurementsPerTrack;
+  std::vector<std::vector<measurementTuple>> measurementsPerTrack;
 
   ACTS_VERBOSE("Starting to compute initial state");
 
   for (const auto& track : tracks) {
-    std::vector<std::tuple<std::size_t, std::size_t, bool>> measurements_tuples;
+    std::vector<measurementTuple> measurements_tuples;
 
     for (auto ts : track.trackStatesReversed()) {
       ACTS_DEBUG("Track state type check: ");
@@ -342,8 +341,7 @@ template <typename track_container_t, typename traj_t,
           template <typename> class holder_t>
 std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-        measurementsPerTrack,
+    std::vector<std::vector<measurementTuple>> measurementsPerTrack,
     Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts) const {
   ACTS_INFO("Number of tracks before Ambiguty Resolution: " << tracks.size());
   std::vector<std::map<std::size_t, TrackFeatures>>
