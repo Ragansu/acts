@@ -1750,7 +1750,7 @@ def addScoreBasedAmbiguityResolution(
 ) -> None:
     from acts.examples import ScoreBasedAmbiguityResolutionAlgorithm
 
-    customLogLevel = acts.examples.defaultLogging(s, acts.logging.INFO)
+    customLogLevel = acts.examples.defaultLogging(s, acts.logging.DEBUG)
 
     algScoreBased = ScoreBasedAmbiguityResolutionAlgorithm(
         level=customLogLevel(),

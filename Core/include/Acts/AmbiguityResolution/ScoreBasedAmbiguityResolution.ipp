@@ -25,14 +25,15 @@ std::vector<std::vector<ScoreBasedAmbiguityResolution::measurementTuple>>
 ScoreBasedAmbiguityResolution::computeInitialState(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     source_link_hash_t&& sourceLinkHash,
-    source_link_equality_t&& sourceLinkEquality) const {
+    source_link_equality_t&& sourceLinkEquality,
+    std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps)
+    const {
   auto measurementIndexMap =
       std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
                          source_link_equality_t>(0, sourceLinkHash,
                                                  sourceLinkEquality);
 
   std::vector<std::vector<measurementTuple>> measurementsPerTrack;
-  std::vector<std::map<std::size_t, TrackFeatures>> trackFeaturesMaps;
 
   ACTS_VERBOSE("Starting to compute initial state");
 
@@ -100,8 +101,9 @@ template <typename track_container_t, typename traj_t,
           template <typename> class holder_t>
 std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
-    Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts) const {
+    const std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
+    const Optional_cuts<track_container_t, traj_t, holder_t>& optionalCuts)
+    const {
   std::vector<double> trackScore;
 
   int iTrack = 0;
@@ -112,47 +114,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
 
   // Loop over all the tracks in the container
   for (const auto& track : tracks) {
-    auto trackFeaturesMap = std::map<std::size_t, TrackFeatures>();
-
-    // Loop over all the track states in a track for counting
-    // hits/hole/outliers per detector.
-    for (const auto& ts : track.trackStatesReversed()) {
-      auto iTypeFlags = ts.typeFlags();
-
-      if (iTypeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-        auto iVolume = ts.referenceSurface().geometryId().volume();
-        auto volume_it = m_cfg.volumeMap.find(iVolume);
-        if (volume_it == m_cfg.volumeMap.end()) {
-          ACTS_ERROR("Volume " << iVolume << "not found in the volume map");
-          continue;
-        }
-        auto detectorId = volume_it->second;
-        if (iTypeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
-          trackFeaturesMap[detectorId].nSharedHits++;
-        }
-        trackFeaturesMap[detectorId].nHits++;
-      } else if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-        auto iVolume = ts.referenceSurface().geometryId().volume();
-        auto volume_it = m_cfg.volumeMap.find(iVolume);
-        if (volume_it == m_cfg.volumeMap.end()) {
-          ACTS_ERROR("Volume " << iVolume << "not found in the volume map");
-          continue;
-        }
-        auto detectorId = volume_it->second;
-        trackFeaturesMap[detectorId].nHoles++;
-      } else if (iTypeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
-        auto iVolume = ts.referenceSurface().geometryId().volume();
-        auto volume_it = m_cfg.volumeMap.find(iVolume);
-        if (volume_it == m_cfg.volumeMap.end()) {
-          ACTS_ERROR("Volume " << iVolume << "not found in the volume map");
-          continue;
-        }
-        auto detectorId = volume_it->second;
-        trackFeaturesMap[detectorId].nOutliers++;
-      }
-    }
-    trackFeaturesMaps.push_back(trackFeaturesMap);
-
+    const auto trackFeaturesMap =
+        trackFeaturesMaps[iTrack];  // get the trackFeatures map for the track
     double score = 1;
     // cuts on pT
     if (Acts::VectorHelpers::perp(track.momentum()) > m_cfg.pTMax ||
@@ -211,19 +174,24 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
          detectorId++) {
       auto detector_it = m_cfg.detectorMap.find(detectorId);
       auto detector = detector_it->second;
+      auto trackFeatures_it = trackFeaturesMap.find(detectorId);
+      if (trackFeatures_it == trackFeaturesMap.end()) {
+        ACTS_DEBUG("Detector " << detectorId
+                                 << " not found in the trackFeaturesMap");
+        continue;
+      }
+      auto trackFeatures = trackFeatures_it->second;
 
       ACTS_DEBUG("---> Found summary information");
       ACTS_DEBUG("---> Detector ID: " << detectorId);
-      ACTS_DEBUG("---> Number of hits: " << trackFeaturesMap[detectorId].nHits);
-      ACTS_DEBUG(
-          "---> Number of holes: " << trackFeaturesMap[detectorId].nHoles);
-      ACTS_DEBUG("---> Number of outliers: "
-                 << trackFeaturesMap[detectorId].nOutliers);
+      ACTS_DEBUG("---> Number of hits: " << trackFeatures.nHits);
+      ACTS_DEBUG("---> Number of holes: " << trackFeatures.nHoles);
+      ACTS_DEBUG("---> Number of outliers: " << trackFeatures.nOutliers);
 
-      if ((trackFeaturesMap[detectorId].nHits < detector.minHits) ||
-          (trackFeaturesMap[detectorId].nHits > detector.maxHits) ||
-          (trackFeaturesMap[detectorId].nHoles > detector.maxHoles) ||
-          (trackFeaturesMap[detectorId].nOutliers > detector.maxOutliers)) {
+      if ((trackFeatures.nHits < detector.minHits) ||
+          (trackFeatures.nHits > detector.maxHits) ||
+          (trackFeatures.nHoles > detector.maxHoles) ||
+          (trackFeatures.nOutliers > detector.maxOutliers)) {
         score = 0;
         ACTS_DEBUG("Track: " << iTrack
                              << " has score = 0, due to detector cuts");
@@ -251,13 +219,17 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
            detectorId++) {
         auto detector_it = m_cfg.detectorMap.find(detectorId);
         auto detector = detector_it->second;
-        score += trackFeaturesMap[detectorId].nHits * detector.hitsScoreWeight;
-        score +=
-            trackFeaturesMap[detectorId].nHoles * detector.holesScoreWeight;
-        score += trackFeaturesMap[detectorId].nOutliers *
-                 detector.outliersScoreWeight;
-        score += trackFeaturesMap[detectorId].nSharedHits *
-                 detector.otherScoreWeight;
+        auto trackFeatures_it = trackFeaturesMap.find(detectorId);
+        if (trackFeatures_it == trackFeaturesMap.end()) {
+          ACTS_WARNING("Detector " << detectorId
+                                   << " not found in the trackFeaturesMap");
+          continue;
+        }
+        auto trackFeatures = trackFeatures_it->second;
+        score += trackFeatures.nHits * detector.hitsScoreWeight;
+        score += trackFeatures.nHoles * detector.holesScoreWeight;
+        score += trackFeatures.nOutliers * detector.outliersScoreWeight;
+        score += trackFeatures.nSharedHits * detector.otherScoreWeight;
       }
 
       // Adding scores based on optional weights
@@ -301,7 +273,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       iTrack++;
       continue;
     }
-    auto trackFeaturesMap =
+    const auto trackFeaturesMap =
         trackFeaturesMaps[iTrack];  // get the trackFeatures map for the track
     double pT = Acts::VectorHelpers::perp(track.momentum());
     // start with larger score for tracks with higher pT.
@@ -314,10 +286,17 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
          detectorId++) {
       auto detector_it = m_cfg.detectorMap.find(detectorId);
       auto detector = detector_it->second;
+      auto trackFeatures_it = trackFeaturesMap.find(detectorId);
+      if (trackFeatures_it == trackFeaturesMap.end()) {
+        ACTS_WARNING("Detector " << detectorId
+                                 << " not found in the trackFeaturesMap");
+        continue;
+      }
+      auto trackFeatures = trackFeatures_it->second;
 
       // choosing a scaling factor based on the number of hits in a track per
       // detector.
-      std::size_t iHits = trackFeaturesMap[detectorId].nHits;
+      std::size_t iHits = trackFeatures.nHits;
       if (detector.factorHits.size() < iHits) {
         ACTS_WARNING("Detector " << detectorId
                                  << " has not enough factorhits in the "
@@ -335,7 +314,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
 
       // choosing a scaling factor based on the number of holes in a track per
       // detector.
-      std::size_t iHoles = trackFeaturesMap[detectorId].nHoles;
+      std::size_t iHoles = trackFeatures.nHoles;
       if (detector.factorHoles.size() < iHoles) {
         ACTS_WARNING("Detector " << detectorId
                                  << " has not enough factorholes in the "
@@ -374,13 +353,14 @@ template <typename track_container_t, typename traj_t,
           template <typename> class holder_t>
 std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    std::vector<std::vector<measurementTuple>> measurementsPerTrack,
-    Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts) const {
+    const std::vector<std::vector<measurementTuple>>& measurementsPerTrack,
+    const std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
+    const Optional_cuts<track_container_t, traj_t, holder_t>& optionalCuts)
+    const {
   ACTS_INFO("Number of tracks before Ambiguty Resolution: " << tracks.size());
-  std::vector<std::map<std::size_t, TrackFeatures>>
-      trackFeaturesMaps;  // vector of trackFeaturesMaps. where each
-                          // trackFeaturesMap contains the number of
-                          // hits/hole/outliers for each detector in a track.
+  // vector of trackFeaturesMaps. where each trackFeaturesMap contains the
+  // number of hits/hole/outliers for each detector in a track.
+
   std::vector<double> trackScore =
       simpleScore(tracks, trackFeaturesMaps, optionalCuts);
 

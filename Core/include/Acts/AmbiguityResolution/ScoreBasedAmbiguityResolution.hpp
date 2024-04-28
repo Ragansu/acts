@@ -87,8 +87,6 @@ class ScoreBasedAmbiguityResolution {
     std::size_t nHoles = 0;
     std::size_t nOutliers = 0;
     std::size_t nSharedHits = 0;
-
-    std::vector<measurementTuple> measurementsPerTrack;
   };
 
   /// @brief Configuration struct : contains the configuration for the ambiguity resolution.
@@ -125,13 +123,11 @@ class ScoreBasedAmbiguityResolution {
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
   struct Optional_cuts {
-    using OptionalFilter =
-        std::function<bool(const Acts::TrackProxy<
-                           track_container_t, traj_t, holder_t, true>&)>;
+    using OptionalFilter = std::function<bool(
+        const Acts::TrackProxy<track_container_t, traj_t, holder_t, true>&)>;
 
     using OptionalScoreModifier = std::function<void(
-        const Acts::TrackProxy<track_container_t, traj_t, holder_t,
-                               true>&,
+        const Acts::TrackProxy<track_container_t, traj_t, holder_t, true>&,
         double&)>;
     std::vector<OptionalFilter> cuts = {};
     std::vector<OptionalScoreModifier> weights = {};
@@ -156,7 +152,8 @@ class ScoreBasedAmbiguityResolution {
   std::vector<std::vector<measurementTuple>> computeInitialState(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       source_link_hash_t&& sourceLinkHash,
-      source_link_equality_t&& sourceLinkEquality) const;
+      source_link_equality_t&& sourceLinkEquality,
+      std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps) const;
 
   /// Compute the score of each track.
   ///
@@ -168,9 +165,9 @@ class ScoreBasedAmbiguityResolution {
             template <typename> class holder_t>
   std::vector<double> simpleScore(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
-      Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts = {})
-      const;
+      const std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
+      const Optional_cuts<track_container_t, traj_t, holder_t>& optionalCuts =
+          {}) const;
 
   /// Remove hits that are not good enough for each track and removes tracks
   /// that have a score below a certain threshold or not enough hits.
@@ -181,9 +178,11 @@ class ScoreBasedAmbiguityResolution {
   /// @param measurementsPerTrack is the list of measurements for each track
   /// @return a vector of IDs of the tracks we want to keep
   std::vector<bool> getCleanedOutTracks(
-      std::vector<double> trackScore,
-      std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
-      std::vector<std::vector<measurementTuple>> measurementsPerTrack) const;
+      const std::vector<double>& trackScore,
+      const std::vector<std::map<std::size_t, TrackFeatures>>&
+          trackFeaturesMaps,
+      const std::vector<std::vector<measurementTuple>>& measurementsPerTrack)
+      const;
 
   /// Remove tracks that are bad based on cuts and weighted scores.
   ///
@@ -196,9 +195,10 @@ class ScoreBasedAmbiguityResolution {
             template <typename> class holder_t>
   std::vector<int> solveAmbiguity(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      std::vector<std::vector<measurementTuple>> measurementsPerTrack,
-      Optional_cuts<track_container_t, traj_t, holder_t> optionalCuts = {})
-      const;
+      const std::vector<std::vector<measurementTuple>>& measurementsPerTracks,
+      const std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
+      const Optional_cuts<track_container_t, traj_t, holder_t>& optionalCuts =
+          {}) const;
 
  private:
   Config m_cfg;

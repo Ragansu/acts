@@ -14,10 +14,10 @@
 #include <stdexcept>
 
 std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
-    std::vector<double> trackScore,
-    std::vector<std::map<std::size_t, TrackFeatures>>& counterMaps,
-    std::vector<std::vector<measurementTuple>>
-        measurementsPerTrack) const {
+    const std::vector<double>& trackScore,
+    const std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
+    const std::vector<std::vector<measurementTuple>>& measurementsPerTrack)
+    const {
   std::vector<bool> cleanTracks(measurementsPerTrack.size(), false);
 
   ACTS_VERBOSE("Cleaning tracks");
@@ -38,7 +38,6 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   // measurement.
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
     if (trackScore[iTrack] <= 0) {
-      measurementsPerTrack[iTrack].clear();
       continue;
     }
     for (auto measurementTuples : measurementsPerTrack[iTrack]) {
@@ -71,7 +70,7 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
       continue;
     }
 
-    auto counterMap = counterMaps[iTrack];
+    auto trackFeaturesMap = trackFeaturesMaps[iTrack];
 
     bool TrkCouldBeAccepted = true;
 
@@ -186,7 +185,7 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
          detectorId++) {
       auto detector_it = m_cfg.detectorMap.find(detectorId);
       auto detector = detector_it->second;
-      if (counterMap[detectorId].nSharedHits > detector.maxSharedHits) {
+      if (trackFeaturesMap[detectorId].nSharedHits > detector.maxSharedHits) {
         TrkCouldBeAccepted = false;
         break;
       }
