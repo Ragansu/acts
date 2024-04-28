@@ -154,8 +154,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     }
 
     // cuts on optional cuts
-    for (const auto& ambicut : optionalCuts.cuts) {
-      if (ambicut(track)) {
+    for (const auto& cutFunction : optionalCuts.cuts) {
+      if (cutFunction(track)) {
         score = 0;
         ACTS_DEBUG("Track: " << iTrack
                              << " has score = 0, due to optional cuts.");
@@ -207,10 +207,11 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     }
 
     // real scoring starts here
-
+    // if the ambiguity scoring function is used, the score is processed with a
+    // different algorithm than the simple score.
     if (!m_cfg.useAmbiguityFunction) {
-      // if the ambiguity function is used, the score is processed with a
-      // different algorithm than the simple score.
+      ACTS_VERBOSE("Using Simple Scoring function");
+
       score = 100;
       // Adding the score for each detector.
       // detector score is determined by the number of hits/hole/outliers *
@@ -233,8 +234,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       }
 
       // Adding scores based on optional weights
-      for (const auto& ambiweights : optionalCuts.weights) {
-        ambiweights(track, score);
+      for (const auto& weightFunction : optionalCuts.weights) {
+        weightFunction(track, score);
       }
 
       // Adding the score based on the chi2/ndf
@@ -244,6 +245,78 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
           score += p;
         } else
           score -= 50;
+      }
+    } else {
+      ACTS_VERBOSE("Using Ambiguity Scoring function");
+
+      double pT = Acts::VectorHelpers::perp(track.momentum());
+      // start with larger score for tracks with higher pT.
+      score = log10(pT / UnitConstants::MeV) - 1.;
+      // pT in GeV, hence 100 MeV is minimum and gets score = 1
+      ACTS_DEBUG("Modifier for pT = " << pT << " GeV is : " << score
+                                      << "  New score now: " << score);
+
+      for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
+           detectorId++) {
+        auto detector_it = m_cfg.detectorMap.find(detectorId);
+        auto detector = detector_it->second;
+        auto trackFeatures_it = trackFeaturesMap.find(detectorId);
+        if (trackFeatures_it == trackFeaturesMap.end()) {
+          ACTS_WARNING("Detector " << detectorId
+                                   << " not found in the trackFeaturesMap");
+          continue;
+        }
+        auto trackFeatures = trackFeatures_it->second;
+
+        // choosing a scaling factor based on the number of hits in a track per
+        // detector.
+        std::size_t iHits = trackFeatures.nHits;
+        if (detector.factorHits.size() < iHits) {
+          ACTS_WARNING("Detector " << detectorId
+                                   << " has not enough factorhits in the "
+                                      "detector.factorHits vector");
+          continue;
+        }
+        if (iHits > detector.maxHits) {
+          score = score * (detector.maxHits - iHits + 1);  // hits are good !
+          iHits = detector.maxHits;
+        }
+        score = score * detector.factorHits[iHits];
+        ACTS_DEBUG("Modifier for " << iHits
+                                   << " hits: " << detector.factorHits[iHits]
+                                   << "  New score now: " << score);
+
+        // choosing a scaling factor based on the number of holes in a track per
+        // detector.
+        std::size_t iHoles = trackFeatures.nHoles;
+        if (detector.factorHoles.size() < iHoles) {
+          ACTS_WARNING("Detector " << detectorId
+                                   << " has not enough factorholes in the "
+                                      "detector.factorHoles vector");
+          continue;
+        }
+        if (iHoles > detector.maxHoles) {
+          score /= (iHoles - detector.maxHoles + 1);  // holes are bad !
+          iHoles = detector.maxHoles;
+        }
+        score = score * detector.factorHoles[iHoles];
+        ACTS_DEBUG("Modifier for " << iHoles
+                                   << " holes: " << detector.factorHoles[iHoles]
+                                   << "  New score now: " << score);
+      }
+
+      for (const auto& ambiscore : optionalCuts.ambiscores) {
+        ambiscore(track, score);
+      }
+
+      if (track.chi2() > 0 && track.nDoF() > 0) {
+        double chi2 = track.chi2();
+        int indf = track.nDoF();
+        double fac = 1. / log10(10. + 10. * chi2 / indf);
+        score = score * fac;
+        ACTS_DEBUG("Modifier for chi2 = " << chi2 << " and NDF = " << indf
+                                          << " is : " << fac
+                                          << "  New score now: " << score)
       }
     }
 
@@ -255,98 +328,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
 
   }  // end of loop over tracks
 
-  if (!m_cfg.useAmbiguityFunction) {
-    ACTS_VERBOSE("Not using ambiguity function");
-    return trackScore;
-  }
-
-  ACTS_VERBOSE("Using ambiguity function");
-
-  std::vector<double> trackScoreAmbig;
-  iTrack = 0;
-  // Loop over all the tracks in the container
-  for (const auto& track : tracks) {
-    double score = trackScore[iTrack];
-    // remove tracks which did not pass the previous cuts.
-    if (score == 0) {
-      trackScoreAmbig.push_back(0.0f);
-      iTrack++;
-      continue;
-    }
-    const auto trackFeaturesMap =
-        trackFeaturesMaps[iTrack];  // get the trackFeatures map for the track
-    double pT = Acts::VectorHelpers::perp(track.momentum());
-    // start with larger score for tracks with higher pT.
-    double prob = log10(pT / UnitConstants::MeV) - 1.;
-    // pT in GeV, hence 100 MeV is minimum and gets score = 1
-    ACTS_DEBUG("Modifier for pT = " << pT << " GeV is : " << prob
-                                    << "  New score now: " << prob);
-
-    for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
-         detectorId++) {
-      auto detector_it = m_cfg.detectorMap.find(detectorId);
-      auto detector = detector_it->second;
-      auto trackFeatures_it = trackFeaturesMap.find(detectorId);
-      if (trackFeatures_it == trackFeaturesMap.end()) {
-        ACTS_WARNING("Detector " << detectorId
-                                 << " not found in the trackFeaturesMap");
-        continue;
-      }
-      auto trackFeatures = trackFeatures_it->second;
-
-      // choosing a scaling factor based on the number of hits in a track per
-      // detector.
-      std::size_t iHits = trackFeatures.nHits;
-      if (detector.factorHits.size() < iHits) {
-        ACTS_WARNING("Detector " << detectorId
-                                 << " has not enough factorhits in the "
-                                    "detector.factorHits vector");
-        continue;
-      }
-      if (iHits > detector.maxHits) {
-        prob = prob * (detector.maxHits - iHits + 1);  // hits are good !
-        iHits = detector.maxHits;
-      }
-      prob = prob * detector.factorHits[iHits];
-      ACTS_DEBUG("Modifier for " << iHits
-                                 << " hits: " << detector.factorHits[iHits]
-                                 << "  New score now: " << prob);
-
-      // choosing a scaling factor based on the number of holes in a track per
-      // detector.
-      std::size_t iHoles = trackFeatures.nHoles;
-      if (detector.factorHoles.size() < iHoles) {
-        ACTS_WARNING("Detector " << detectorId
-                                 << " has not enough factorholes in the "
-                                    "detector.factorHoles vector");
-        continue;
-      }
-      if (iHoles > detector.maxHoles) {
-        prob /= (iHoles - detector.maxHoles + 1);  // holes are bad !
-        iHoles = detector.maxHoles;
-      }
-      prob = prob * detector.factorHoles[iHoles];
-      ACTS_DEBUG("Modifier for " << iHoles
-                                 << " holes: " << detector.factorHoles[iHoles]
-                                 << "  New score now: " << prob);
-    }
-
-    for (const auto& ambiscore : optionalCuts.ambiscores) {
-      ambiscore(track, prob);
-    }
-
-    if (track.chi2() > 0 && track.nDoF() > 0) {
-      double chi2 = track.chi2();
-      int indf = track.nDoF();
-      double fac = 1. / log10(10. + 10. * chi2 / indf);
-      prob = prob * fac;
-      ACTS_DEBUG("Modifier for chi2 = " << chi2 << " and NDF = " << indf
-                                        << " is : " << fac
-                                        << "  New score now: " << prob)
-    }
-    trackScoreAmbig.push_back(prob);
-  }
-  return trackScoreAmbig;
+  return trackScore;
 }
 
 template <typename track_container_t, typename traj_t,
