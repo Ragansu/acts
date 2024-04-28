@@ -177,7 +177,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       auto trackFeatures_it = trackFeaturesMap.find(detectorId);
       if (trackFeatures_it == trackFeaturesMap.end()) {
         ACTS_DEBUG("Detector " << detectorId
-                                 << " not found in the trackFeaturesMap");
+                               << " not found in the trackFeaturesMap");
         continue;
       }
       auto trackFeatures = trackFeatures_it->second;

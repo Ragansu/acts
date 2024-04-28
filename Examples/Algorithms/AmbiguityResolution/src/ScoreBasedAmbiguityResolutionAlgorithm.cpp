@@ -109,7 +109,9 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
   std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
       measurementsPerTracks;
 
-  std::vector<std::map<std::size_t, Acts::ScoreBasedAmbiguityResolution::TrackFeatures>> trackFeaturesMaps;
+  std::vector<
+      std::map<std::size_t, Acts::ScoreBasedAmbiguityResolution::TrackFeatures>>
+      trackFeaturesMaps;
   measurementsPerTracks = m_ambi.computeInitialState(
       tracks, &sourceLinkHash, &sourceLinkEquality, trackFeaturesMaps);
 

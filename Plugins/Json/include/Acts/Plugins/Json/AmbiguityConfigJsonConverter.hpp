@@ -26,8 +26,9 @@ class AmbiguityConfigJsonConverter {
   using DetectorConfig = ScoreBasedAmbiguityResolution::DetectorConfig;
 
  public:
-  std::pair<std::map<std::size_t, std::size_t>,
-            std::map<std::size_t, ScoreBasedAmbiguityResolution::DetectorConfig>>
+  std::pair<
+      std::map<std::size_t, std::size_t>,
+      std::map<std::size_t, ScoreBasedAmbiguityResolution::DetectorConfig>>
   fromJson(const std::string&) const;
 };
 
