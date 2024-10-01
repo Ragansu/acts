@@ -14,6 +14,7 @@
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
@@ -87,7 +88,13 @@ struct ExperimentalSensitiveCandidates : public SensitiveCandidatesBase {
   }
 
   std::vector<const Acts::Surface*> queryAll() const override {
-    throw std::runtime_error("not implemented");
+    std::vector<const Acts::Surface*> surfaces;
+    detector->visitSurfaces([&](const Acts::Surface* surface) {
+      if (surface->associatedDetectorElement() != nullptr) {
+        surfaces.push_back(surface);
+      }
+    });
+    return surfaces;
   }
 };
 
@@ -207,6 +214,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(killVolume);
     ACTS_PYTHON_MEMBER(killAfterTime);
     ACTS_PYTHON_MEMBER(killSecondaries);
+    ACTS_PYTHON_MEMBER(recordHitsOfNeutrals);
     ACTS_PYTHON_MEMBER(recordHitsOfSecondaries);
     ACTS_PYTHON_MEMBER(keepParticlesWithoutHits);
     ACTS_PYTHON_STRUCT_END();
