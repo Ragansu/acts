@@ -153,10 +153,7 @@ class ScoreBasedAmbiguityResolution {
   /// Compute the initial state of the tracks.
   ///
   /// @param tracks is the input track container
-  /// @param sourceLinkHash is the  source links
-  /// @param sourceLinkEquality is the equality function for the source links
-  /// @param trackFeaturesVectors is the trackFeatures map from detector ID to trackFeatures
-  /// @return a vector of the initial state of the tracks
+  /// @return trackFeaturesVectors is the trackFeatures map from detector ID to trackFeatures
   template <TrackContainerFrontend track_container_t>
   std::vector<std::vector<TrackFeatures>> computeInitialState(
       const track_container_t& tracks) const;
@@ -209,8 +206,8 @@ class ScoreBasedAmbiguityResolution {
   ///
   /// @brief Remove tracks that are not good enough
   /// @param tracks is the input track container
-  /// @param measurementsPerTrack is the list of measurements for each track
-  /// @param trackFeaturesVectors is the map of detector id to trackFeatures for each track
+  /// @param sourceLinkHash is the  source links
+  /// @param sourceLinkEquality is the equality function for the source links
   /// @param optionalCuts is the optional cuts to be applied
   /// @return a vector of IDs of the tracks we want to keep
   template <TrackContainerFrontend track_container_t,
