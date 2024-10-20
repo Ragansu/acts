@@ -132,9 +132,9 @@ class ScoreBasedAmbiguityResolution {
     using OptionalScoreModifier =
         std::function<void(const track_proxy_t&, double&)>;
 
-    using OptionalHitSelection = std::function<bool(
+    using OptionalHitSelection = std::function<void(
         const track_proxy_t&,
-        const typename track_proxy_t::ConstTrackStateProxy&, TrackStateTypes)>;
+        const typename track_proxy_t::ConstTrackStateProxy&, TrackStateTypes&)>;
 
     std::vector<OptionalFilter> cuts = {};
     std::vector<OptionalScoreModifier> weights = {};
@@ -198,9 +198,9 @@ class ScoreBasedAmbiguityResolution {
       const std::vector<std::size_t>& measurementsPerTrack,
       const std::map<std::size_t, std::size_t> nTracksPerMeasurement,
       const std::vector<std::function<
-          bool(const track_proxy_t&,
+          void(const track_proxy_t&,
                const typename track_proxy_t::ConstTrackStateProxy&,
-               TrackStateTypes)>>& optionalHitSelections) const;
+               TrackStateTypes&)>>& optionalHitSelections) const;
 
   /// Remove tracks that are bad based on cuts and weighted scores.
   ///
