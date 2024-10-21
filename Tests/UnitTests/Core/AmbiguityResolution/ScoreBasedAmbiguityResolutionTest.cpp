@@ -99,7 +99,6 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
 
   // Assert the expected results
   BOOST_CHECK_EQUAL(measurementsPerTrack.size(), 5);
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()
