@@ -200,7 +200,7 @@ class ScoreBasedAmbiguityResolution {
       const std::vector<std::function<
           void(const track_proxy_t&,
                const typename track_proxy_t::ConstTrackStateProxy&,
-               TrackStateTypes&)>>& optionalHitSelections) const;
+               TrackStateTypes&)>>& optionalHitSelections = {}) const;
 
   /// Remove tracks that are bad based on cuts and weighted scores.
   ///

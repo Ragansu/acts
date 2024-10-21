@@ -426,7 +426,7 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
         measurementsPerTrack.push_back(iMeasurement);
         if (nTracksPerMeasurement.find(iMeasurement) ==
             nTracksPerMeasurement.end()) {
-          nTracksPerMeasurement[iMeasurement] = 0;
+          nTracksPerMeasurement[iMeasurement] = 1;
         }
         nTracksPerMeasurement[iMeasurement]++;
       }

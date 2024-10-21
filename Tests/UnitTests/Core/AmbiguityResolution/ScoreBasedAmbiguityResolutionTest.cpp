@@ -18,10 +18,7 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/EventData/detail/TestTrackState.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/TrackFinding/TrackSelector.hpp"
-#include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 
 #include <map>
 
@@ -64,22 +61,68 @@ struct Fixture {
   ~Fixture() = default;
 };
 
-// Helper function to create a sample input for getCleanedOutTracks
-std::vector<std::vector<std::size_t>> createSampleInput() {
-  Fixture fixture;
-
-  std::vector<std::vector<std::size_t>> measurementsPerTrack;
-  // Add sample measurements for each track
-
-  for (const int j : {0, 1, 2, 3, 4}) {
-    std::vector<std::size_t> measurements;
-    for (std::size_t i = 0; i < fixture.config.volumeMap.size(); i++) {
-      measurements.push_back(i + j + 2);
+template <typename TrackContainer, typename FlagsPerState>
+auto createTestTrack(TrackContainer& tc, const FlagsPerState& flagsPerState) {
+  auto t = tc.makeTrack();
+  for (const auto& flags : flagsPerState) {
+    auto ts = t.appendTrackState();
+    for (auto f : flags) {
+      ts.typeFlags().set(f);
     }
-    measurementsPerTrack.push_back(measurements);
   }
 
-  return measurementsPerTrack;
+  calculateTrackQuantities(t);
+
+  return t;
+}
+
+BOOST_FIXTURE_TEST_CASE(ComputeInitialStateTest, Fixture) {
+  Fixture fixture;
+  // Create an instance of ScoreBasedAmbiguityResolution
+  ScoreBasedAmbiguityResolution tester(fixture.config);
+
+  VectorTrackContainer mutVtc;
+  VectorMultiTrajectory mutMtj;
+
+  TrackContainer mutTc{mutVtc, mutMtj};
+  static_assert(!mutTc.ReadOnly, "Unexpectedly read only");
+
+  auto t = createTestTrack(mutTc, std::vector<std::vector<TrackStateFlag>>{
+                                      {MeasurementFlag},
+                                      {OutlierFlag},
+                                      {MeasurementFlag, SharedHitFlag},
+                                      {HoleFlag},
+                                      {OutlierFlag},
+                                      {HoleFlag},
+                                      {MeasurementFlag, SharedHitFlag},
+                                      {OutlierFlag},
+                                  });
+
+  BOOST_CHECK_EQUAL(t.nHoles(), 2);
+  BOOST_CHECK_EQUAL(t.nMeasurements(), 3);
+  BOOST_CHECK_EQUAL(t.nOutliers(), 3);
+  BOOST_CHECK_EQUAL(t.nSharedHits(), 2);
+
+  ConstVectorTrackContainer vtc{std::move(mutVtc)};
+  ConstVectorMultiTrajectory mtj{std::move(mutMtj)};
+
+  TrackContainer ctc{vtc, mtj};
+
+  std::vector<std::vector<TrackFeatures>> trackFeaturesVectors;
+  trackFeaturesVectors = tester.computeInitialState(ctc);
+
+  BOOST_CHECK_EQUAL(trackFeaturesVectors.size(), ctc.size());
+
+  std::vector<double> trackScores;
+  trackScores = tester.simpleScore(ctc, trackFeaturesVectors);
+
+  BOOST_CHECK_EQUAL(trackScores.size(), ctc.size());
+
+  trackScores = tester.ambiguityScore(ctc, trackFeaturesVectors);
+
+  BOOST_CHECK_EQUAL(trackScores.size(), ctc.size());
+
+  // Assert the expected results
 }
 
 BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
@@ -87,17 +130,68 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
   // Create an instance of ScoreBasedAmbiguityResolution
   ScoreBasedAmbiguityResolution tester(fixture.config);
 
-  // Create sample input
-  std::vector<std::vector<std::size_t>> measurementsPerTrack =
-      createSampleInput();
+  VectorTrackContainer mutVtc;
+  VectorMultiTrajectory mutMtj;
 
-  std::vector<double> TrackSore;
-  for (std::size_t i = 0; i < measurementsPerTrack.size(); i++) {
-    TrackSore.push_back(60 + 40 * i);
+  TrackContainer mutTc{mutVtc, mutMtj};
+  static_assert(!mutTc.ReadOnly, "Unexpectedly read only");
+
+  auto t = createTestTrack(mutTc, std::vector<std::vector<TrackStateFlag>>{
+                                      {MeasurementFlag},
+                                      {OutlierFlag},
+                                      {MeasurementFlag, SharedHitFlag},
+                                      {HoleFlag},
+                                      {OutlierFlag},
+                                      {HoleFlag},
+                                      {MeasurementFlag, SharedHitFlag},
+                                      {OutlierFlag},
+                                  });
+
+  BOOST_CHECK_EQUAL(t.nHoles(), 2);
+  BOOST_CHECK_EQUAL(t.nMeasurements(), 3);
+  BOOST_CHECK_EQUAL(t.nOutliers(), 3);
+  BOOST_CHECK_EQUAL(t.nSharedHits(), 2);
+
+  ConstVectorTrackContainer vtc{std::move(mutVtc)};
+  ConstVectorMultiTrajectory mtj{std::move(mutMtj)};
+
+  TrackContainer ctc{vtc, mtj};
+
+  std::vector<std::vector<TrackFeatures>> trackFeaturesVectors;
+  std::vector<std::vector<std::size_t>> measurementsPerTrackVector;
+  std::map<std::size_t, std::size_t> nTracksPerMeasurement;
+
+  trackFeaturesVectors = tester.computeInitialState(ctc);
+
+  BOOST_CHECK_EQUAL(trackFeaturesVectors.size(), ctc.size());
+
+  for (std::size_t iMeasurement = 1; const auto& track : ctc) {
+    std::vector<std::size_t> measurementsPerTrack;
+    for (auto ts : track.trackStatesReversed()) {
+      if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
+          ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        measurementsPerTrack.push_back(iMeasurement);
+        if (nTracksPerMeasurement.find(iMeasurement) ==
+            nTracksPerMeasurement.end()) {
+          nTracksPerMeasurement[iMeasurement] = 1;
+        }
+        nTracksPerMeasurement[iMeasurement]++;
+      }
+
+      iMeasurement++;
+    }
+    measurementsPerTrackVector.push_back(std::move(measurementsPerTrack));
   }
 
-  // Assert the expected results
-  BOOST_CHECK_EQUAL(measurementsPerTrack.size(), 5);
+  auto trackScore = tester.ambiguityScore(ctc, trackFeaturesVectors);
+
+  const auto& track = ctc.getTrack(0);
+  std::size_t iTrack = track.index();
+  bool accepted = tester.getCleanedOutTracks(track, trackScore[iTrack],
+                                             measurementsPerTrackVector[iTrack],
+                                             nTracksPerMeasurement);
+
+  BOOST_CHECK_EQUAL(accepted, false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
