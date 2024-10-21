@@ -173,7 +173,7 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
         measurementsPerTrack.push_back(iMeasurement);
         if (nTracksPerMeasurement.find(iMeasurement) ==
             nTracksPerMeasurement.end()) {
-          nTracksPerMeasurement[iMeasurement] = 1;
+          nTracksPerMeasurement[iMeasurement] = 0;
         }
         nTracksPerMeasurement[iMeasurement]++;
       }
