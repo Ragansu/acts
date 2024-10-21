@@ -74,7 +74,7 @@ std::vector<std::vector<std::size_t>> createSampleInput() {
   for (const int j : {0, 1, 2, 3, 4}) {
     std::vector<std::size_t> measurements;
     for (std::size_t i = 0; i < fixture.config.volumeMap.size(); i++) {
-      measurements.push_back(i + 2);
+      measurements.push_back(i + j + 2);
     }
     measurementsPerTrack.push_back(measurements);
   }
