@@ -72,8 +72,8 @@ std::vector<std::vector<std::size_t>> createSampleInput() {
   std::vector<std::vector<std::size_t>> measurementsPerTrack;
   // Add sample measurements for each track
 
-  for (const auto& trackVolume : trackVolumes) {
-    std::vector<MeasurementInfo> measurements;
+  for (const int i : {0, 1, 2, 3, 4}) {
+    std::vector<std::size_t> measurements;
     for (std::size_t i = 0; i < trackVolume.second.size(); ++i) {
       measurements.push_back(i + 2);
     }
