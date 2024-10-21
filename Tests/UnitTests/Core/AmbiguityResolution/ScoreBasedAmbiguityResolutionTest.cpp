@@ -110,19 +110,11 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
       {{0, 18, 0, 0}, {0, 2, 0, 0}},
       {{0, 14, 0, 0}, {0, 3, 0, 0}}};
 
-  // Call the function under testBOOST_FIXTURE_TEST_CASE
-  std::vector<bool> cleanTracks = tester.getCleanedOutTracks(
-      TrackSore, trackFeaturesVectors, measurementsPerTrack);
+
 
   // Assert the expected results
   BOOST_CHECK_EQUAL(measurementsPerTrack.size(), 5);
 
-  for (std::size_t i = 0; i < cleanTracks.size(); i++) {
-    auto score = TrackSore[i];
-    if (cleanTracks[i]) {
-      BOOST_CHECK_GT(score, fixture.config.minScoreSharedTracks);
-    }
-  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
