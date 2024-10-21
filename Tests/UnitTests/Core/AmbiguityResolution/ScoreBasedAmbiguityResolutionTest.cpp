@@ -66,23 +66,16 @@ struct Fixture {
 };
 
 // Helper function to create a sample input for getCleanedOutTracks
-std::vector<std::vector<MeasurementInfo>> createSampleInput() {
+std::vector<std::vector<std::size_t>> createSampleInput() {
   Fixture fixture;
-  std::vector<std::pair<std::size_t, std::vector<std::size_t>>> trackVolumes = {
-      {0, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10}},
-      {1, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}},
-      {2, {13, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8}},
-      {3, {13, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8}},
-      {4, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10}}};
 
-  std::vector<std::vector<MeasurementInfo>> measurementsPerTrack;
+  std::vector<std::vector<std::size_t>> measurementsPerTrack;
   // Add sample measurements for each track
 
   for (const auto& trackVolume : trackVolumes) {
     std::vector<MeasurementInfo> measurements;
     for (std::size_t i = 0; i < trackVolume.second.size(); ++i) {
-      std::size_t detectorID = fixture.config.volumeMap[trackVolume.second[i]];
-      measurements.push_back({i + 2, detectorID, false});
+      measurements.push_back(i + 2);
     }
     measurementsPerTrack.push_back(measurements);
   }
@@ -103,14 +96,6 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
   for (std::size_t i = 0; i < measurementsPerTrack.size(); i++) {
     TrackSore.push_back(60 + 40 * i);
   }
-  std::vector<std::vector<TrackFeatures>> trackFeaturesVectors = {
-      {{0, 14, 0, 0}, {0, 2, 0, 0}},
-      {{0, 15, 0, 0}, {0, 2, 0, 0}},
-      {{0, 17, 0, 0}, {0, 2, 0, 0}},
-      {{0, 18, 0, 0}, {0, 2, 0, 0}},
-      {{0, 14, 0, 0}, {0, 3, 0, 0}}};
-
-
 
   // Assert the expected results
   BOOST_CHECK_EQUAL(measurementsPerTrack.size(), 5);
