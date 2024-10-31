@@ -226,6 +226,7 @@ class ScoreBasedAmbiguityResolution {
   /// Logging instance
   std::unique_ptr<const Logger> m_logger = nullptr;
 
+
   /// Private access to logging instance
   const Logger& logger() const;
 };
