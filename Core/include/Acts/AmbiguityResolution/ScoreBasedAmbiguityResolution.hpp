@@ -207,7 +207,6 @@ class ScoreBasedAmbiguityResolution {
 
   template <TrackProxyConcept track_proxy_t>
   void assignTrackStateType(
-      const track_proxy_t& track,
       const typename track_proxy_t::ConstTrackStateProxy& ts,
       TrackStateTypes& trackStateType, const std::size_t nTracksShared) const;
 

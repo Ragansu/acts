@@ -525,7 +525,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
       }
       std::size_t nTracksShared = it->second;
 
-      assignTrackStateType<track_proxy_t>(track, ts, trackStateTypes[index],
+      assignTrackStateType<track_proxy_t>(ts, trackStateTypes[index],
                                           nTracksShared);
 
       // Loop over all optionalHitSelections and apply them to trackStateType of
@@ -572,7 +572,6 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
 
 template <TrackProxyConcept track_proxy_t>
 void Acts::ScoreBasedAmbiguityResolution::assignTrackStateType(
-    const track_proxy_t& track,
     const typename track_proxy_t::ConstTrackStateProxy& ts,
     TrackStateTypes& trackStateType, const std::size_t nTracksShared) const {
   if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
@@ -586,7 +585,8 @@ void Acts::ScoreBasedAmbiguityResolution::assignTrackStateType(
     trackStateType = TrackStateTypes::UnsharedHit;
 
     return;
-  } else if (nTracksShared > 1) {
+  }
+  if (nTracksShared > 1) {
     ACTS_VERBOSE("Measurement is shared, copy it over");
     trackStateType = TrackStateTypes::SharedHit;
     return;
