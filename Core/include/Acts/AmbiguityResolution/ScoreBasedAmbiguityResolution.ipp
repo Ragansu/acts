@@ -87,7 +87,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
   // Loop over all the tracks in the container
   for (const auto& track : tracks) {
     // get the trackFeatures map for the track
-    const std::vector<TrackFeatures>& trackFeaturesVector = trackFeaturesVectors[iTrack];
+    const std::vector<TrackFeatures>& trackFeaturesVector =
+        trackFeaturesVectors[iTrack];
     double score = 1;
     auto pT = Acts::VectorHelpers::perp(track.momentum());
     auto eta = Acts::VectorHelpers::eta(track.momentum());
@@ -237,7 +238,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
   // Loop over all the tracks in the container
   for (const auto& track : tracks) {
     // get the trackFeatures map for the track
-    const std::vector<TrackFeatures>& trackFeaturesVector = trackFeaturesVectors[iTrack];
+    const std::vector<TrackFeatures>& trackFeaturesVector =
+        trackFeaturesVectors[iTrack];
     double score = 1;
     auto pT = Acts::VectorHelpers::perp(track.momentum());
     auto eta = Acts::VectorHelpers::eta(track.momentum());
@@ -449,7 +451,8 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   // If the track is good, add it to the goodTracks vector.
   for (std::size_t iTrack = 0; const auto& track : tracks) {
     // Check if the track has too many shared hits to be accepted.
-    std::vector<TrackFeatures> trackFeaturesVector = trackFeaturesVectors.at(iTrack);
+    std::vector<TrackFeatures> trackFeaturesVector =
+        trackFeaturesVectors.at(iTrack);
     bool trkCouldBeAccepted = true;
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
          detectorId++) {
@@ -494,43 +497,16 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   // For tracks with shared hits, we need to check and remove bad hits
 
   std::vector<TrackStateTypes> trackStateTypes;
-  // Loop over all measurements of the track and for each hit a
-  // trackStateTypes is assigned.
-  for (std::size_t index = 0; const auto& ts : track.trackStatesReversed()) {
-    if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
-        ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-      std::size_t iMeasurement = measurementsPerTrack[index];
-      auto it = nTracksPerMeasurement.find(iMeasurement);
-      if (it == nTracksPerMeasurement.end()) {
-        trackStateTypes.push_back(TrackStateTypes::OtherTrackStateType);
-        index++;
-        continue;
-      }
+  // Loop over all measurements of the track and for each hit and
+  // trackStateTypes are assigned.
 
-      std::size_t nTracksShared = it->second;
-
-      if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
-        ACTS_VERBOSE("Measurement is outlier on a fitter track, copy it over");
-        trackStateTypes.push_back(TrackStateTypes::Outlier);
-        continue;
-      }
-      if (nTracksShared == 1) {
-        ACTS_VERBOSE("Measurement is not shared, copy it over");
-
-        trackStateTypes.push_back(TrackStateTypes::UnsharedHit);
-        continue;
-      } else if (nTracksShared > 1) {
-        ACTS_VERBOSE("Measurement is shared, copy it over");
-        trackStateTypes.push_back(TrackStateTypes::SharedHit);
-        continue;
-      }
-    }
-  }
   std::vector<std::size_t> newMeasurementsPerTrack;
   std::size_t measurement = 0;
   std::size_t nshared = 0;
 
-  // Loop over all measurements of the track and process them according to the
+  // Loop over all measurements of the track and
+  // assign a trackStateType to each trackState.
+  // process them according to the
   // trackStateTypes and other conditions.
   // Good measurements are copied to the newMeasurementsPerTrack vector.
   for (std::size_t index = 0; const auto& ts : track.trackStatesReversed()) {
@@ -548,6 +524,9 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
         continue;
       }
       std::size_t nTracksShared = it->second;
+
+      assignTrackStateType<track_proxy_t>(track, ts, trackStateTypes[index],
+                                          nTracksShared);
 
       // Loop over all optionalHitSelections and apply them to trackStateType of
       // the TrackState.
@@ -591,4 +570,26 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   }
 }
 
+template <TrackProxyConcept track_proxy_t>
+void Acts::ScoreBasedAmbiguityResolution::assignTrackStateType(
+    const track_proxy_t& track,
+    const typename track_proxy_t::ConstTrackStateProxy& ts,
+    TrackStateTypes& trackStateType, const std::size_t nTracksShared) const {
+  if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+    ACTS_VERBOSE("Measurement is outlier on a fitter track, copy it over");
+    trackStateType = TrackStateTypes::Outlier;
+    return;
+  }
+  if (nTracksShared == 1) {
+    ACTS_VERBOSE("Measurement is not shared, copy it over");
+
+    trackStateType = TrackStateTypes::UnsharedHit;
+
+    return;
+  } else if (nTracksShared > 1) {
+    ACTS_VERBOSE("Measurement is shared, copy it over");
+    trackStateType = TrackStateTypes::SharedHit;
+    return;
+  }
+}
 }  // namespace Acts

@@ -205,6 +205,12 @@ class ScoreBasedAmbiguityResolution {
                const typename track_proxy_t::ConstTrackStateProxy&,
                TrackStateTypes&)>>& optionalHitSelections = {}) const;
 
+  template <TrackProxyConcept track_proxy_t>
+  void assignTrackStateType(
+      const track_proxy_t& track,
+      const typename track_proxy_t::ConstTrackStateProxy& ts,
+      TrackStateTypes& trackStateType, const std::size_t nTracksShared) const;
+
   /// Remove tracks that are bad based on cuts and weighted scores.
   ///
   /// @brief Remove tracks that are not good enough
