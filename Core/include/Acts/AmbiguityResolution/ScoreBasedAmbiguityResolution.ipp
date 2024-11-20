@@ -457,6 +457,7 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
          detectorId++) {
       DetectorConfig detector = m_cfg.detectorConfigs.at(detectorId);
+
       if (trackFeaturesVector[detectorId].nSharedHits >
           detector.maxSharedHits) {
         trkCouldBeAccepted = false;
@@ -500,6 +501,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   // Loop over all measurements of the track and for each hit and
   // trackStateTypes are assigned.
 
+
   std::vector<std::size_t> newMeasurementsPerTrack;
   std::size_t measurement = 0;
   std::size_t nshared = 0;
@@ -510,6 +512,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   // trackStateTypes and other conditions.
   // Good measurements are copied to the newMeasurementsPerTrack vector.
   for (std::size_t index = 0; const auto& ts : track.trackStatesReversed()) {
+
     if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
         ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
       if (!ts.hasReferenceSurface()) {
@@ -592,4 +595,5 @@ void Acts::ScoreBasedAmbiguityResolution::assignTrackStateType(
     return;
   }
 }
+
 }  // namespace Acts
