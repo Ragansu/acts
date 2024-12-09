@@ -405,39 +405,15 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     trackScore = simpleScore(tracks, trackFeaturesVectors, optionalCuts);
   }
 
-  auto MeasurementIndexMap =
-      std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
-                         source_link_equality_t>(0, sourceLinkHash,
-                                                 sourceLinkEquality);
 
   std::vector<std::vector<std::size_t>> measurementsPerTrackVector;
   std::map<std::size_t, std::size_t> nTracksPerMeasurement;
 
-  // Stores tracks measurement into a vector or vectors
-  // (measurementsPerTrackVector) and counts the number of tracks per
-  // measurement.(nTracksPerMeasurement)
-
-  for (const auto& track : tracks) {
-    std::vector<std::size_t> measurementsPerTrack;
-    for (const auto& ts : track.trackStatesReversed()) {
-      if (!ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) &&
-          !ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-        continue;
-      }
-      Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
-      // assign a new measurement index if the source link was not seen yet
-      auto emplace = MeasurementIndexMap.try_emplace(
-          sourceLink, MeasurementIndexMap.size());
-      std::size_t iMeasurement = emplace.first->second;
-      measurementsPerTrack.push_back(iMeasurement);
-      if (nTracksPerMeasurement.find(iMeasurement) ==
-          nTracksPerMeasurement.end()) {
-        nTracksPerMeasurement[iMeasurement] = 0;
-      }
-      nTracksPerMeasurement[iMeasurement]++;
-    }
-    measurementsPerTrackVector.push_back(std::move(measurementsPerTrack));
-  }
+  // Compute the measurements per track and the number of tracks per measurement
+  computeSharedHitsMatrix<track_container_t>(tracks, sourceLinkHash,
+                                             sourceLinkEquality,
+                                             measurementsPerTrackVector,
+                                             nTracksPerMeasurement);
 
   std::vector<int> goodTracks;
   int cleanTrackIndex = 0;
@@ -498,10 +474,6 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   // For tracks with shared hits, we need to check and remove bad hits
 
   std::vector<TrackStateTypes> trackStateTypes;
-  // Loop over all measurements of the track and for each hit and
-  // trackStateTypes are assigned.
-
-
   std::vector<std::size_t> newMeasurementsPerTrack;
   std::size_t measurement = 0;
   std::size_t nshared = 0;
@@ -512,7 +484,6 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   // trackStateTypes and other conditions.
   // Good measurements are copied to the newMeasurementsPerTrack vector.
   for (std::size_t index = 0; const auto& ts : track.trackStatesReversed()) {
-
     if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
         ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
       if (!ts.hasReferenceSurface()) {
@@ -596,4 +567,40 @@ void Acts::ScoreBasedAmbiguityResolution::assignTrackStateType(
   }
 }
 
+template <TrackContainerFrontend track_container_t, typename source_link_hash_t,
+          typename source_link_equality_t>
+void Acts::ScoreBasedAmbiguityResolution::computeSharedHitsMatrix(
+    const track_container_t& tracks, source_link_hash_t sourceLinkHash,
+    source_link_equality_t sourceLinkEquality,
+    std::vector<std::size_t>& measurementsPerTrack,
+    std::map<std::size_t, std::size_t>& nTracksPerMeasurement) const {
+  auto MeasurementIndexMap =
+      std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
+                         source_link_equality_t>(0, sourceLinkHash,
+                                                 sourceLinkEquality);
+  // Stores tracks measurement into a vector or vectors
+  // (measurementsPerTrackVector) and counts the number of tracks per
+  // measurement.(nTracksPerMeasurement)
+  for (const auto& track : tracks) {
+    std::vector<std::size_t> measurementsPerTrack;
+    for (const auto& ts : track.trackStatesReversed()) {
+      if (!ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) &&
+          !ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        continue;
+      }
+      Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
+      // assign a new measurement index if the source link was not seen yet
+      auto emplace = MeasurementIndexMap.try_emplace(
+          sourceLink, MeasurementIndexMap.size());
+      std::size_t iMeasurement = emplace.first->second;
+      measurementsPerTrack.push_back(iMeasurement);
+      if (nTracksPerMeasurement.find(iMeasurement) ==
+          nTracksPerMeasurement.end()) {
+        nTracksPerMeasurement[iMeasurement] = 0;
+      }
+      nTracksPerMeasurement[iMeasurement]++;
+    }
+    measurementsPerTrackVector.push_back(std::move(measurementsPerTrack));
+  }
+}
 }  // namespace Acts

@@ -226,6 +226,23 @@ class ScoreBasedAmbiguityResolution {
       const OptionalCuts<typename track_container_t::ConstTrackProxy>&
           optionalCuts = {}) const;
 
+  /// Remove tracks that are bad based on cuts and weighted scores.
+  ///
+  /// @brief Remove tracks that are not good enough
+  /// @param tracks is the input track container
+  /// @param sourceLinkHash is the  source links
+  /// @param sourceLinkEquality is the equality function for the source links
+  /// @param measurementsPerTrack is the list of measurements for each track
+  /// @param nTracksPerMeasurement is the number of tracks per measurement
+  /// @return a vector of IDs of the tracks we want to keep
+  template <TrackContainerFrontend track_container_t,
+            typename source_link_hash_t, typename source_link_equality_t>
+  void computeSharedHitsMatrix(
+      const track_container_t& tracks, source_link_hash_t sourceLinkHash,
+      source_link_equality_t sourceLinkEquality,
+      std::vector<std::size_t>& measurementsPerTrack,
+      std::map<std::size_t, std::size_t>& nTracksPerMeasurement) const;
+
  private:
   Config m_cfg;
 
