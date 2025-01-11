@@ -156,7 +156,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param tracks is the input track container
   /// @return trackFeaturesVectors is the trackFeatures map from detector ID to trackFeatures
   template <TrackContainerFrontend track_container_t>
-  std::vector<std::vector<TrackFeatures>> computeInitialState(
+  std::vector<std::vector<TrackFeatures>> computeDetectorState(
       const track_container_t& tracks) const;
 
   /// Compute the score of each track.
@@ -232,7 +232,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param tracks is the input track container
   /// @param sourceLinkHash is the  source links
   /// @param sourceLinkEquality is the equality function for the source links
-  /// @param measurementsPerTrack is the list of measurements for each track
+  /// @param measurementsPerTrackVector is the vector of lists of measurements for each track
   /// @param nTracksPerMeasurement is the number of tracks per measurement
   /// @return a vector of IDs of the tracks we want to keep
   template <TrackContainerFrontend track_container_t,
@@ -240,7 +240,7 @@ class ScoreBasedAmbiguityResolution {
   void computeSharedHitsMatrix(
       const track_container_t& tracks, source_link_hash_t sourceLinkHash,
       source_link_equality_t sourceLinkEquality,
-      std::vector<std::size_t>& measurementsPerTrack,
+      std::vector<std::vector<std::size_t>>& measurementsPerTrackVector,
       std::map<std::size_t, std::size_t>& nTracksPerMeasurement) const;
 
  private:

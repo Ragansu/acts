@@ -23,7 +23,7 @@ inline const Logger& ScoreBasedAmbiguityResolution::logger() const {
 
 template <TrackContainerFrontend track_container_t>
 std::vector<std::vector<ScoreBasedAmbiguityResolution::TrackFeatures>>
-ScoreBasedAmbiguityResolution::computeInitialState(
+ScoreBasedAmbiguityResolution::computeDetectorState(
     const track_container_t& tracks) const {
   ACTS_VERBOSE("Starting to compute initial state");
   std::vector<std::vector<TrackFeatures>> trackFeaturesVectors;
@@ -391,19 +391,13 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     const OptionalCuts<typename track_container_t::ConstTrackProxy>&
         optionalCuts) const {
   ACTS_INFO("Number of tracks before Ambiguty Resolution: " << tracks.size());
+
+  // --------------------------- Initializations Step ----------------------------
+
   // vector of trackFeaturesVectors. where each trackFeaturesVector contains the
   // number of hits/hole/outliers for each detector in a track.
-
   const std::vector<std::vector<TrackFeatures>> trackFeaturesVectors =
-      computeInitialState<track_container_t>(tracks);
-
-  std::vector<double> trackScore;
-  trackScore.reserve(tracks.size());
-  if (m_cfg.useAmbiguityFunction) {
-    trackScore = ambiguityScore(tracks, trackFeaturesVectors, optionalCuts);
-  } else {
-    trackScore = simpleScore(tracks, trackFeaturesVectors, optionalCuts);
-  }
+      computeDetectorState<track_container_t>(tracks);
 
 
   std::vector<std::vector<std::size_t>> measurementsPerTrackVector;
@@ -414,6 +408,19 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
                                              sourceLinkEquality,
                                              measurementsPerTrackVector,
                                              nTracksPerMeasurement);
+
+  // ---------------------------- Track Scoring Step ------------------------------
+
+  std::vector<double> trackScore;
+  trackScore.reserve(tracks.size());
+  if (m_cfg.useAmbiguityFunction) {
+    trackScore = ambiguityScore(tracks, trackFeaturesVectors, optionalCuts);
+  } else {
+    trackScore = simpleScore(tracks, trackFeaturesVectors, optionalCuts);
+  }
+
+
+  // ---------------------------- Track Cleaning Step -----------------------------
 
   std::vector<int> goodTracks;
   int cleanTrackIndex = 0;
@@ -572,7 +579,7 @@ template <TrackContainerFrontend track_container_t, typename source_link_hash_t,
 void Acts::ScoreBasedAmbiguityResolution::computeSharedHitsMatrix(
     const track_container_t& tracks, source_link_hash_t sourceLinkHash,
     source_link_equality_t sourceLinkEquality,
-    std::vector<std::size_t>& measurementsPerTrack,
+    std::vector<std::vector<std::size_t>>& measurementsPerTrackVector,
     std::map<std::size_t, std::size_t>& nTracksPerMeasurement) const {
   auto MeasurementIndexMap =
       std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
