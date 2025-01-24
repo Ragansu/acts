@@ -20,9 +20,9 @@ std::size_t Acts::ScoreBasedAmbiguityResolution::getValueAtEta(
   }
 
   else {
-    std::cerr
-        << "The size of minHits is not equal to 1 or the number of eta bins"
-        << std::endl;
+    std::cerr << "The size of cuts is not equal to 1 or the number of eta bins"
+              << " size of cuts: " << cuts.size()
+              << " number of eta bins: " << etaBinSize << std::endl;
     return 0;
   }
 }
@@ -42,17 +42,17 @@ bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
     }
   }
 
+  cutApplied = (trackFeatures.nHits < getValueAtEta(detector.minHitsPerEta,
+                                                    etaBins.size(), etaBin)) ||
+               cutApplied;
+
+  cutApplied = (trackFeatures.nHoles > getValueAtEta(detector.maxHolesPerEta,
+                                                     etaBins.size(), etaBin)) ||
+               cutApplied;
+
   cutApplied =
-       (trackFeatures.nHits <
-          getValueAtEta(detector.minHitsPerEta, etaBins.size(), etaBin)) ||
-      cutApplied;
-  cutApplied =
-       (trackFeatures.nHoles >
-          getValueAtEta(detector.maxHolesPerEta, etaBins.size(), etaBin)) ||
-      cutApplied;
-  cutApplied =
-       (trackFeatures.nOutliers >
-          getValueAtEta(detector.maxOutliersPerEta, etaBins.size(), etaBin)) ||
+      (trackFeatures.nOutliers >
+       getValueAtEta(detector.maxOutliersPerEta, etaBins.size(), etaBin)) ||
       cutApplied;
 
   return cutApplied;

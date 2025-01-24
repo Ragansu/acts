@@ -423,7 +423,7 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
         }
       }
 
-      if (trackFeaturesVector[detectorId].nSharedHits <
+      if (trackFeaturesVector[detectorId].nSharedHits >
           getValueAtEta(detector.maxSharedHitsPerEta, etaBins.size(), etaBin)) {
         trkCouldBeAccepted = false;
         break;
