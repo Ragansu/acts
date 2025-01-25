@@ -113,6 +113,9 @@ class ScoreBasedAmbiguityResolution {
     std::size_t maxSharedTracksPerMeasurement = 10;
     /// maximum number of shared hit per track
     std::size_t maxShared = 5;
+    /// minimum number of unshared hits per track
+    std::size_t minUnshared = 5;
+
 
     // if true, the ambiguity score is computed based on a different function.
     bool useAmbiguityFunction = false;
