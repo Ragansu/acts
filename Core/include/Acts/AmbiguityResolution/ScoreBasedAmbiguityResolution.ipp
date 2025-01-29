@@ -255,16 +255,11 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
 
     // All cuts passed, now start scoring the track
 
-    std::cout << ", Score before Pt," << score << ", pT, " << pT << ", eta, "
-              << eta << std::endl;
     // start with larger score for tracks with higher pT.
     score = std::log10(pT / UnitConstants::MeV) - 1.;
     // pT in GeV, hence 100 MeV is minimum and gets score = 1
     ACTS_DEBUG("Modifier for pT = " << pT << " GeV is : " << score
                                     << "  New score now: " << score);
-
-    std::cout << ", Score after Pt," << score << ", pT, " << pT << ", eta, "
-              << eta << std::endl;
 
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
          detectorId++) {
@@ -272,8 +267,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
 
       const auto& trackFeatures = trackFeaturesVector[detectorId];
 
-      std::cout << ", Score before detector " << detectorId << " Hits," << score
-                << ", pT, " << pT << ", eta, " << eta << std::endl;
       // choosing a scaling factor based on the number of hits in a track per
       // detector.
       std::size_t nHits = trackFeatures.nHits;
@@ -286,12 +279,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
                                  << " hits: " << detector.factorHits[nHits]
                                  << "  New score now: " << score);
 
-      std::cout << ", Score after detector " << detectorId << " Hits," << score
-                << ", pT, " << pT << ", eta, " << eta << std::endl;
-
-      std::cout << ", Score before detector " << detectorId << " Holes,"
-                << score << ", pT, " << pT << ", eta, " << eta << std::endl;
-
       // choosing a scaling factor based on the number of holes in a track per
       // detector.
       std::size_t iHoles = trackFeatures.nHoles;
@@ -303,16 +290,11 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       ACTS_DEBUG("Modifier for " << iHoles
                                  << " holes: " << detector.factorHoles[iHoles]
                                  << "  New score now: " << score);
-      std::cout << ", Score after detector " << detectorId << " Holes," << score
-                << ", pT, " << pT << ", eta, " << eta << std::endl;
     }
 
     for (const auto& scoreFunction : optionalCuts.scores) {
       scoreFunction(track, score);
     }
-
-    std::cout << ", Score before chi2," << score << ", pT, " << pT << ", eta, "
-              << eta << std::endl;
 
     if (track.chi2() > 0 && track.nDoF() > 0) {
       double chi2 = track.chi2();
@@ -324,8 +306,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
                                         << "  New score now: " << score);
     }
 
-    std::cout << ", Score after chi2," << score << ", pT, " << pT << ", eta, "
-              << eta << std::endl;
     iTrack++;
 
     // Add the score to the vector
@@ -424,7 +404,7 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
       }
 
       if (trackFeaturesVector[detectorId].nSharedHits >
-          getValueAtEta(detector.maxSharedHitsPerEta, etaBins.size(), etaBin)) {
+          detector.maxSharedHitsPerEta[etaBin]) {
         trkCouldBeAccepted = false;
         break;
       }
@@ -510,6 +490,18 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
         ACTS_DEBUG("Track state has no reference surface");
         continue;
       }
+
+      std::size_t ivolume = ts.referenceSurface().geometryId().volume();
+      auto volume_it = m_cfg.volumeMap.find(ivolume);
+      if (volume_it == m_cfg.volumeMap.end()) {
+        ACTS_ERROR("Volume " << ivolume << "not found in the volume map");
+        continue;
+      }
+
+      std::size_t detectorID = volume_it->second;
+
+      const auto& detector = m_cfg.detectorConfigs.at(detectorID);
+
       measurement = measurementsPerTrack[index];
 
       auto it = nTracksPerMeasurement.find(measurement);
@@ -542,7 +534,8 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
       else {
         ACTS_DEBUG("Try to recover shared hit ");
         if (nTracksShared <= m_cfg.maxSharedTracksPerMeasurement &&
-            trackScore > m_cfg.minScoreSharedTracks) {
+            trackScore > m_cfg.minScoreSharedTracks &&
+            !detector.sharedHitsFlag) {
           ACTS_DEBUG("Accepted hit shared with " << nTracksShared << " tracks");
           newMeasurementsPerTrack.push_back(measurement);
           nshared++;

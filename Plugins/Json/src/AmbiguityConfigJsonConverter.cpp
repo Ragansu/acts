@@ -11,6 +11,21 @@
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 
+void initializeEtaVector(std::vector<std::size_t>& target,
+                         const std::vector<std::size_t>& source,
+                         int etaBinSize) {
+  if (source.size() == etaBinSize - 1) {
+    target = source;  // Directly copy if sizes match
+  } else if (source.size() == 1) {
+    target.resize(etaBinSize - 1);  // Resize target to the required size
+    std::fill(target.begin(), target.end(),
+              source[0]);  // Fill with the single value from source
+  } else {
+    throw std::invalid_argument("Invalid cuts size. Expected 1 or " +
+                                std::to_string(etaBinSize - 1) + ", got " +
+                                std::to_string(source.size()));
+  }
+}
 namespace Acts {
 
 void from_json(const nlohmann::json& j, ConfigPair& p) {
@@ -36,36 +51,38 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
     const std::vector<double>& fakeHoles = value["fakeHoles"];
 
     const std::vector<double>& etaBins = value["etaBins"];
-    detectorConfig.etaBins = {};
-    for (auto etaBin : etaBins) {
-      detectorConfig.etaBins.push_back(etaBin);
+
+    // Validate eta bins
+    if (!etaBins.empty()) {
+      // Verify monotonically increasing eta bins
+      if (!std::is_sorted(etaBins.begin(), etaBins.end())) {
+        throw std::invalid_argument(
+            "Eta bins must be monotonically increasing");
+      }
+
+      detectorConfig.etaBins = {};
+      for (auto etaBin : etaBins) {
+        detectorConfig.etaBins.push_back(etaBin);
+      }
     }
 
     const std::vector<std::size_t>& minHitsPerEta = value["minHitsPerEta"];
-    detectorConfig.minHitsPerEta = {};
-    for (auto minHit : minHitsPerEta) {
-      detectorConfig.minHitsPerEta.push_back(minHit);
-    }
+    initializeEtaVector(detectorConfig.minHitsPerEta, minHitsPerEta,
+                        detectorConfig.etaBins.size());
 
     const std::vector<std::size_t>& maxHolesPerEta = value["maxHolesPerEta"];
-    detectorConfig.maxHolesPerEta = {};
-    for (auto maxHole : maxHolesPerEta) {
-      detectorConfig.maxHolesPerEta.push_back(maxHole);
-    }
+    initializeEtaVector(detectorConfig.maxHolesPerEta, maxHolesPerEta,
+                        detectorConfig.etaBins.size());
 
     const std::vector<std::size_t>& maxOutliersPerEta =
         value["maxOutliersPerEta"];
-    detectorConfig.maxOutliersPerEta = {};
-    for (auto maxOutlier : maxOutliersPerEta) {
-      detectorConfig.maxOutliersPerEta.push_back(maxOutlier);
-    }
+    initializeEtaVector(detectorConfig.maxOutliersPerEta, maxOutliersPerEta,
+                        detectorConfig.etaBins.size());
 
     const std::vector<std::size_t>& maxSharedHitsPerEta =
         value["maxSharedHitsPerEta"];
-    detectorConfig.maxSharedHitsPerEta = {};
-    for (auto maxSharedHit : maxSharedHitsPerEta) {
-      detectorConfig.maxSharedHitsPerEta.push_back(maxSharedHit);
-    }
+    initializeEtaVector(detectorConfig.maxSharedHitsPerEta, maxSharedHitsPerEta,
+                        detectorConfig.etaBins.size());
 
     if (goodHits.size() != fakeHits.size()) {
       throw std::invalid_argument("goodHits and FakeHits size mismatch");

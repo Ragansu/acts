@@ -51,12 +51,19 @@ class ScoreBasedAmbiguityResolution {
     int outliersScoreWeight = 0;
     int otherScoreWeight = 0;
 
-    // the minimum number of hits for each detector for each eta bin
+    // the eta bins for the detector
     std::vector<double> etaBins = {-5, 5};
 
+    // the minimum number of hits for each detector for each eta bin
     std::vector<std::size_t> minHitsPerEta = {0};
+
+    // the maximum number of holes for each detector for each eta bin
     std::vector<std::size_t> maxHolesPerEta = {0};
+
+    // the maximum number of outliers for each detector for each eta bin
     std::vector<std::size_t> maxOutliersPerEta = {0};
+
+    // the maximum number of shared hits for each detector for each eta bin
     std::vector<std::size_t> maxSharedHitsPerEta = {0};
 
     std::size_t maxHits = 0;
@@ -115,7 +122,6 @@ class ScoreBasedAmbiguityResolution {
     std::size_t maxShared = 5;
     /// minimum number of unshared hits per track
     std::size_t minUnshared = 5;
-
 
     // if true, the ambiguity score is computed based on a different function.
     bool useAmbiguityFunction = false;
@@ -185,9 +191,15 @@ class ScoreBasedAmbiguityResolution {
       const OptionalCuts<typename track_container_t::ConstTrackProxy>&
           optionalCuts = {}) const;
 
-  bool etaBasedCuts(
-    const DetectorConfig& detector, const TrackFeatures& trackFeatures,
-    const double& eta) const;
+  /// Rejects Tracks based on eta dependent cuts.
+  ///
+  /// @param detector is the detector configuration object
+  /// @param trackFeatures is the trackFeatures object for a specific detector
+  /// @param eta is the eta of the track
+  /// @return true if the track is rejected, false otherwise
+  bool etaBasedCuts(const DetectorConfig& detector,
+                    const TrackFeatures& trackFeatures,
+                    const double& eta) const;
 
   /// Remove hits that are not good enough for each track and removes tracks
   /// that have a score below a certain threshold or not enough hits.
@@ -224,9 +236,6 @@ class ScoreBasedAmbiguityResolution {
       source_link_equality_t sourceLinkEquality,
       const OptionalCuts<typename track_container_t::ConstTrackProxy>&
           optionalCuts = {}) const;
-
-  static std::size_t getValueAtEta(std::vector<std::size_t> cuts, std::size_t etaBinSize,
-                          std::size_t binIndex);
 
  private:
   Config m_cfg;
