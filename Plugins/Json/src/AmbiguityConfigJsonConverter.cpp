@@ -13,7 +13,7 @@
 
 void initializeEtaVector(std::vector<std::size_t>& target,
                          const std::vector<std::size_t>& source,
-                         int etaBinSize) {
+                         std::size_t etaBinSize) {
   if (source.size() == etaBinSize - 1) {
     target = source;  // Directly copy if sizes match
   } else if (source.size() == 1) {
@@ -60,10 +60,7 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
             "Eta bins must be monotonically increasing");
       }
 
-      detectorConfig.etaBins = {};
-      for (auto etaBin : etaBins) {
-        detectorConfig.etaBins.push_back(etaBin);
-      }
+      detectorConfig.etaBins = etaBins;
     }
 
     const std::vector<std::size_t>& minHitsPerEta = value["minHitsPerEta"];
