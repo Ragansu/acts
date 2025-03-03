@@ -76,6 +76,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     const Optionals<typename track_container_t::ConstTrackProxy>& optionals)
     const {
   std::vector<double> trackScore;
+  std::vector<ScoreMonitor> scoreMonitor;
   trackScore.reserve(tracks.size());
 
   int iTrack = 0;
@@ -189,7 +190,9 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     const Optionals<typename track_container_t::ConstTrackProxy>& optionals)
     const {
   std::vector<double> trackScore;
+  std::vector<ScoreMonitor> scoreMonitor;
   trackScore.reserve(tracks.size());
+  scoreMonitor.reserve(tracks.size());
 
   ACTS_VERBOSE("Using Ambiguity Scoring function");
 
@@ -204,6 +207,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     // get the trackFeatures map for the track
     const auto& trackFeaturesVector = trackFeaturesVectors[iTrack];
     double score = 1;
+    ScoreMonitor monitor;
     auto pT = Acts::VectorHelpers::perp(track.momentum());
     auto eta = Acts::VectorHelpers::eta(track.momentum());
 
@@ -220,6 +224,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     if (score == 0) {
       iTrack++;
       trackScore.push_back(score);
+      monitor.setZero();
+      scoreMonitor.push_back(monitor);
       ACTS_DEBUG("Track: " << iTrack << " score : " << score);
       continue;
     }
@@ -249,6 +255,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     if (score == 0) {
       iTrack++;
       trackScore.push_back(score);
+      monitor.setZero();
+      scoreMonitor.push_back(monitor);
       ACTS_DEBUG("Track: " << iTrack << " score : " << score);
       continue;
     }
@@ -260,6 +268,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     // pT in GeV, hence 100 MeV is minimum and gets score = 1
     ACTS_DEBUG("Modifier for pT = " << pT << " GeV is : " << score
                                     << "  New score now: " << score);
+
+    monitor.ptScore = score;                                
 
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
          detectorId++) {
@@ -279,6 +289,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
                                  << " hits: " << detector.factorHits[nHits]
                                  << "  New score now: " << score);
 
+      monitor.detectorHitScore.push_back(score);                           
       // choosing a scaling factor based on the number of holes in a track per
       // detector.
       std::size_t iHoles = trackFeatures.nHoles;
@@ -287,6 +298,9 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
         iHoles = detector.maxHoles;
       }
       score = score * detector.factorHoles[iHoles];
+
+      monitor.detectorHoleScore.push_back(score);
+
       ACTS_DEBUG("Modifier for " << iHoles
                                  << " holes: " << detector.factorHoles[iHoles]
                                  << "  New score now: " << score);
@@ -294,6 +308,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
 
     for (const auto& scoreFunction : optionals.scores) {
       scoreFunction(track, score);
+      monitor.optionalScore.push_back(score);
     }
 
     if (track.chi2() > 0 && track.nDoF() > 0) {
@@ -301,18 +316,26 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       int indf = track.nDoF();
       double fac = 1. / std::log10(10. + 10. * chi2 / indf);
       score = score * fac;
+
+      monitor.chi2Score = score;
+
       ACTS_DEBUG("Modifier for chi2 = " << chi2 << " and NDF = " << indf
                                         << " is : " << fac
                                         << "  New score now: " << score);
     }
 
+    monitor.totalScore = score;
+
     iTrack++;
 
     // Add the score to the vector
     trackScore.push_back(score);
+    scoreMonitor.push_back(monitor);
     ACTS_VERBOSE("Track: " << iTrack << " score: " << score);
 
   }  // end of loop over tracks
+
+  saveScoreMonitor(scoreMonitor, "scoreMonitor.csv");
 
   return trackScore;
 }

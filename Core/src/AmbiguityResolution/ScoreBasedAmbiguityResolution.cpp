@@ -7,8 +7,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
-
-bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
+#include <fstream>
+#include <iostream>
+namespace Acts {
+bool ScoreBasedAmbiguityResolution::etaBasedCuts(
     const DetectorConfig& detector, const TrackFeatures& trackFeatures,
     const double& eta) const {
   const auto& etaBins = detector.etaBins;
@@ -23,3 +25,56 @@ bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
           trackFeatures.nOutliers > detector.maxOutliersPerEta[etaBin] ||
           trackFeatures.nSharedHits > detector.maxSharedHitsPerEta[etaBin]);
 }
+
+void ScoreBasedAmbiguityResolution::saveScoreMonitor(
+    const std::vector<ScoreMonitor>& scoreMonitor,
+    const std::string& monitorFilePath) const {
+  std::string headers;
+  headers = "ptScore,";
+  for (std::size_t i = 0; i < scoreMonitor[0].detectorHitScore.size(); i++) {
+    headers += "detectorHitScore" + std::to_string(i) + ",";
+  }
+  for (std::size_t i = 0; i < scoreMonitor[0].detectorHoleScore.size(); i++) {
+    headers += "detectorHoleScore" + std::to_string(i) + ",";
+  }
+  for (std::size_t i = 0; i < scoreMonitor[0].detectorOutlierScore.size();
+       i++) {
+    headers += "detectorOutlierScore" + std::to_string(i) + ",";
+  }
+  for (std::size_t i = 0; i < scoreMonitor[0].detectorOtherScore.size(); i++) {
+    headers += "detectorOtherScore" + std::to_string(i) + ",";
+  }
+  headers += "chi2Score,";
+  for (std::size_t i = 0; i < scoreMonitor[0].optionalScore.size(); i++) {
+    headers += "optionalScore" + std::to_string(i) + ",";
+  }
+  headers += "totalScore\n";
+
+  std::ofstream monitorFile;
+  monitorFile.open(monitorFilePath, std::ios::app);
+  monitorFile << headers;
+
+  for (const auto& monitor : scoreMonitor) {
+    monitorFile << monitor.ptScore << ",";
+    for (const auto& score : monitor.detectorHitScore) {
+      monitorFile << score << ",";
+    }
+    for (const auto& score : monitor.detectorHoleScore) {
+      monitorFile << score << ",";
+    }
+    for (const auto& score : monitor.detectorOutlierScore) {
+      monitorFile << score << ",";
+    }
+    for (const auto& score : monitor.detectorOtherScore) {
+      monitorFile << score << ",";
+    }
+    monitorFile << monitor.chi2Score << ",";
+    for (const auto& score : monitor.optionalScore) {
+      monitorFile << score << ",";
+    }
+    monitorFile << monitor.totalScore << "\n";
+  }
+
+  monitorFile.close();
+}
+}  // namespace Acts
