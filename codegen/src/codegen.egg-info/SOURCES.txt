@@ -1,0 +1,8 @@
+pyproject.toml
+src/codegen/__init__.py
+src/codegen/sympy_common.py
+src/codegen.egg-info/PKG-INFO
+src/codegen.egg-info/SOURCES.txt
+src/codegen.egg-info/dependency_links.txt
+src/codegen.egg-info/requires.txt
+src/codegen.egg-info/top_level.txt

@@ -125,6 +125,12 @@ class ScoreBasedAmbiguityResolution {
 
     // if true, the ambiguity score is computed based on a different function.
     bool useAmbiguityScoring = false;
+
+    // if true, the score monitor is saved to a file
+    bool saveScoreMonitor = false;
+
+    // the file name to save the score monitor
+    std::string monitorFile = "scoreMonitor.csv";
   };
 
   /// @brief Optionals struct: contains the optional cuts, weights and score to be applied.
@@ -196,7 +202,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param optionals is the user defined optional cuts to be applied.
   /// @return a vector of scores for each track
   template <TrackContainerFrontend track_container_t>
-  std::vector<double> simpleScore(
+  std::vector<ScoreMonitor> simpleScore(
       const track_container_t& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
@@ -209,7 +215,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param optionals is the user defined optional cuts to be applied.
   /// @return a vector of scores for each track
   template <TrackContainerFrontend track_container_t>
-  std::vector<double> ambiguityScore(
+  std::vector<ScoreMonitor> ambiguityScore(
       const track_container_t& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
@@ -237,7 +243,7 @@ class ScoreBasedAmbiguityResolution {
   /// @return a vector of IDs of the tracks we want to keep
   template <TrackProxyConcept track_proxy_t>
   bool getCleanedOutTracks(
-      const track_proxy_t& track, const double& trackScore,
+      const track_proxy_t& track,
       const std::vector<std::size_t>& measurementsPerTrack,
       const std::map<std::size_t, std::size_t>& nTracksPerMeasurement,
       const std::vector<std::function<
@@ -255,7 +261,7 @@ class ScoreBasedAmbiguityResolution {
   /// @return a vector of IDs of the tracks we want to keep
   template <TrackContainerFrontend track_container_t,
             typename source_link_hash_t, typename source_link_equality_t>
-  std::vector<int> solveAmbiguity(
+  track_container_t solveAmbiguity(
       const track_container_t& tracks, source_link_hash_t sourceLinkHash,
       source_link_equality_t sourceLinkEquality,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
