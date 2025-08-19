@@ -354,8 +354,10 @@ track_container_t Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
 
   track_container_t updatedTracks;
   updatedTracks.ensureDynamicColumns(tracks);
-  updatedTracks.template addColumn<double>("trackScore");
-
+  if (!updatedTracks.hasColumn(Acts::hashString("trackScore"))) {
+    std::string key("trackScore");
+    updatedTracks.template addColumn<double>(key);
+  }
   std::vector<ScoreMonitor> scoreMonitor;
 
   if (m_cfg.useAmbiguityScoring) {
@@ -408,20 +410,21 @@ track_container_t Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
 
   auto optionalHitSelections = optionals.hitSelections;
 
-  track_container_t solvedTracks;
+  Acts::TrackContainer solvedTracks{track_container_t, traj_t};
   solvedTracks.ensureDynamicColumns(updatedTracks);
 
   // Loop over all the tracks in the container
   // For each track, check if the track has too many shared hits to be accepted.
   // If the track is good, add it to the solvedTracks container.
-  for (const auto& track : tracks) {
+  for (const auto& track : updatedTracks) {
+    int iTrack = track.index();
     // Check if the track has too many shared hits to be accepted.
     if (getCleanedOutTracks(track, measurementsPerTrackVector[iTrack],
                             nTracksPerMeasurement, optionalHitSelections)) {
       cleanTrackIndex++;
 
       double trackScore =
-          track.component<double>(Acts::hashString("trackScore"));
+          track.template component<double>(Acts::hashString("trackScore"));
 
       if (trackScore > m_cfg.minScore) {
         auto destProxy = solvedTracks.makeTrack();
@@ -447,10 +450,11 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
                            const typename track_proxy_t::ConstTrackStateProxy&,
                            TrackStateTypes&)>>& optionalHitSelections) const {
   // For tracks with shared hits, we need to check and remove bad hits
-
+  double trackScore = 0;
   Acts::HashedString hash_score = Acts::hashString("trackScore");
   if (track.container().hasColumn(hash_score)) {
-    double trackScore = track.component<double>(hash_score);
+    trackScore =
+        track.template component<double>(Acts::hashString("trackScore"));
   } else {
     ACTS_ERROR("Track has no score");
     return false;

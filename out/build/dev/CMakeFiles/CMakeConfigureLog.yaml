@@ -1,0 +1,11 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineSystem.cmake:204 (message)"
+      - "CMakeLists.txt:14 (project)"
+    message: |
+      The system is: Linux - 5.14.0-503.33.1.el9_5.x86_64 - x86_64
+...
