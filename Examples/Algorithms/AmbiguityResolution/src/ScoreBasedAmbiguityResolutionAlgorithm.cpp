@@ -11,6 +11,7 @@
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Plugins/Json/AmbiguityConfigJsonConverter.hpp"
+#include "Acts/Plugins/Root/AmbiScoreMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -124,6 +125,26 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
     auto srcProxy = tracks.getTrack(iTrack);
     destProxy.copyFrom(srcProxy, false);
     destProxy.tipIndex() = srcProxy.tipIndex();
+  }
+
+  // Save the score monitor data to a ROOT file
+  nlohmann::json json_file;
+  std::ifstream file(m_cfg.configFile);
+  if (!file.is_open()) {
+    std::cerr << "Error opening file: " << m_cfg.configFile << std::endl;
+    return {};
+  }
+  file >> json_file;
+  file.close();
+  auto prtDetectorNames = std::make_unique<std::vector<std::string>>();
+  Acts::from_json(json_file, prtDetectorNames.get());
+
+  std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor> scoreMonitor =
+      m_ambi.getScoreMonitor();
+  if (!scoreMonitor.empty()) {
+    Acts::saveScoreMonitor(scoreMonitor, m_cfg.monitorFile, *prtDetectorNames);
+  } else {
+    ACTS_ERROR("No score monitor data available to save.");
   }
 
   ActsExamples::ConstTrackContainer outputTracks{

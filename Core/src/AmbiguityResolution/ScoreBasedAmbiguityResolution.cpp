@@ -23,3 +23,8 @@ bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
           trackFeatures.nOutliers > detector.maxOutliersPerEta[etaBin] ||
           trackFeatures.nSharedHits > detector.maxSharedHitsPerEta[etaBin]);
 }
+
+std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>
+Acts::ScoreBasedAmbiguityResolution::getScoreMonitor() const {
+  return m_scoreMonitor;
+}

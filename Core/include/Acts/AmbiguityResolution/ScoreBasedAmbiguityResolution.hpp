@@ -151,6 +151,34 @@ class ScoreBasedAmbiguityResolution {
     std::vector<OptionalHitSelection> hitSelections = {};
   };
 
+  struct ScoreMonitor {
+    double pT = 0.0;
+    double eta = 0.0;
+    double phi = 0.0;
+
+    double ptScore = 0;
+    std::vector<double> detectorHitScore;
+    std::vector<double> detectorHoleScore;
+    std::vector<double> detectorOutlierScore;
+    std::vector<double> detectorOtherScore;
+    double chi2Score = 0;
+
+    std::vector<double> optionalScore;
+
+    double totalScore = 0;
+
+    void setZero() {
+      ptScore = 0;
+      detectorHitScore.clear();
+      detectorHoleScore.clear();
+      detectorOutlierScore.clear();
+      detectorOtherScore.clear();
+      chi2Score = 0;
+      optionalScore.clear();
+      totalScore = 0;
+    }
+  };
+
   explicit ScoreBasedAmbiguityResolution(
       const Config& cfg,
       std::unique_ptr<const Logger> logger =
@@ -237,11 +265,15 @@ class ScoreBasedAmbiguityResolution {
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
           {}) const;
 
+  std::vector<ScoreMonitor> getScoreMonitor() const;
+
  private:
   Config m_cfg;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger = nullptr;
+
+  mutable std::vector<ScoreMonitor> m_scoreMonitor;
 
   /// Private access to logging instance
   const Logger& logger() const;
