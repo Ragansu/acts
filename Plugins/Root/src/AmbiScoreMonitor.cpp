@@ -32,6 +32,7 @@ void Acts::saveScoreMonitor(
   double pT = 0.0;
   double eta = 0.0;
   double phi = 0.0;
+  int index = -1;
 
   double ptScore = 0;
   std::vector<double> detectorHitScore;
@@ -50,6 +51,7 @@ void Acts::saveScoreMonitor(
   tree->Branch("pT", &pT);
   tree->Branch("eta", &eta);
   tree->Branch("phi", &phi);
+  tree->Branch("index", &index);
   tree->Branch("ptScore", &ptScore);
   tree->Branch("chi2Score", &chi2Score);
   tree->Branch("totalScore", &totalScore);
@@ -67,6 +69,7 @@ void Acts::saveScoreMonitor(
     pT = monitor.pT;
     eta = monitor.eta;
     phi = monitor.phi;
+    index = monitor.index;
 
     ptScore = monitor.ptScore;
     chi2Score = monitor.chi2Score;

@@ -95,6 +95,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     const auto& trackFeaturesVector = trackFeaturesVectors[iTrack];
     double score = 1;
     ScoreMonitor monitor;
+
+    monitor.index = track.index();
     auto eta = Acts::VectorHelpers::eta(track.momentum());
     monitor.phi = Acts::VectorHelpers::phi(track.momentum());
     monitor.pT = Acts::VectorHelpers::perp(track.momentum());
@@ -239,6 +241,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     const auto& trackFeaturesVector = trackFeaturesVectors[iTrack];
     double score = 1;
     ScoreMonitor monitor;
+    monitor.index = track.index();
+
     auto pT = Acts::VectorHelpers::perp(track.momentum());
     auto eta = Acts::VectorHelpers::eta(track.momentum());
     auto phi = Acts::VectorHelpers::phi(track.momentum());

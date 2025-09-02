@@ -155,6 +155,7 @@ class ScoreBasedAmbiguityResolution {
     double pT = 0.0;
     double eta = 0.0;
     double phi = 0.0;
+    int index = -1;
 
     double ptScore = 0;
     std::vector<double> detectorHitScore;
