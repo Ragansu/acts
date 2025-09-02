@@ -104,6 +104,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::
   }
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTracks.initialize(m_cfg.outputTracks);
+  m_outputScoreMonitor.initialize(m_cfg.monitorFile);
 }
 
 ActsExamples::ProcessCode
@@ -159,5 +160,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
       tracks.trackStateContainerHolder()};
 
   m_outputTracks(ctx, std::move(outputTracks));
+  m_outputScoreMonitor(ctx, std::move(scoreMonitor));
+  
   return ActsExamples::ProcessCode::SUCCESS;
 }

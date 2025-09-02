@@ -2144,6 +2144,7 @@ def addScoreBasedAmbiguityResolution(
         configFile=ambiVolumeFile,
         monitorFile=ambiMonitorFile,
         outputTracks="ambiTracksScoreBased",
+        outputScoreMonitor="ambiScoreBased_monitor",
         **acts.examples.defaultKWArgs(
             minScore=config.minScore,
             minScoreSharedTracks=config.minScoreSharedTracks,
