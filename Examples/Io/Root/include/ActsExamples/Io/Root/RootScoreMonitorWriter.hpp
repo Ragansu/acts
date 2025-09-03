@@ -48,6 +48,10 @@ class RootScoreMonitorWriter final
   struct Config {
     /// Input particles collection.
     std::string inputScoreMonitor;
+
+    /// Input particles collection.
+    std::string inputParticles;
+    
     /// Input track-particle matching.
     std::string inputTrackParticleMatching;
 

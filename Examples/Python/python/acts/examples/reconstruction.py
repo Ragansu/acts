@@ -1811,6 +1811,7 @@ def addGx2fTracks(
 def addScoreMonitor(
     s: acts.examples.Sequencer,
     name: str,
+    inputParticles: str = "particles_selected",
     inputTrackParticleMatching: str = "track_particle_matching",
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1825,8 +1826,9 @@ def addScoreMonitor(
         scoreMonitorWriter = acts.examples.RootScoreMonitorWriter(
             level=customLogLevel(),
             inputScoreMonitor="ambiScoreBased_monitor",
+            inputParticles=inputParticles,
             inputTrackParticleMatching=inputTrackParticleMatching,
-            filePath=str(outputDirRoot / f"scoremonitor_{name}.root"),
+            filePath=str(outputDirRoot / "scoremonitor.root"),
             treeName="scoremonitor",
         )
         s.addWriter(scoreMonitorWriter)
@@ -2168,7 +2170,7 @@ def addScoreBasedAmbiguityResolution(
         inputTracks=tracks,
         configFile=ambiVolumeFile,
         outputTracks="ambiTracksScoreBased",
-        outputScoreMonitor="ambiScoreBased_monitor",
+        scoreMonitors="ambiScoreBased_monitor",
         **acts.examples.defaultKWArgs(
             minScore=config.minScore,
             minScoreSharedTracks=config.minScoreSharedTracks,
@@ -2198,6 +2200,7 @@ def addScoreBasedAmbiguityResolution(
     addScoreMonitor(
         s,
         name="scorebased",
+        inputParticles="particles",
         inputTrackParticleMatching=matchAlg_monitor.config.outputTrackParticleMatching,
         outputDirRoot=outputDirRoot,
         logLevel=logLevel,

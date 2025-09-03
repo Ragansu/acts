@@ -22,7 +22,8 @@ ActsExamples::RootScoreMonitorWriter::RootScoreMonitorWriter(
     Acts::Logging::Level level)
     : WriterT(config.inputScoreMonitor, "RootScoreMonitorWriter", level),
       m_cfg(config) {
-  // inputParticles is already checked by base constructor
+
+  
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing file path");
   }
@@ -41,8 +42,10 @@ ActsExamples::RootScoreMonitorWriter::RootScoreMonitorWriter(
     throw std::bad_alloc();
   }
 
-  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
-
+  m_inputParticles.maybeInitialize(m_cfg.inputParticles);
+  m_inputTrackParticleMatching.maybeInitialize(
+      m_cfg.inputTrackParticleMatching);
+      
   m_outputTree->Branch("event_nr", &m_eventNr);
   m_outputTree->Branch("pT", &m_pT);
   m_outputTree->Branch("eta", &m_eta);
@@ -87,8 +90,16 @@ ActsExamples::ProcessCode ActsExamples::RootScoreMonitorWriter::writeT(
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
-  const auto& particles = m_inputParticles(ctx);
+  const static SimParticleContainer emptyParticles;
+  const static TrackParticleMatching emptyTrackParticleMatching;
+
+  const auto& particles =
+      m_inputParticles.isInitialized() ? m_inputParticles(ctx) : emptyParticles;
+  const auto& trackParticleMatching =
+      m_inputTrackParticleMatching.isInitialized()
+          ? m_inputTrackParticleMatching(ctx)
+          : emptyTrackParticleMatching;
+
 
   // Get the event number
   m_eventNr = ctx.eventNumber;

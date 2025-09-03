@@ -104,7 +104,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::
   }
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTracks.initialize(m_cfg.outputTracks);
-  m_outputScoreMonitor.initialize(m_cfg.monitorFile);
+  m_outputScoreMonitor.initialize(m_cfg.scoreMonitors);
 }
 
 ActsExamples::ProcessCode

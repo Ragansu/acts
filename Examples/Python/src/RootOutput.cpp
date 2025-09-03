@@ -202,10 +202,11 @@ void addRootOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootTrackSummaryWriter, mex, "RootTrackSummaryWriter",
-      inputParticles, inputTrackParticleMatching, filePath, treeName, fileMode);
+      inputTracks, inputParticles, inputTrackParticleMatching, filePath,
+      treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootScoreMonitorWriter, mex,
-                             "RootScoreMonitorWriter", inputScoreMonitor,
+                             "RootScoreMonitorWriter", inputScoreMonitor,inputParticles,
                              inputTrackParticleMatching, detectorNames,
                              optionalFunctions, filePath, treeName, fileMode);
 
