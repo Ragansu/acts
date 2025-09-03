@@ -51,6 +51,11 @@ class RootScoreMonitorWriter final : public WriterT<ConstTrackContainer> {
     /// Input track-particle matching.
     std::string inputTrackParticleMatching;
 
+    /// Names of the detectors
+    std::vector<std::string> detectorNames = {};
+    /// Names of optional scoring functions
+    std::vector<std::string> optionalFunctions = {};
+
     /// output filename.
     std::string filePath = "ScoreMonitor.root";
     /// name of the output tree.
@@ -77,18 +82,17 @@ class RootScoreMonitorWriter final : public WriterT<ConstTrackContainer> {
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] tracks are what to be written out
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const ConstTrackContainer& tracks) override;
+  ProcessCode write(const AlgorithmContext& ctx) override;
 
  private:
   /// The config class
   Config m_cfg;
 
-  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
   ReadDataHandle<std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>>
       m_outputScoreMonitor{this, "InputScoreMonitor"};
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   /// Mutex used to protect multi-threaded writes
   std::mutex m_writeMutex;
 
@@ -99,17 +103,27 @@ class RootScoreMonitorWriter final : public WriterT<ConstTrackContainer> {
 
   /// the event number
   std::uint32_t m_eventNr{0};
-  /// the track number
-  std::uint32_t m_trackNr{0};
-
+  /// transverse momentum
   double m_pT = 0.0;
+  /// pseudorapidity
   double m_eta = 0.0;
+  /// azimuthal angle
   double m_phi = 0.0;
+  /// track index
   std::uint32_t m_index = -1;
+  /// total score from ambiguity resolution
   double m_totalScore = 0;
+  /// chi2 score from ambiguity resolution
   double m_chi2Score = 0;
+  /// pT score from ambiguity resolution
   double m_ptScore = 0;
+  /// whether the track is matched to a truth particle
+  bool m_isMatched = false;
+  /// ID of the matched truth particle (0 if not matched)
+  std::uint32_t m_matchedParticleId = 0;
 
+  /// scores per detector for hits, holes, outliers, others
+  /// (size is number of detectors)
   std::vector<double> m_detectorHitScore;
   std::vector<double> m_detectorHoleScore;
   std::vector<double> m_detectorOutlierScore;

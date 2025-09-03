@@ -41,6 +41,10 @@ ActsExamples::RootScoreMonitorWriter::RootScoreMonitorWriter(
     throw std::bad_alloc();
   }
 
+  m_outputScoreMonitor.initialize(m_cfg.inputScoreMonitor);
+  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+
+  m_outputTree->Branch("event_nr", &m_eventNr);
   m_outputTree->Branch("pT", &m_pT);
   m_outputTree->Branch("eta", &m_eta);
   m_outputTree->Branch("phi", &m_phi);
@@ -48,6 +52,8 @@ ActsExamples::RootScoreMonitorWriter::RootScoreMonitorWriter(
   m_outputTree->Branch("ptScore", &m_ptScore);
   m_outputTree->Branch("chi2Score", &m_chi2Score);
   m_outputTree->Branch("totalScore", &m_totalScore);
+  m_outputTree->Branch("isMatched", &m_isMatched);
+  m_outputTree->Branch("matchedParticleId", &m_matchedParticleId);
 
   m_outputTree->Branch("detectorHitScore", &m_detectorHitScore);
   m_outputTree->Branch("detectorHoleScore", &m_detectorHoleScore);
@@ -73,4 +79,64 @@ ActsExamples::ProcessCode ActsExamples::RootScoreMonitorWriter::finalize() {
                                                << m_cfg.filePath << "'");
 
   return ProcessCode::SUCCESS;
+}
+
+ActsExamples::ProcessCode ActsExamples::RootScoreMonitorWriter::write(
+    const AlgorithmContext& ctx) {
+  // ensure exclusive access to tree/file while writing
+  std::lock_guard<std::mutex> lock(m_writeMutex);
+
+  const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
+  const auto& scoreMonitor = m_outputScoreMonitor(ctx);
+  const auto& particles = m_inputParticles(ctx);
+
+  // Get the event number
+  m_eventNr = ctx.eventNumber;
+  m_detectorNamesroot = m_cfg.detectorNames;
+  m_optionalFunctionsroot = m_cfg.optionalFunctions;
+
+  // Fill the tree
+  for (const auto& monitor : scoreMonitor) {
+    m_pT = monitor.pT;
+    m_eta = monitor.eta;
+    m_phi = monitor.phi;
+    m_index = monitor.index;
+
+    auto match = trackParticleMatching.find(m_index);
+    if (match != trackParticleMatching.end() &&
+        match->second.particle.has_value()) {
+          if (match != trackParticleMatching.end() &&
+          match->second.particle.has_value()) {
+        // Get the barcode of the majority truth particle
+        auto barcode = match->second.particle.value();
+        // Find the truth particle via the barcode
+        auto ip = particles.find(barcode);
+        if (ip != particles.end()) {
+          ACTS_VERBOSE("Find the truth particle with barcode "
+                       << barcode << "=" << barcode.value());
+        } else {
+          ACTS_DEBUG("Truth particle with barcode "
+                     << barcode << "=" << barcode.value() << " not found!");
+        }
+      }
+      m_isMatched = true;
+      m_matchedParticleId = match->second.particle.value().value();
+    } else {
+      m_isMatched = false;
+      m_matchedParticleId = 0;
+    }
+
+    m_ptScore = monitor.ptScore;
+    m_chi2Score = monitor.chi2Score;
+    m_totalScore = monitor.totalScore;
+
+    m_detectorHitScore = monitor.detectorHitScore;
+    m_detectorHoleScore = monitor.detectorHoleScore;
+    m_detectorOutlierScore = monitor.detectorOutlierScore;
+    m_detectorOtherScore = monitor.detectorOtherScore;
+    m_optionalScore = monitor.optionalScore;
+
+    m_outputTree->Fill();
+  }
+  return ActsExamples::ProcessCode::SUCCESS;
 }
