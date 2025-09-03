@@ -16,6 +16,7 @@
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationSummaryWriter.hpp"
+#include "ActsExamples/Io/Root/RootScoreMonitorWriter.hpp"
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
@@ -201,8 +202,12 @@ void addRootOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootTrackSummaryWriter, mex, "RootTrackSummaryWriter",
-      inputTracks, inputParticles, inputTrackParticleMatching, filePath,
-      treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
+      inputParticles, inputTrackParticleMatching, filePath, treeName, fileMode);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootScoreMonitorWriter, mex,
+                             "RootScoreMonitorWriter", inputScoreMonitor,
+                             inputTrackParticleMatching, detectorNames,
+                             optionalFunctions, filePath, treeName, fileMode);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::VertexNTupleWriter, mex, "VertexNTupleWriter",

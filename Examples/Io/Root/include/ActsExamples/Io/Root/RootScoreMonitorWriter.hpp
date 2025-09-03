@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
@@ -41,11 +41,11 @@ namespace ActsExamples {
 /// done by setting the Config::rootFile pointer to an existing file.
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootScoreMonitorWriter final : public WriterT<ConstTrackContainer> {
+class RootScoreMonitorWriter final
+    : public WriterT<
+          std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>> {
  public:
   struct Config {
-    /// Input (fitted) tracks collection
-    std::string inputTracks;
     /// Input particles collection.
     std::string inputScoreMonitor;
     /// Input track-particle matching.
@@ -82,7 +82,10 @@ class RootScoreMonitorWriter final : public WriterT<ConstTrackContainer> {
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] tracks are what to be written out
-  ProcessCode write(const AlgorithmContext& ctx) override;
+  ProcessCode writeT(
+      const AlgorithmContext& ctx,
+      const std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>&
+          scoreMonitor) override;
 
  private:
   /// The config class
@@ -90,8 +93,6 @@ class RootScoreMonitorWriter final : public WriterT<ConstTrackContainer> {
 
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
-  ReadDataHandle<std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>>
-      m_outputScoreMonitor{this, "InputScoreMonitor"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   /// Mutex used to protect multi-threaded writes
   std::mutex m_writeMutex;

@@ -41,7 +41,6 @@ ActsExamples::RootScoreMonitorWriter::RootScoreMonitorWriter(
     throw std::bad_alloc();
   }
 
-  m_outputScoreMonitor.initialize(m_cfg.inputScoreMonitor);
   m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
 
   m_outputTree->Branch("event_nr", &m_eventNr);
@@ -81,13 +80,14 @@ ActsExamples::ProcessCode ActsExamples::RootScoreMonitorWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootScoreMonitorWriter::write(
-    const AlgorithmContext& ctx) {
+ActsExamples::ProcessCode ActsExamples::RootScoreMonitorWriter::writeT(
+    const AlgorithmContext& ctx,
+    const std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>&
+        scoreMonitor) {
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
-  const auto& scoreMonitor = m_outputScoreMonitor(ctx);
   const auto& particles = m_inputParticles(ctx);
 
   // Get the event number
@@ -105,7 +105,7 @@ ActsExamples::ProcessCode ActsExamples::RootScoreMonitorWriter::write(
     auto match = trackParticleMatching.find(m_index);
     if (match != trackParticleMatching.end() &&
         match->second.particle.has_value()) {
-          if (match != trackParticleMatching.end() &&
+      if (match != trackParticleMatching.end() &&
           match->second.particle.has_value()) {
         // Get the barcode of the majority truth particle
         auto barcode = match->second.particle.value();
