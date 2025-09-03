@@ -135,25 +135,6 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
     destProxy.tipIndex() = srcProxy.tipIndex();
   }
 
-  if (!scoreMonitor.empty()) {
-    // load  names of detectors from the json file
-    nlohmann::json json_file;
-    std::ifstream file(m_cfg.configFile);
-    if (!file.is_open()) {
-      std::cerr << "Error opening file: " << m_cfg.configFile << std::endl;
-      return {};
-    }
-    file >> json_file;
-    file.close();
-    auto prtDetectorNames = std::make_unique<std::vector<std::string>>();
-    Acts::from_json(json_file, prtDetectorNames.get());
-
-    // Save the score monitor data to a ROOT file
-    Acts::saveScoreMonitor(scoreMonitor, m_cfg.monitorFile, *prtDetectorNames);
-  } else {
-    ACTS_ERROR("No score monitor data available to save.");
-  }
-
   ActsExamples::ConstTrackContainer outputTracks{
       std::make_shared<Acts::ConstVectorTrackContainer>(
           std::move(solvedTracks.container())),
@@ -161,6 +142,6 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
 
   m_outputTracks(ctx, std::move(outputTracks));
   m_outputScoreMonitor(ctx, std::move(scoreMonitor));
-  
+
   return ActsExamples::ProcessCode::SUCCESS;
 }
