@@ -124,6 +124,13 @@ class RootScoreMonitorWriter final
   double m_ptScore = 0;
   /// whether the track is matched to a truth particle
   bool m_isMatched = false;
+  /// whether the track is a duplicate
+  bool m_isDuplicate = false;
+  /// whether the track is a fake
+  bool m_isFake = false;
+  /// whether the track is a good match
+  bool m_isGood = false;
+
   /// ID of the matched truth particle (0 if not matched)
   std::uint32_t m_matchedParticleId = 0;
 

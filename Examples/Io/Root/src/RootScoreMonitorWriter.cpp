@@ -55,6 +55,9 @@ ActsExamples::RootScoreMonitorWriter::RootScoreMonitorWriter(
   m_outputTree->Branch("chi2Score", &m_chi2Score);
   m_outputTree->Branch("totalScore", &m_totalScore);
   m_outputTree->Branch("isMatched", &m_isMatched);
+  m_outputTree->Branch("isDuplicate", &m_isDuplicate);
+  m_outputTree->Branch("isFake", &m_isFake);
+  m_outputTree->Branch("isGood", &m_isGood);
   m_outputTree->Branch("matchedParticleId", &m_matchedParticleId);
 
   m_outputTree->Branch("detectorHitScore", &m_detectorHitScore);
@@ -106,36 +109,45 @@ ActsExamples::ProcessCode ActsExamples::RootScoreMonitorWriter::writeT(
   m_detectorNamesroot = m_cfg.detectorNames;
   m_optionalFunctionsroot = m_cfg.optionalFunctions;
 
+  std::cout << "Writing " << scoreMonitor.size()
+            << " score monitors for event " << m_eventNr << std::endl;
+
+
   // Fill the tree
   for (const auto& monitor : scoreMonitor) {
+    
+    m_index = monitor.index;
+
+    auto imatched = trackParticleMatching.find(m_index);
+    if (imatched != trackParticleMatching.end() &&
+    imatched->second.particle.has_value()) {
+      m_isMatched = true;
+      const auto& particleMatch = imatched->second;
+      
+      m_isFake = false;
+      m_isDuplicate = false;
+      m_isGood = false;
+
+      if (particleMatch.classification == TrackMatchClassification::Fake) {
+        m_isFake = true;
+      } else if (particleMatch.classification == TrackMatchClassification::Duplicate) {
+        m_isDuplicate = true;
+      } else {
+        m_isGood = true;
+      }
+
+    } else {
+      m_isMatched = false;
+      m_isFake = true;
+      m_isDuplicate = false;
+      m_isGood = false;
+    }
+
+    m_matchedParticleId = 0;
+
     m_pT = monitor.pT;
     m_eta = monitor.eta;
     m_phi = monitor.phi;
-    m_index = monitor.index;
-
-    auto match = trackParticleMatching.find(m_index);
-    if (match != trackParticleMatching.end() &&
-        match->second.particle.has_value()) {
-      if (match != trackParticleMatching.end() &&
-          match->second.particle.has_value()) {
-        // Get the barcode of the majority truth particle
-        auto barcode = match->second.particle.value();
-        // Find the truth particle via the barcode
-        auto ip = particles.find(barcode);
-        if (ip != particles.end()) {
-          ACTS_VERBOSE("Find the truth particle with barcode "
-                       << barcode << "=" << barcode.value());
-        } else {
-          ACTS_DEBUG("Truth particle with barcode "
-                     << barcode << "=" << barcode.value() << " not found!");
-        }
-      }
-      m_isMatched = true;
-      m_matchedParticleId = match->second.particle.value().value();
-    } else {
-      m_isMatched = false;
-      m_matchedParticleId = 0;
-    }
 
     m_ptScore = monitor.ptScore;
     m_chi2Score = monitor.chi2Score;

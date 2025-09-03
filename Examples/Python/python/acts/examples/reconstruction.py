@@ -1582,7 +1582,6 @@ def addTruthTrackingGsf(
 
     return s
 
-
 @acts.examples.NamedTypeArgs(
     trackSelectorConfig=TrackSelectorConfig,
     ckfConfig=CkfConfig,
@@ -1723,6 +1722,7 @@ def addCKFTracks(
         outputParticleTrackMatching="ckf_particle_track_matching",
         doubleMatching=True,
     )
+        
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
         "track_particle_matching", matchAlg.config.outputTrackParticleMatching
@@ -2164,7 +2164,18 @@ def addScoreBasedAmbiguityResolution(
     from acts.examples import ScoreBasedAmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, acts.logging.INFO)
-
+    
+    matchAlg_monitor = acts.examples.TrackTruthMatcher(
+        level=customLogLevel(),
+        inputTracks=tracks,
+        inputParticles="particles_selected",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputTrackParticleMatching="scorebased_input_track_particle_matching",
+        outputParticleTrackMatching="scorebased_input_particle_track_matching",
+        doubleMatching=True,
+    )
+    s.addAlgorithm(matchAlg_monitor)
+    
     algScoreBased = ScoreBasedAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=tracks,
@@ -2183,16 +2194,6 @@ def addScoreBasedAmbiguityResolution(
     s.addAlgorithm(algScoreBased)
     s.addWhiteboardAlias("tracks", algScoreBased.config.outputTracks)
 
-    matchAlg_monitor = acts.examples.TrackTruthMatcher(
-        level=customLogLevel(),
-        inputTracks=tracks,
-        inputParticles="particles",
-        inputMeasurementParticlesMap="measurement_particles_map",
-        outputTrackParticleMatching="scorebased_input_track_particle_matching",
-        outputParticleTrackMatching="scorebased_input_particle_track_matching",
-        doubleMatching=True,
-    )
-    s.addAlgorithm(matchAlg_monitor)
     s.addWhiteboardAlias(
         "input_track_particle_matching", matchAlg_monitor.config.outputTrackParticleMatching
     )
@@ -2200,7 +2201,7 @@ def addScoreBasedAmbiguityResolution(
     addScoreMonitor(
         s,
         name="scorebased",
-        inputParticles="particles",
+        inputParticles="particles_selected",
         inputTrackParticleMatching=matchAlg_monitor.config.outputTrackParticleMatching,
         outputDirRoot=outputDirRoot,
         logLevel=logLevel,
