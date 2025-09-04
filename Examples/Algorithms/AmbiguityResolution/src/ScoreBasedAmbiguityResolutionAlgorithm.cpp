@@ -11,6 +11,7 @@
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Plugins/Json/AmbiguityConfigJsonConverter.hpp"
+#include "Acts/Plugins/Root/AmbiScoreMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -103,6 +104,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::
   }
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTracks.initialize(m_cfg.outputTracks);
+  m_outputScoreMonitor.initialize(m_cfg.scoreMonitors);
 }
 
 ActsExamples::ProcessCode
@@ -113,12 +115,19 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
 
   Acts::ScoreBasedAmbiguityResolution::Optionals<ConstTrackProxy> optionals;
   optionals.cuts.push_back(doubleHolesFilter);
-  std::vector<int> goodTracks = m_ambi.solveAmbiguity(
-      tracks, &sourceLinkHash, &sourceLinkEquality, optionals);
+
+  auto scoreMonitorPtr = std::make_unique<
+      std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>>();
+  auto& scoreMonitor = *scoreMonitorPtr;
+
+  std::vector<int> goodTracks =
+      m_ambi.solveAmbiguity(tracks, &sourceLinkHash, &sourceLinkEquality,
+                            optionals, scoreMonitorPtr.get());
   // Prepare the output track collection from the IDs
   TrackContainer solvedTracks{std::make_shared<Acts::VectorTrackContainer>(),
                               std::make_shared<Acts::VectorMultiTrajectory>()};
   solvedTracks.ensureDynamicColumns(tracks);
+
   for (auto iTrack : goodTracks) {
     auto destProxy = solvedTracks.makeTrack();
     auto srcProxy = tracks.getTrack(iTrack);
@@ -132,5 +141,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
       tracks.trackStateContainerHolder()};
 
   m_outputTracks(ctx, std::move(outputTracks));
+  m_outputScoreMonitor(ctx, std::move(scoreMonitor));
+
   return ActsExamples::ProcessCode::SUCCESS;
 }

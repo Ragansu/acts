@@ -429,7 +429,7 @@ if args.reco:
                 maxShared=2,
                 minUnshared=3,
                 maxSharedTracksPerMeasurement=2,
-                useAmbiguityScoring=False,
+                useAmbiguityScoring=True,
             ),
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,

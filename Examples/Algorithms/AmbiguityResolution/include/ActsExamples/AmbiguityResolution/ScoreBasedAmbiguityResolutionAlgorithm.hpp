@@ -37,6 +37,9 @@ class ScoreBasedAmbiguityResolutionAlgorithm final : public IAlgorithm {
     /// Output track collection.
     std::string outputTracks;
 
+    /// Output score monitor file path
+    std::string scoreMonitors;
+
     std::vector<Acts::ScoreBasedAmbiguityResolution::DetectorConfig>
         detectorConfigs;
     std::map<std::size_t, std::size_t> volumeMap;
@@ -81,6 +84,9 @@ class ScoreBasedAmbiguityResolutionAlgorithm final : public IAlgorithm {
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
+  WriteDataHandle<
+      std::vector<Acts::ScoreBasedAmbiguityResolution::ScoreMonitor>>
+      m_outputScoreMonitor{this, "OutputScoreMonitor"};
 };
 
 }  // namespace ActsExamples

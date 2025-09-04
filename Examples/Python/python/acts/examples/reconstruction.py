@@ -1728,6 +1728,7 @@ def addCKFTracks(
         outputParticleTrackMatching="ckf_particle_track_matching",
         doubleMatching=True,
     )
+
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
         "track_particle_matching", matchAlg.config.outputTrackParticleMatching
@@ -1811,6 +1812,35 @@ def addGx2fTracks(
     )
 
     return s
+
+
+def addScoreMonitor(
+    s: acts.examples.Sequencer,
+    name: str,
+    inputTrackParticleMatching: str = "track_particle_matching",
+    detectorNames: Optional[List[str]] = [],
+    optionalFunctions: Optional[List[str]] = [],
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    logLevel: Optional[acts.logging.Level] = None,
+):
+
+    if outputDirRoot is not None:
+        customLogLevel = acts.examples.defaultLogging(s, logLevel)
+        outputDirRoot = Path(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
+
+        scoreMonitorWriter = acts.examples.RootScoreMonitorWriter(
+            level=customLogLevel(),
+            inputScoreMonitor="ambiScoreBased_monitor",
+            inputTrackParticleMatching=inputTrackParticleMatching,
+            filePath=str(outputDirRoot / f"{name}_scoremonitor.root"),
+            detectorNames=detectorNames,
+            optionalFunctions=optionalFunctions,
+            treeName="scoremonitor",
+        )
+        s.addWriter(scoreMonitorWriter)
+    pass
 
 
 def addTrackWriters(
@@ -2142,11 +2172,23 @@ def addScoreBasedAmbiguityResolution(
 
     customLogLevel = acts.examples.defaultLogging(s, acts.logging.INFO)
 
+    matchAlg_monitor = acts.examples.TrackTruthMatcher(
+        level=customLogLevel(),
+        inputTracks=tracks,
+        inputParticles="particles_selected",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputTrackParticleMatching="scorebased_input_track_particle_matching",
+        outputParticleTrackMatching="scorebased_input_particle_track_matching",
+        doubleMatching=True,
+    )
+    s.addAlgorithm(matchAlg_monitor)
+
     algScoreBased = ScoreBasedAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=tracks,
         configFile=ambiVolumeFile,
         outputTracks="ambiTracksScoreBased",
+        scoreMonitors="ambiScoreBased_monitor",
         **acts.examples.defaultKWArgs(
             minScore=config.minScore,
             minScoreSharedTracks=config.minScoreSharedTracks,
@@ -2158,6 +2200,20 @@ def addScoreBasedAmbiguityResolution(
     )
     s.addAlgorithm(algScoreBased)
     s.addWhiteboardAlias("tracks", algScoreBased.config.outputTracks)
+
+    s.addWhiteboardAlias(
+        "input_track_particle_matching",
+        matchAlg_monitor.config.outputTrackParticleMatching,
+    )
+
+    addScoreMonitor(
+        s,
+        name="ambi_scorebased",
+        inputTrackParticleMatching=matchAlg_monitor.config.outputTrackParticleMatching,
+        outputDirRoot=outputDirRoot,
+        detectorNames=["InnerPixel", "InnerPixel", "Strips"],
+        logLevel=logLevel,
+    )
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
