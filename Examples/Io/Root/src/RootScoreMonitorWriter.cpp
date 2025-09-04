@@ -22,8 +22,6 @@ ActsExamples::RootScoreMonitorWriter::RootScoreMonitorWriter(
     Acts::Logging::Level level)
     : WriterT(config.inputScoreMonitor, "RootScoreMonitorWriter", level),
       m_cfg(config) {
-
-  
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing file path");
   }
@@ -44,7 +42,7 @@ ActsExamples::RootScoreMonitorWriter::RootScoreMonitorWriter(
 
   m_inputTrackParticleMatching.maybeInitialize(
       m_cfg.inputTrackParticleMatching);
-      
+
   m_outputTree->Branch("event_nr", &m_eventNr);
   m_outputTree->Branch("pT", &m_pT);
   m_outputTree->Branch("eta", &m_eta);
@@ -93,40 +91,38 @@ ActsExamples::ProcessCode ActsExamples::RootScoreMonitorWriter::writeT(
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   const static TrackParticleMatching emptyTrackParticleMatching;
-  
+
   const auto& trackParticleMatching =
       m_inputTrackParticleMatching.isInitialized()
           ? m_inputTrackParticleMatching(ctx)
           : emptyTrackParticleMatching;
-
 
   // Get the event number
   m_eventNr = ctx.eventNumber;
   m_detectorNamesroot = m_cfg.detectorNames;
   m_optionalFunctionsroot = m_cfg.optionalFunctions;
 
-  std::cout << "Writing " << scoreMonitor.size()
-            << " score monitors for event " << m_eventNr << std::endl;
-
+  std::cout << "Writing " << scoreMonitor.size() << " score monitors for event "
+            << m_eventNr << std::endl;
 
   // Fill the tree
   for (const auto& monitor : scoreMonitor) {
-    
     m_index = monitor.index;
 
     auto imatched = trackParticleMatching.find(m_index);
     if (imatched != trackParticleMatching.end() &&
-    imatched->second.particle.has_value()) {
+        imatched->second.particle.has_value()) {
       m_isMatched = true;
       const auto& particleMatch = imatched->second;
-      
+
       m_isFake = false;
       m_isDuplicate = false;
       m_isGood = false;
 
       if (particleMatch.classification == TrackMatchClassification::Fake) {
         m_isFake = true;
-      } else if (particleMatch.classification == TrackMatchClassification::Duplicate) {
+      } else if (particleMatch.classification ==
+                 TrackMatchClassification::Duplicate) {
         m_isDuplicate = true;
       } else {
         m_isGood = true;

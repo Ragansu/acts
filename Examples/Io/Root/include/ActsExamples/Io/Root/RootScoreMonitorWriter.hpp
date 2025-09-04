@@ -51,7 +51,7 @@ class RootScoreMonitorWriter final
 
     /// Input particles collection.
     std::string inputParticles;
-    
+
     /// Input track-particle matching.
     std::string inputTrackParticleMatching;
 
