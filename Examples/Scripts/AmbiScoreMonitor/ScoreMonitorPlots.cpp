@@ -27,8 +27,6 @@ enum MatchType {
 
 // Helper function to determine match type
 MatchType getMatchType(bool isFake, bool isDuplicate, bool isGood) {
-    std::cout << "isFake: " << isFake << ", isDuplicate: " << isDuplicate 
-              << ", isGood: " << isGood << std::endl;
     if (isGood) return GOOD;
     if (isFake) return FAKE;
     if (isDuplicate) return DUPLICATE;
@@ -38,9 +36,9 @@ MatchType getMatchType(bool isFake, bool isDuplicate, bool isGood) {
 // Helper function to get color for match type
 int getMatchColor(MatchType type) {
     switch (type) {
-        case GOOD: return kGreen;
-        case FAKE: return kRed;
-        case DUPLICATE: return kOrange;
+        case GOOD: return kGreen + 2;
+        case FAKE: return kRed +1;
+        case DUPLICATE: return kOrange + 7;
         default: return kGray;
     }
 }
@@ -63,14 +61,12 @@ TGraph *makeScatterByMatchType(const std::vector<double> &x,
                               int markerStyle = 20)
 {
     if (x.empty() || y.empty() || x.size() != y.size() || x.size() != matchTypes.size()) {
+        std::cout << "size x: " << x.size() << ", size y: " << y.size() 
+                  << ", size matchTypes: " << matchTypes.size() << std::endl;
         std::cerr << "Error: Vector sizes don't match or are empty for: " << title << std::endl;
         return nullptr;
     }
 
-    // for (size_t i = 0; i < matchTypes.size(); i++) {
-    //   std::cout << "MatchType" << i << ": " << getMatchName(matchTypes[i]) << std::endl;
-    // }
-    
     // Separate points by match type
     std::vector<std::vector<double>> x_by_type(4); // 4 match types
     std::vector<std::vector<double>> y_by_type(4);
@@ -91,8 +87,9 @@ TGraph *makeScatterByMatchType(const std::vector<double> &x,
         if (!x_by_type[type].empty()) {
             TGraph *g = new TGraph(x_by_type[type].size(), x_by_type[type].data(), y_by_type[type].data());
             g->SetMarkerStyle(markerStyle);
-            g->SetMarkerColor(getMatchColor(static_cast<MatchType>(type)));
 
+            int baseColor = getMatchColor(static_cast<MatchType>(type));
+            g->SetMarkerColorAlpha(baseColor, 0.5);
             if (!first_graph) {
                 g->SetTitle(title.c_str());
                 g->Draw("AP");
@@ -113,6 +110,17 @@ TGraph *makeScatterByMatchType(const std::vector<double> &x,
     
     return first_graph;
 }
+void processDetectorScores(std::vector<double>* detectorScores, 
+    std::vector<std::vector<double>>& targetVector) {
+    if (detectorScores) {
+        if (targetVector.empty()) {
+            targetVector.resize(detectorScores->size());
+        }
+        for (size_t j = 0; j < detectorScores->size() && j < targetVector.size(); j++) {
+        targetVector[j].push_back(detectorScores->at(j));
+        }
+    }
+}
 
 // Function to process tree and extract data
 bool processTree(TTree *tree, 
@@ -123,6 +131,9 @@ bool processTree(TTree *tree,
                 std::vector<MatchType> &v_matchTypes,
                 std::vector<std::vector<double>> &v_hit,
                 std::vector<std::vector<double>> &v_hole,
+                std::vector<std::vector<double>> &v_outlier,
+                std::vector<std::vector<double>> &v_other,
+                std::vector<std::vector<double>> &v_optional,
                 std::vector<std::string> &v_detectorNames)
 {
     // Variables
@@ -159,6 +170,15 @@ bool processTree(TTree *tree,
     if (tree->GetBranch("detectorNames")) {
         tree->SetBranchAddress("detectorNames", &detectorNames);
     }
+    if (tree->GetBranch("detectorOutlierScore")) {
+        tree->SetBranchAddress("detectorOutlierScore", &detectorOutlierScore);
+    }
+    if (tree->GetBranch("detectorOtherScore")) {
+        tree->SetBranchAddress("detectorOtherScore", &detectorOtherScore);
+    }
+    if (tree->GetBranch("optionalScore")) {
+        tree->SetBranchAddress("optionalScore", &optionalScore);
+    }
 
     Long64_t nEntries = tree->GetEntries();
     for (Long64_t i = 0; i < nEntries; i++) {
@@ -166,6 +186,8 @@ bool processTree(TTree *tree,
         
         // Only process matched tracks
         if (!isMatched) continue;
+        if (detectorHitScore->empty()) continue;
+        if (detectorHoleScore->empty()) continue;
         
         v_pt.push_back(pt);
         v_eta.push_back(eta);
@@ -175,21 +197,12 @@ bool processTree(TTree *tree,
         MatchType matchType = getMatchType(isFake, isDuplicate, isGood);
         v_matchTypes.push_back(matchType);
 
-        // Process detector scores
-        if (detectorHitScore && !detectorHitScore->empty()) {
-            if (v_hit.empty()) v_hit.resize(detectorHitScore->size());
-            for (size_t j = 0; j < detectorHitScore->size() && j < v_hit.size(); j++) {
-                v_hit[j].push_back(detectorHitScore->at(j));
-            }
-        }
-        
-        if (detectorHoleScore && !detectorHoleScore->empty()) {
-            if (v_hole.empty()) v_hole.resize(detectorHoleScore->size());
-            for (size_t j = 0; j < detectorHoleScore->size() && j < v_hole.size(); j++) {
-                v_hole[j].push_back(detectorHoleScore->at(j));
-            }
-        }
-        
+        processDetectorScores(detectorHitScore, v_hit);
+        processDetectorScores(detectorHoleScore, v_hole);
+        processDetectorScores(detectorOutlierScore, v_outlier);
+        processDetectorScores(detectorOtherScore, v_other);
+        processDetectorScores(optionalScore, v_optional);
+
         if (detectorNames && !detectorNames->empty() && v_detectorNames.empty()) {
             v_detectorNames = *detectorNames;
         }
@@ -299,11 +312,12 @@ int main(int argc, char **argv)
     // Storage vectors
     std::vector<double> v_pt, v_eta, v_chi2, v_total;
     std::vector<MatchType> v_matchTypes;
-    std::vector<std::vector<double>> v_hit, v_hole;
+    std::vector<std::vector<double>> v_hit, v_hole, v_outlier, v_other, v_optional;
     std::vector<std::string> v_detectorNames;
 
     // Process the tree
-    if (!processTree(tree, v_pt, v_eta, v_chi2, v_total, v_matchTypes, v_hit, v_hole, v_detectorNames)) {
+    if (!processTree(tree, v_pt, v_eta, v_chi2, v_total, v_matchTypes, v_hit, v_hole, v_outlier, v_other, v_optional,
+        v_detectorNames)) {
         std::cerr << "Error processing tree!" << std::endl;
         file->Close();
         delete file;

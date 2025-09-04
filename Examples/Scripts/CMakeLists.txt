@@ -1,5 +1,6 @@
 add_subdirectory(MaterialMapping)
 add_subdirectory(TrackingPerformance)
+add_subdirectory(AmbiScoreMonitor)
 
 if(ACTS_BUILD_EXAMPLES_ROOT)
     add_executable(compareRootFiles compareRootFiles.C)

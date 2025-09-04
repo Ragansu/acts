@@ -97,7 +97,6 @@ class RootScoreMonitorWriter final
 
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
-  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   /// Mutex used to protect multi-threaded writes
   std::mutex m_writeMutex;
 

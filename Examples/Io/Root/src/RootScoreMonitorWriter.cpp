@@ -42,7 +42,6 @@ ActsExamples::RootScoreMonitorWriter::RootScoreMonitorWriter(
     throw std::bad_alloc();
   }
 
-  m_inputParticles.maybeInitialize(m_cfg.inputParticles);
   m_inputTrackParticleMatching.maybeInitialize(
       m_cfg.inputTrackParticleMatching);
       
@@ -93,11 +92,8 @@ ActsExamples::ProcessCode ActsExamples::RootScoreMonitorWriter::writeT(
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  const static SimParticleContainer emptyParticles;
   const static TrackParticleMatching emptyTrackParticleMatching;
-
-  const auto& particles =
-      m_inputParticles.isInitialized() ? m_inputParticles(ctx) : emptyParticles;
+  
   const auto& trackParticleMatching =
       m_inputTrackParticleMatching.isInitialized()
           ? m_inputTrackParticleMatching(ctx)

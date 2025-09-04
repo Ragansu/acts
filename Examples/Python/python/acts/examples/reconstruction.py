@@ -1811,8 +1811,9 @@ def addGx2fTracks(
 def addScoreMonitor(
     s: acts.examples.Sequencer,
     name: str,
-    inputParticles: str = "particles_selected",
     inputTrackParticleMatching: str = "track_particle_matching",
+    detectorNames: Optional[List[str]] = [],
+    optionalFunctions: Optional[List[str]] = [],
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ):
@@ -1826,9 +1827,10 @@ def addScoreMonitor(
         scoreMonitorWriter = acts.examples.RootScoreMonitorWriter(
             level=customLogLevel(),
             inputScoreMonitor="ambiScoreBased_monitor",
-            inputParticles=inputParticles,
             inputTrackParticleMatching=inputTrackParticleMatching,
-            filePath=str(outputDirRoot / "scoremonitor.root"),
+            filePath=str(outputDirRoot / f"{name}_scoremonitor.root"),
+            detectorNames=detectorNames,
+            optionalFunctions=optionalFunctions,
             treeName="scoremonitor",
         )
         s.addWriter(scoreMonitorWriter)
@@ -2154,7 +2156,6 @@ def addScoreBasedAmbiguityResolution(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     ambiVolumeFile: Optional[Union[Path, str]] = None,
-    ambiMonitorFile: Optional[Union[Path, str]] = None,
     writeTrackSummary: bool = True,
     writeTrackStates: bool = False,
     writePerformance: bool = True,
@@ -2200,10 +2201,10 @@ def addScoreBasedAmbiguityResolution(
     
     addScoreMonitor(
         s,
-        name="scorebased",
-        inputParticles="particles_selected",
+        name="ambi_scorebased",
         inputTrackParticleMatching=matchAlg_monitor.config.outputTrackParticleMatching,
         outputDirRoot=outputDirRoot,
+        detectorNames=["InnerPixel", "InnerPixel", "Strips"],
         logLevel=logLevel,
     )
     
