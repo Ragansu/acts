@@ -1582,6 +1582,7 @@ def addTruthTrackingGsf(
 
     return s
 
+
 @acts.examples.NamedTypeArgs(
     trackSelectorConfig=TrackSelectorConfig,
     ckfConfig=CkfConfig,
@@ -1722,7 +1723,7 @@ def addCKFTracks(
         outputParticleTrackMatching="ckf_particle_track_matching",
         doubleMatching=True,
     )
-        
+
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
         "track_particle_matching", matchAlg.config.outputTrackParticleMatching
@@ -2165,7 +2166,7 @@ def addScoreBasedAmbiguityResolution(
     from acts.examples import ScoreBasedAmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, acts.logging.INFO)
-    
+
     matchAlg_monitor = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=tracks,
@@ -2176,7 +2177,7 @@ def addScoreBasedAmbiguityResolution(
         doubleMatching=True,
     )
     s.addAlgorithm(matchAlg_monitor)
-    
+
     algScoreBased = ScoreBasedAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=tracks,
@@ -2196,9 +2197,10 @@ def addScoreBasedAmbiguityResolution(
     s.addWhiteboardAlias("tracks", algScoreBased.config.outputTracks)
 
     s.addWhiteboardAlias(
-        "input_track_particle_matching", matchAlg_monitor.config.outputTrackParticleMatching
+        "input_track_particle_matching",
+        matchAlg_monitor.config.outputTrackParticleMatching,
     )
-    
+
     addScoreMonitor(
         s,
         name="ambi_scorebased",
@@ -2207,7 +2209,6 @@ def addScoreBasedAmbiguityResolution(
         detectorNames=["InnerPixel", "InnerPixel", "Strips"],
         logLevel=logLevel,
     )
-    
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),

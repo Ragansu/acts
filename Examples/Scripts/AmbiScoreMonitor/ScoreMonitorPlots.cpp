@@ -307,9 +307,11 @@ void createStackedTotalScoreHistogram(
   stats->SetFillColor(0);
   stats->SetBorderSize(1);
   stats->AddText(Form("Good: %d", static_cast<int>(h_good->GetEntries())));
-  stats->AddText(Form("Duplicate: %d", static_cast<int>(h_duplicate->GetEntries())));
+  stats->AddText(
+      Form("Duplicate: %d", static_cast<int>(h_duplicate->GetEntries())));
   stats->AddText(Form("Fake: %d", static_cast<int>(h_fake->GetEntries())));
-  stats->AddText(Form("Unknown: %d", static_cast<int>(h_unknown->GetEntries())));
+  stats->AddText(
+      Form("Unknown: %d", static_cast<int>(h_unknown->GetEntries())));
   stats->Draw();
 
   c->SaveAs(outputPath.c_str());
