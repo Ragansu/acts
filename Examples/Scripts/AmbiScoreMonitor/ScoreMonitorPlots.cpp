@@ -85,7 +85,7 @@ TGraph *makeScatterByMatchType(const std::vector<double> &x,
   std::vector<std::vector<double>> x_by_type(4);  // 4 match types
   std::vector<std::vector<double>> y_by_type(4);
 
-  for (size_t i = 0; i < x.size(); i++) {
+  for (std::size_t i = 0; i < x.size(); i++) {
     int type_idx = static_cast<int>(matchTypes[i]);
     if (type_idx >= 0 && type_idx < 5) {
       x_by_type[type_idx].push_back(x[i]);
@@ -131,8 +131,8 @@ void processDetectorScores(std::vector<double> *detectorScores,
     if (targetVector.empty()) {
       targetVector.resize(detectorScores->size());
     }
-    for (size_t j = 0; j < detectorScores->size() && j < targetVector.size();
-         j++) {
+    for (std::size_t j = 0;
+         j < detectorScores->size() && j < targetVector.size(); j++) {
       targetVector[j].push_back(detectorScores->at(j));
     }
   }
@@ -264,7 +264,7 @@ void createStackedTotalScoreHistogram(
   h_unknown->SetFillColorAlpha(getMatchColor(UNKNOWN), 0.8);
 
   // Fill histograms based on match type
-  for (size_t i = 0; i < v_total.size(); ++i) {
+  for (std::size_t i = 0; i < v_total.size(); ++i) {
     switch (v_matchTypes[i]) {
       case GOOD:
         h_good->Fill(v_total[i]);
@@ -350,7 +350,7 @@ void createBasicPlots(const std::vector<double> &v_pt,
   std::vector<std::vector<double>> x_axis = {v_pt, v_eta};
   std::vector<std::string> xlabels = {"pT", "eta"};
 
-  for (size_t i = 0; i < 2; ++i) {
+  for (std::size_t i = 0; i < 2; ++i) {
     c1->cd(i + 1);
     makeScatterByMatchType(x_axis[i], v_chi2, v_matchTypes,
                            xlabels[i] + " vs chi2Score", 21);
@@ -386,7 +386,7 @@ void createDetectorPlots(const std::vector<double> &v_pt,
                            (scoreType + " Plots").c_str(), 1600, 900);
   c->Divide(v_scores.size(), 2);
 
-  for (size_t i = 0; i < v_scores.size(); ++i) {
+  for (std::size_t i = 0; i < v_scores.size(); ++i) {
     if (v_scores[i].empty())
       continue;
 
